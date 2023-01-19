@@ -24,7 +24,7 @@ cat > top << EOF
     prefix = '${matl}_expansion$e',
     calculation ='scf',
     outdir = './out',
-    pseudo_dir = '/global/home/hpc4995/potential/'
+    pseudo_dir = '/home/zjm'
     tstress = .true.
     tprnfor = .true.
  /
