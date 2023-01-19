@@ -12,7 +12,7 @@ cat > runscript << EOF
 module load       StdEnv/2020 inter/2020.1.217 openmpi/4.0.3
 module load    quantumespresso/6.6
 
-/home/zjm/scratch/K-MTP-training/initial_dft_dataset_sim_files/${matl}_${etype}_runs/${matl}_${etype}${e}
+cd /home/zjm/scratch/K-MTP-training/initial_dft_dataset_sim_files/${matl}_${etype}_runs/${matl}_${etype}${e}
 
 mpirun -np 10 pw.x < ${matl}_${etype}${e}.relax.in > ../../output/${matl}_${etype}${e}.relax.out
 
