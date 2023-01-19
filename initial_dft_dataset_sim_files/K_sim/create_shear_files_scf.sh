@@ -31,7 +31,7 @@ cat > top << EOF
  &system
     ibrav=0,
     nat=$nat,
-    ntyp=5,
+    ntyp=1,
     ecutwfc=50,
     occupations='smearing',
     smearing = 'gaussian',
