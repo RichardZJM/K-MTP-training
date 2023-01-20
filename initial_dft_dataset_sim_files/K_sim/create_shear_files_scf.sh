@@ -24,7 +24,7 @@ cat > top << EOF
     prefix = '${matl}_${etype}$e',
     calculation ='scf',
     outdir = './out',
-    pseudo_dir = '/global/home/hpc4995/potential/'
+    pseudo_dir = '/home/zjm'
     tstress = .true.
     tprnfor = .true.
  /
@@ -32,7 +32,7 @@ cat > top << EOF
     ibrav=0,
     nat=$nat,
     ntyp=1,
-    ecutwfc=50,
+    ecutwfc=60,
     occupations='smearing',
     smearing = 'gaussian',
     degauss = 0.01,
