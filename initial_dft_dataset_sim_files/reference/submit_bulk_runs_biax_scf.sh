@@ -9,7 +9,7 @@ cat > runscript << EOF
 #SBATCH --time=0-2:59 # time (DD-HH:MM)
 #SBATCH --mem-per-cpu=9G
 
-module load       StdEnv/2020 inter/2020.1.217 openmpi/4.0.3
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
 module load    quantumespresso/6.6
 
 cd /global/scratch/hpc4995/MTP/Na/${matl}_${etype}_runs/${matl}_${etype}${e}

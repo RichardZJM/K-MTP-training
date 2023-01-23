@@ -9,7 +9,7 @@ cat > runscript << EOF
 #SBATCH --time=0-2:00 # time (DD-HH:MM)
 #SBATCH --mem-per-cpu=9G
 
-module load       StdEnv/2020 inter/2020.1.217 openmpi/4.0.3
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
 module load    quantumespresso/6.6
 
 cd /home/zjm/scratch/K-MTP-training/initial_dft_dataset_sim_files/${matl}_${etype}_runs/${matl}_${etype}${e}
@@ -22,3 +22,8 @@ cp runscript ../${matl}_${etype}_runs/${matl}_${etype}${e}/job_${matl}_${etype}$
 sbatch ../${matl}_${etype}_runs/${matl}_${etype}${e}/job_${matl}_${etype}${e}.qsub
 done
 rm runscript #clean-up
+
+
+
+
+# module load       StdEnv/2020 inter/2020.1.217 openmpi/4.0.3
