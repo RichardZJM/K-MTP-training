@@ -9,7 +9,7 @@ matl="K";etype="expansion_bcc";nat=1;
 #for i in "${e[@]}"; do
 
 mkdir ../${matl}_${etype}_runs
-for e in `seq -35 76`; do
+for e in `seq 0 26`; do
 
 a=$(echo "1+0.05*$e" | bc -l);
 b=$(echo "1+0.05*$e" | bc -l);
