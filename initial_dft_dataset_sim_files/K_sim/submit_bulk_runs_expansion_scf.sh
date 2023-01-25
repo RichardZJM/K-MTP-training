@@ -1,7 +1,7 @@
 #!/bin/bash
 matl="K";etype="expansion_bcc";
 ##
-for e in `seq -35 6`; do      #Not running the full expansion sequence
+for e in `seq 0 26`; do      #Not running the full expansion sequence
 cat > runscript << EOF
 #!/bin/bash
 #SBATCH --account=def-belandl1
