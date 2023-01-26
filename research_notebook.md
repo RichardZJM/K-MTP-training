@@ -21,10 +21,11 @@ $$
 
 The weightings, $\xi_\alpha$, are trainable parameters in the machine learning of the algorithm. $\Beta_\alpha$ are the members of the basis function to the level specified as a model hyperparameter.
 
-The basis functions are constructed on moment tensor descriptors. These moment tensor descriptors contain radial and angular components which capture the geometric representation of the system environment local to the atom whose energy is being calculated (as defined by a cutoff radius). 
+The basis functions are constructed with moment tensor descriptors. These moment tensor descriptors contain radial and angular components which capture the geometric representation of the system environment local to the atom whose energy is being calculated (as defined by a cutoff radius). 
 
-Moment tensor descriptors are differentiated by two different parameters $\nu$ and $\mu$. The former can be conceptually thought of as the depth of the angular data that the particular moment tensor captures. The latter allows the system to  
+Moment tensor descriptors are differentiated by two different parameters $\nu$ and $\mu$. The former can be conceptually thought of as the depth of the angular data that the particular moment tensor captures. The latter allows the system to exhibit more trainable radial parameters. The moment tensor descriptor for the $ith$ atom, described by $\nu$ and $\mu$, is the summation of the products of the corresponding radial and angular components between the $i$th atom and its $j$ neighbours. 
 
+$$M_{\mu,\nu} (n_i)= \sum_{j} f_\mu (r_{ij},z_i,z_j) r_{ij} \otimes \dots \otimes r_{ij} $$
 
 | Component | Description                            |
 | --------- | -------------------------------------- |
@@ -38,9 +39,26 @@ Where,  the important properties of the atoms in local enviroment are described 
 | $z_{i}$  | Species of the originating atom|
 | $z_{j}$  | Species of the $j$th neighbour|
 
+As moment tensors descriptor are described by $\nu$ and $\mu$, we can define a measure the complexity of a moment tensor descriptor based on these two values—the so-called *level* of a moment tensor descriptor. This is given by:
+
+$$\textrm{lev}M_{\mu,\nu} = 2 + 4\mu + \nu$$
+
+Where there the coefficients were determined through experimentation.
+
+Additionally, we can perform binary tensor operations and contractions between various moment tensor descriptors to form additional expressions as long as the operations are valid and one of the following:
+
+1. Dot Product
+2. Frobenius Product
+3. Scalar Multiplication
+
+The level of an expression of moment tensor descriptors is given by the sum of the level of its constituents. 
+
+We ultimately choose the basis set of the MTP model based on a *maximum level*, $\textrm{lev}_{\max}$ which serves as one of the model's hyperparameters. The basis set consists of all combinations of moment tensor descriptors that use the above operands to contract down to a single scalar value such that the formed expression has a level no more than $\textrm{lev}_{\max}$.  Accordingly, the number of trainable parameters is heavily dependent on $\textrm{lev}_{\max}$, scaling exponentially.
+
+Now, consider the radial and angular components as characterized by the $\nu$ and $\mu$ of the particular moment tensor descriptor.
 
 ####Radial Component of the Moment Tensor Descriptor
-The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of the product of the members of the radial basis set, $Q^{(\Beta)(r_{ij})}$, and the corresponding trainable radial parameters $c^{\Beta} _ {\mu,z_i,z_j}$ .
+The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of the product of the members of the radial basis set, $Q^{(\Beta)(r_{ij})}$, and the corresponding trainable radial parameters $c^{\Beta} _ {\mu,z_i,z_j}$.
 
 $$f_\mu (r_{ij},z_i,z_j) = \sum ^ {N_o} _ {\Beta = 1} c^{(\Beta)} _ {\mu,z_i,z_j}  Q^{(\Beta)(r_{ij})}$$
 
@@ -51,13 +69,17 @@ $$Q^{(\Beta)(r_{ij})} =  \begin{cases}
     0 & wk
 \end{cases}$$
 
-Where $\phi^(n)$ represents the $n$th Chebyshev polynomial.
+Where $\phi^(n)$ represents the $n$th Chebyshev polynomial. This generates a Chebyshev polynomial sequence that smoothly decays to zero at the cutoff radius.
 
 ####Angular Component of the Moment Tensor Descriptors
-The angular component is a series of $\nu$ outer products performed on the position vector between the originating atom and its $j$th neighbour. The value is dependent on the exact moment tensor. This angular component works to capture the angular information between two atoms and results in a tensor whose rank is equivalent to $\nu$.
+The angular component is a series of $\nu$ outer products performed on the position vector between the originating atom and its $j$th neighbour. The value of $\nu$ is dependent on the exact moment tensor descriptor. This angular component works to capture the angular information between two atoms and results in a tensor whose rank is equivalent to $\nu$.
 
-####Determining Basis Functions from Moment Tensor Descriptors
-A moment tensor descriptor is described by two parameters, 
+####MTP Model Overview
+Overall,  the MTP potential provides a framework atop which radial and angular components are considered. Additionally, the tensor operations performed on the descriptors maintain the model's invariance to permutations, rotations, reflection, and translation. MTP has two hyperparameters which affect its accuracy and computational cost: $N_o$ and $\textrm{lev}_{\max}$ which determine the number of basis functions expressions and the number of Chebyshev polynomials evaluated in the radial basis set. 
+
+### Training
+To prepare an MTP for usage in MD simulations like LAMMPS, training is generally performed on quantum-mechanical databases. The initial training is performed using the energies $E^{qm}$, forces , and stress tensors 
+
 
 
 
