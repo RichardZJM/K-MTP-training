@@ -1,4 +1,5 @@
 #MECH 461 Research Notebook
+https://github.com/RichardZJM/K-MTP-training
 
 ##Introduction
 This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
@@ -11,6 +12,10 @@ The first bit of setup focused on Compute Canada HPC cluster access. Compute Can
 With access to Narval, I then took a closer examination of the mathematics and theory behind the MTP approach before I started work on developing training sets and running training the system.  This took much of the remainder of week 1 and a brief overview of my understanding is outlined below. A more in-depth description will be provided for the final report.
 
 ### The MTP interatomic model
+<p style ="font-size:smaller">
+Please note that the following are personal notes taken from [REF] that explain the MTP method for my personal reference and future understanding.
+</p>
+
 As an atomistic potential, the MTP method describes the energy of a system as a function of the configuration of its atoms. The MTP potential does this by considering the sum of the energies associated with each of the atoms within the system.
 
 The energy of each atom can be defined as the weighted summations through a set of basis functions:
@@ -95,6 +100,37 @@ Where, $w_e$, $w_f$, and $w_s$ represent weighting factors (user-chosen) that ex
 | $\delta E$    |$(E^\textrm{mtp}(\textrm{cfg}_k, x) - E^\textrm{qm}(\textrm{cfg}_k, x))^2$| Loss contribution from energy inaccuracies|
 | $\delta F$    |$(E^\textrm{mtp}(\textrm{cfg}_k, x) - E^\textrm{qm}(\textrm{cfg}_k, x))^2$  | Loss contribution from force inaccuracies in each atom in the configuration||
 | $\delta S$    |$(E^\textrm{mtp}(\textrm{cfg}_k, x) - E^\textrm{qm}(\textrm{cfg}_k, x))^2$ | Species of the $j$th neighbour| |
+
+The mathematical optimization of this loss function doesn't use any special approach for gradient solving like backpropagation for more traditional ML techniques. Instead, we use a BFGS approach against the training set. Afterwards, an estimation of the trained potential accuracy can be obtained using root mean square error on the energies, forces, and stress tensors. RSME is shown for the energies below.
+
+
+ $\textrm{RSME} (E)^2 = \frac{1}{K} \sum ^{K}_{k=1} (\frac{E^\text{mtp}(\text{cfg}_g,x)}{N^{(k)}}-\frac{E^\text{qm}(\text{cfg}_g,x)}{N^{(k)}})$
+
+##Week 2
+The validity of the MTP (and other machine learning potentials ) is predicated on the availability of high-fidelity training data. For the MTP, these calculations consist of DFT calculations using Quantum Espresso. Most of Week 2 focused on familiarizing myself with the Narval HPC enviroment. 
+
+This all starts by connecting to Narval through my newly-minted Compute Canada account and SSH. Then, I follow the prompts, entering my password to gain access.
+
+```
+ssh -Y zjm@narval.computecanada.ca
+```
+Hao initially recommend me the MobaXterm terminal for automatic reconnection and SFTP (file transfer). However, I am currently running a Linux-based personal machine, and am using Tabby Terminal to perform the same.
+
+Upon SSH'ing into Narval, I'm greeted with the home directory in one of the login nodes (narval3 in this case).
+
+![Narval SSH](narval_home.png)
+
+This is a Linux-based terminal environment with no GUI. I have some experience with similar such enviroments, having run Linux natively for CFD purposes.  I immediately started by setting up a git repository for the project. This is to hold version-controlled scripts, output files, and the research notebook. 
+
+The 
+
+
+
+
+```
+
+```
+
 
 #References
 https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe
