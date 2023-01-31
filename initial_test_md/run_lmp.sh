@@ -9,4 +9,4 @@
 module load       StdEnv/2020  gcc/9.3.0  cuda/11.2.2
 module load openmpi/4.0.3
 
-mpirun -np 48 /home/zjm/interface/mylammps/src/lmp_mpi  < in.run > out.run
+mpirun -np 48 /home/zjm/interface/lmp_mpi  < in.run > out.run
