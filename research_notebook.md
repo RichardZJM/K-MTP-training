@@ -126,7 +126,7 @@ This is a Linux-based terminal environment with no GUI. I have some experience w
 
 https://github.com/RichardZJM/K-MTP-training
 
-Narval utilizes the job scheduler Slurm Workload manager for intensive computations. Only tasks smaller than 10 CPU-minutes and 4 RAM are permissible on the login nodes. Slurm is essentially a priority queue for Narval's nodes. Users submit job requests for system resources in job requests. Priority can be allocated based on the relative importance allocated to the project and the principal researcher. A job request resembles the below.
+Narval utilizes the job scheduler Slurm Workload manager for intensive computations. Only tasks smaller than 10 CPU minutes and 4 RAM are permissible on the login nodes. Slurm is essentially a priority queue for Narval's nodes. Users submit job requests for system resources in job requests. Priority can be allocated based on the relative importance allocated to the project and the principal researcher. A job request resembles the below.
 
 ```sh
 #!/bin/bash                                                 
@@ -138,6 +138,7 @@ Narval utilizes the job scheduler Slurm Workload manager for intensive computati
 //Code to run on the Narval compute nodes with allocated resources
 // ...
 ```
+Additional commands for the batch can be found here. https://slurm.schedmd.com/sbatch.html
 
 A job is defined in the format above in a text file with the .qsub extension. They are submitted to the Slurm system using the sbatch command.
 
@@ -152,7 +153,6 @@ squeue -u zjm           # Shows the curret jobs associated with user
 scancel <job number>    # Cancels the specified job
 scancel -u zjm          # Cancels all jobs associated with user
 ```
-
 
 With this knowledge, I began by preparing the environment to run DFT, MD, and prepare MTP potentials. Quantum Espresso was already present in the Narval environment and simply needed to be loaded into the active node using the below commands. MPI is needed for parallel processing.
 
