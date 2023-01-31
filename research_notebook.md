@@ -107,7 +107,9 @@ The mathematical optimization of this loss function doesn't use any special appr
  $\textrm{RSME} (E)^2 = \frac{1}{K} \sum ^{K}_{k=1} (\frac{E^\text{mtp}(\text{cfg}_g,x)}{N^{(k)}}-\frac{E^\text{qm}(\text{cfg}_g,x)}{N^{(k)}})$
 
 ## Week 2
-The validity of the MTP (and other machine learning potentials ) is predicated on the availability of high-fidelity training data. For the MTP, these calculations consist of DFT calculations using Quantum Espresso. Most of Week 2 focused on familiarizing myself with the Narval HPC enviroment. 
+The validity of the MTP (and other machine learning potentials ) is predicated on the availability of high-fidelity training data. For the MTP, these calculations consist of DFT calculations using Quantum Espresso (QE). Most of Week 2 focused on familiarizing myself with the Narval HPC enviroment. 
+
+### HPC Narval cluster
 
 This all starts by connecting to Narval through my newly-minted Compute Canada account and SSH. Then, I follow the prompts, entering my password to gain access.
 
@@ -126,7 +128,7 @@ https://github.com/RichardZJM/K-MTP-training
 
 Narval utilizes the job scheduler Slurm Workload manager for intensive computations. Only tasks smaller than 10 CPU-minutes and 4 RAM are permissible on the login nodes. Slurm is essentially a priority queue for Narval's nodes. Users submit job requests for system resources in job requests. Priority can be allocated based on the relative importance allocated to the project and the principal researcher. A job request resembles the below.
 
-```
+```sh
 #!/bin/bash                                                 
 #SBATCH --account=def-belandl1                  // PI's account
 #SBATCH --ntasks=1                              // Number of CPUs for job
@@ -139,20 +141,42 @@ Narval utilizes the job scheduler Slurm Workload manager for intensive computati
 
 A job is defined in the format above in a text file with the .qsub extension. They are submitted to the Slurm system using the sbatch command.
 
-```
+```sh
 sbatch <file>
 ```
 Listed below are some additional Slurm commands which are generally useful.
 
+```sh
+squeue                  # Shows the current jobs in queue and running
+squeue -u zjm           # Shows the curret jobs associated with user
+scancel <job number>    # Cancels the specified job
+scancel -u zjm          # Cancels all jobs associated with user
 ```
-squeue                  // Shows the current jobs in queue and running
-squeue -u zjm           // Shows the curret jobs associated with user
-scancel <job number>    // Cancels the specified job
-scancel -u zjm          // Cancels all jobs associated with user
-```
-With these tools to perform computationally intensive calculations on Narval, I began to assemble the initial DFT dataset. I received several scripts from Hao from which I adapted my first set of jobs for periodic potassium cells at under shear and hydrostatic expansion/compression. 
 
-The first step is to utilize Quantum Expresso to determine the lattice parameter of BCC potassium from this value. This represents a realistic baseline from which the initial dataset can be built around. We start by determining DFT parameters which produce well-converged results, including the plane wave cutoff energy and the number of uniform k-points. From previous experience with convergence testing with Potassium in Quantum Espresso, I settled on the following parameters for all future Potassium DFT simulations.
+
+With this knowledge, I began by preparing the environment to run DFT, MD, and prepare MTP potentials. Quantum Espresso was already present in the Narval environment and simply needed to be loaded into the active node using the below commands. MPI is needed for parallel processing.
+
+```sh
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+module load    quantumespresso/6.6
+```
+
+Additional information about modules can also be obtained with the below commands.
+
+```sh
+module spider                           # Gives information on all available modules
+module spider quantumespresso           # Same but for a specific module
+module spider quantumespresso/6.6       # Same but for specific version
+```
+The installation of MTP and its interface with LAMMPS was accomplished with the instructions on the project's Gitlab, available below.
+
+https://gitlab.com/ashapeev/interface-lammps-mlip-2
+
+This mostly included cloning from the repository, running a few installation scripts, and verifying the installation.
+
+### Preparing the first DFT calculations
+
+With the environment configured, I began to assemble the initial DFT training dataset. The first step is to utilize Quantum Expresso to determine the lattice parameter of BCC potassium from this value. This represents a realistic baseline from which the initial dataset can be built around. We start by determining DFT parameters which produce well-converged results, including the plane wave cutoff energy and the number of uniform k-points. From previous experience with convergence testing with Potassium in Quantum Espresso, I settled on the following parameters for all future Potassium DFT simulations.
 
 | Parameter                | Value |
 | :----------------------- | ----- |
@@ -162,12 +186,172 @@ The first step is to utilize Quantum Expresso to determine the lattice parameter
 
 Pseudopotential Source: https://github.com/buck54321/pyspresso/tree/master/pseudo
 
+Referencing the experimental value of BCC potassium's lattice parameter, I locally performed ten DFT simulations whose lattice parameters surrounded the experimental value. This provided me with corresponding system energies which were then minimized. They were fed into Quantum Espresso ev.x's 2nd order Birch fitting function to predict a lattice parameter of **9.67166 Bohr.** Generally, when working on extending DFT calculations, it is important to use consistent simulation parameters. However, for this case, where the goal is to generate a baseline, the experimental lattice parameter would have probably worked. 
+
+In any case, using the reference lattice parameter, I moved to perform bulk simulation on Narval. I received several scripts from Hao from which I adapted my first set of jobs for periodic potassium cells under shear and hydrostatic expansion/compression. These are all 1-atom simulation cells used to form a simpler initial training set. The following are my notes on the important points of the scripts' function. 
+
+The create script is perhaps the most important one, responsible for the generation of the Quantum Espresso instructions which Slurm will schedule. The full script is available on Github, although here are the important points (some lines are omitted).
+
+```sh
+basefile = "K_e0bcc.txt";           # File name of the baseline lattice vectors
+matl="K";etype="expansion_bcc";nat=1;   # Values for naming conventions
+
+mkdir ../${matl}_${etype}_runs          # Generate an uncle directory to hold runs 
+
+for e in `seq 0 26`; do         # Create runs with the specified offsets
+
+a=$(echo "1+0.05*$e" | bc -l);          # For Expansion vary the length of 
+b=$(echo "1+0.05*$e" | bc -l);          # the lattice vectors by 5% per degree of offset
+c=$(echo "1+0.05*$e" | bc -l);
+
+cat > top << EOF            # Generate a QE file
+&control
+    disk_io = 'none',
+    prefix = '${matl}_expansion$e',        
+    calculation ='scf',             # Self-consistet field calculation
+    outdir = './out',
+    pseudo_dir = '/home/zjm'            # Directory of pseudopotential
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,            # Type of lattice = lattice vector specified
+    nat=$nat,           # Number of atom in cell
+    ntyp=1,             # Number of Species
+    ecutwfc=60,         # Plane wave cutoff energy (Ry)
+    occupations='smearing',     # Next three are smearing parameters
+    smearing = 'gaussian',
+    degauss = 0.01,
+
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &cell
+ /
+CELL_PARAMETERS
+EOF
+
+# Appends the contents of the baseline file and scales the lattice vectors
+sed -n '3,5p' $basefile > cell
+awk -v a=$a -v b=$b -v c=$c '{print a*$1,b*$2,c*$3}' cell > newcell
+
+# Similar but with the pseudo and kp files (these are constants)
+cat top newcell  pseudo kp > ${matl}_${etype}${e}.relax.in
+
+# Makes a new directory to hold the new files and perfoms clean up 
+mkdir ../${matl}_${etype}_runs/${matl}_${etype}${e}
+mv ${matl}_${etype}${e}.relax.in ../${matl}_${etype}_runs/${matl}_${etype}${e}/
+rm top cell newcell #clean-up
+```
+
+Overall, the scripts act very much like the previous Python scripts (shutil) I had used for automating QE runs in MECH 868. There is essentially a master file that retrieves values from auxiliary files and fuses them together to form members of a bulk run.
+
+Those auxiliary files are kp, pseudo, and the baseline file.
+
+The baseline file (K_e0bcc.txt), contains the lattice vector as determined by the previous energy minimization calculations. A slight offset is introduced to prevent symmetry although it may not be strictly necessary.  It also includes the atom positions, but for shear and expansion/contraction in 1 atom BCC, any position is valid, so the origin is chosen.
+
+```txt
+1     
+CELL_PARAMETERS {bohr} 
+   4.83583   4.83589   4.835813             # Vector 1
+  -4.83582   4.83585   4.8358231            # Vector 2
+  -4.83581  -4.83586   4.83583111           # Vector 3
+Atom Positions {Angstrom}
+K       0.000000000   0.000000000   0.000000000
+```
+The kp file simply specifics the number of automatic k-points.
+
+```txt
+K_POINTS automatic
+8 8 8 0 0 0
+```
+
+The pseudo file is used to define the specific information including the atomic weight and the pseudopotential to use. 
+
+```txt
+ATOMIC_SPECIES
+K  39.0983 K.pbe-mt_fhi.UPF         # Potassium, atomic weight = 39.0983
+ATOMIC_POSITIONS angstrom
+K  0   0   0
+```
+
+Overall, after using all these files, we end up with an uncle directory which contains sub-directories which each contain a QE input file for one of the specified expansion/contraction levels.
+
+A very similar process is used to generate the input files for the shear calculation. The difference is the create files script. Instead of modifying the scale of all of the lattice vectors, only the v1 vector is modified to change the shape of the cell. 
+
+```sh
+
+# ...
+
+for e in `seq 1 50`; do
+
+a=$(echo "0.1*$e" | bc -l);      # Only the a parameter is variable
+b=$(echo "1+0*$e" | bc -l);
+c=$(echo "1+0*$e" | bc -l);
+
+# ...
+# The last two parameters of the v1 lattice vector are modified,
+# Results in the shear deformation of the cell.
+awk -v a=$a -v b=$b -v c=$c '{print $1,a+$2,$3+a}' cell > newcell   
+
+# ...
+```
+Once the QE job files are generated, the submit bulk run scripts are used to pass the jobs to the Slurm manager. For these single-atom simulations, a single core for twenty minutes should be more than sufficient although the resource requirements will increase for more complex configurations.
+
+```sh
+#!/bin/bash
+matl="K";etype="expansion_bcc";     # Constants for job name / type
+
+for e in `seq 0 26`; do      # Which jobs to submit
+
+# Generate a Slurm job file
+cat > runscript << EOF
+
+#!/bin/bash
+#SBATCH --account=def-belandl1
+#SBATCH --ntasks=1                     # 1 core is fine
+#SBATCH --time=0-2:00 # time (DD-HH:MM)            # 2 hours is probably excessive
+#SBATCH --mem-per-cpu=9G            # Probably don't need this much RAM
+
+# Load Quantum Espresso on the Compute Node(s)
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+module load    quantumespresso/6.6
+
+# Navigate to the QE input
+cd /home/zjm/scratch/K-MTP-training/initial_dft_dataset_sim_files/${matl}_${etype}_runs/${matl}_${etype}${e}
+
+# Run with parallel processing on 1 CPU
+mpirun -np 1 pw.x < ${matl}_${etype}${e}.relax.in > ../../output/${matl}_${etype}${e}.relax.out
+
+EOF
+
+cp runscript ../${matl}_${etype}_runs/${matl}_${etype}${e}/job_${matl}_${etype}${e}.qsub
+
+# Submit the Slurm job to Slurm
+sbatch ../${matl}_${etype}_runs/${matl}_${etype}${e}/job_${matl}_${etype}${e}.qsub
+done
+rm runscript #clean-up
+```
+
+The submission script for shears is the same script with variations on the for loop and the job name constants.
+
+Overall, this gives a framework through which we can easily create a training dataset of DFT data. While this iteration is limited to 1 atom, it should be fairly trivial to modify it for more atoms. I have prior experience doing so although it was done with Python, a language I'm a bit more familiar with.
+
+The rest of the week was mostly spent running simulations and Narval to better familiarize with the system and prepare various samples for the initial training of the MTP.
+
+## Week 3
+
+Week 3 started by configuring the 
 
 
-#References
+# References
 https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe
 /home/zjm/mlip-2/bin/mlp train 08.mtp mlip_input.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
 
 
-module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
-module load    quantumespresso/6.6
