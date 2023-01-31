@@ -1,5 +1,7 @@
-For some time, I've had varying interests. On one hand, I've been coding since grade six; on the other, I've been studying mechanical engineering. These interests meld, driving towards courses like Computational Materials Science and endeavours like my personal website.
+For some time, I've had varying interests. On one hand, I've been coding since grade six; on the other, I've been studying mechanical engineering. These interests meld, driving me towards courses like Computational Materials Science and endeavours like my personal website.
 
-I recall several projects
+Some of my most memorable school experiences involved combinations of mechanical engineering concepts and computational principles. There was that time when I developed a numerical optimizing tool for a gearbox. I recently built a pin-jointed structure simulator, and am currently working on a CFD model for my mechanical engineering capstone. My undergraduate research project involved the fitting of an interatomic potential to a set of DFT calculations for later molecular dynamics simulations.
 
-One can then imagine my delight when my undergraduate research supervisor, Professor Béland mentioned the possibility of a co-supervised project with ECE profess or
+More recently, I've been looking at getting more involved with the software side of my interests. This is partially due to several projects with my peers who are more involved in the field, but also due to my growing curiosities. As I'm nearing the end of my mechanical engineering undergrad, I have a good amount of experience and formal training in the discipline. It would be fascinating to have some more projects related to computing especially since I've had comparatively fewer opportunities to exercise this interest.
+
+One can then imagine my surprise when my undergraduate research supervisor, Professor Béland mentioned the possibility of a co-supervised Master's project with ECE professor Ryan Grant. Professor Béland is experienced with atom-level simulations and Professor Grant is
