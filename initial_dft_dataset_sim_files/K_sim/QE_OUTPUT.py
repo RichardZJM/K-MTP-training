@@ -322,7 +322,7 @@ def QE_OUTPUT():
                     f_y = Forces_F[i][1]
                     f_z = Forces_F[i][2]
                     mlip_conf.write(
-                        "    " + str(i + 1) + "    " + str(typ) + "   " + str(pos_x) + "    " + str(pos_y) + "    " + str(
+                        "    " + str(0) + "    " + str(typ) + "   " + str(pos_x) + "    " + str(pos_y) + "    " + str(
                             pos_z) + "    " + str(f_x) + "    " + str(f_y) + "    " + str(f_z) + "\n")
             xx = V*Stress_S[0][0]
             yy = V*Stress_S[1][1]
