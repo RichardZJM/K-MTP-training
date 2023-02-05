@@ -65,12 +65,12 @@ Now, consider the radial and angular components as characterized by the $\nu$ an
 #### Radial Component of the Moment Tensor Descriptor
 The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of the product of the members of the radial basis set, $Q^{(\Beta)(r_{ij})}$, and the corresponding trainable radial parameters $c^{\Beta} _ {\mu,z_i,z_j}$.
 
-$$f_\mu (r_{ij},z_i,z_j) = \sum ^ {N_o} _ {\Beta = 1} c^{(\Beta)} _ {\mu,z_i,z_j}  Q^{(\Beta)(r_{ij})}$$
+$$f_\mu (r_{ij},z_i,z_j) = \sum ^ {N_o} _ {\Beta = 1} c^{(\Beta)} _ {\mu,z_i,z_j}  Q^{(\Beta)}(r_{ij})$$
 
 The number of members of the radial basis set, $N_o$ is chosen as a model hyperparameter. The basis set is conditionally evaluated based on the chosen cutoff radius and the minimum distance between atoms in the system, using Chebyshev polynomials on the interval $[R_{min}, R_{cut}]$.
-
-$$Q^{(\Beta)(r_{ij})} =  \begin{cases}
-    \phi ^(\Beta)(|r_{ij}|) (R_{cut} - |r_{ij}|)^2& |r_{ij}| < R_{cut} \\
+=
+$$Q^{(\Beta)}(r_{ij})=  \begin{cases}
+    \phi ^{(\Beta)}(|r_{ij}|) (R_{cut} - |r_{ij}|)^2& |r_{ij}| < R_{cut} \\
     0 & wk
 \end{cases}$$
 
@@ -347,7 +347,10 @@ The rest of the week was mostly spent running simulations and Narval to better f
 
 ## Week 3
 
-Week 3 started by configuring the 
+Week 3 started by reconfiguring and troubleshooting the environment on the Narval setup to start running the MTP.  In the previous weeks, the MLIP interface had been installed improperly although it hadn't been detected due to the verification script mostly focused on confirming that LAMMPs itself had been installed correctly. As a personal note, in the future when I may need to reinstall the MTP interface package, the package must be cloned from the repository in its directory (ie. not in the same directory as the MLIP package). The library packages are created in the lib folder of the MLIP package and must be copied into the interface package manually. Additionally, the install script for the interface takes several minutes to run and produces detailed logs. This is important as failure to install the interface may pass the validation script for LAMMPS. 
+
+After, resolving issues with the interface, I began to assemble the first training set. Using the shell script-based process obtained in the previous week, 
+
 
 
 # References
