@@ -1,0 +1,39 @@
+&control
+    disk_io = 'none',
+    prefix = 'K_expansion-1',
+    calculation ='scf',
+    outdir = './out',
+    pseudo_dir = './'
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,
+    nat=2,
+    ntyp=1,
+    ecutwfc=60,
+    occupations='smearing',
+    smearing = 'gaussian',
+    degauss = 0.01,
+
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &cell
+ /
+CELL_PARAMETERS
+   ee ee ee
+   -ee ee ee
+   -ee -ee ee
+ATOMIC_SPECIES
+K  39.0983 K.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS crystal
+K  0   0   0
+K 0.33 0.33 0.33
+K_POINTS automatic
+8 8 8 0 0 0

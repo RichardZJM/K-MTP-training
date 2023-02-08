@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --account=def-belandl1
+#SBATCH --ntasks=1
+#SBATCH --time=0-2:00 # time (DD-HH:MM)
+#SBATCH --mem-per-cpu=9G
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+module load    quantumespresso/6.6
+
+cd /home/zjm/scratch/K-MTP-training/active_learning/2AtomsRuns/inin
+
+mpirun -np 1 pw.x < inin > ../../output/outout

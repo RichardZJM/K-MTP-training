@@ -4,4 +4,6 @@
 **/reference
 **/minimum_lattice_parameter
 **/slurm*
+ENV
+2AtomRuns
 # **/md*
