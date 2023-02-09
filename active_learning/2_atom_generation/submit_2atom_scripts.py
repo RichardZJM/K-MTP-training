@@ -21,8 +21,8 @@ for ele in points:
     with open (submissionName, "r+") as f:
         content = f.read()
         
-        content_new = re.sub("inin", fileName, content)
-        content_new = re.sub("outout", outputName, content_new)
+        content_new = re.sub("ininin", fileName, content)
+        content_new = re.sub("outoutout", outputName, content_new)
         
         f.seek(0)
         f.write(content_new)

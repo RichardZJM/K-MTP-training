@@ -3,7 +3,7 @@
     prefix = 'K_expansion-1',
     calculation ='scf',
     outdir = './out',
-    pseudo_dir = './'
+    pseudo_dir = '/global/home/hpc5146'
     tstress = .true.
     tprnfor = .true.
  /
