@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=hpc1725
+#SBATCH --account=hpcg1725
 #SBATCH --qos=privileged
 #SBATCH --ntasks=1
 #SBATCH --time=0-1:00 # time (DD-HH:MM)
