@@ -11,6 +11,7 @@ os.chdir("./2AtomRuns")
 for ele in points:
         
     fileName = "2Atom"+str(round(ele,2))+".in"
+    folderName = "2Atom"+str(round(ele,2))
     outputName = "2Atom"+str(round(ele,2))+".out"
     submissionName = "2Atom"+str(round(ele,2))+".qsub"
     
@@ -22,6 +23,7 @@ for ele in points:
         content = f.read()
         
         content_new = re.sub("ininin", fileName, content)
+        content_new = re.sub("folder", folderName, content_new)
         content_new = re.sub("outoutout", outputName, content_new)
         
         f.seek(0)
