@@ -23,7 +23,7 @@ for ele in points:
         content = f.read()
         
         content_new = re.sub("ininin", fileName, content)
-        content_new = re.sub("folder", folderName, content_new)
+        content_new = re.sub("folderfolder", folderName, content_new)
         content_new = re.sub("outoutout", outputName, content_new)
         
         f.seek(0)
