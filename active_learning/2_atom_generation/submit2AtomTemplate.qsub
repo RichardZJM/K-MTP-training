@@ -9,6 +9,6 @@
 module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
 module load    quantumespresso/6.6
 
-cd /global/home/hpc5146/Projects/K-MTP-training/active_learning/2AtomRuns/folderfolder/ininin
+cd /global/home/hpc5146/Projects/K-MTP-training/active_learning/2AtomRuns/folderfolder
 
 mpirun -np 1 pw.x < ininin > ../../output/outoutout
