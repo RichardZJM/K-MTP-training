@@ -6,4 +6,6 @@
 **/slurm*
 ENV
 2AtomRuns
+Na*
+MDRuns
 # **/md*
