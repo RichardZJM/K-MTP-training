@@ -21,4 +21,4 @@ with open(masterConfigFileLocation,'wb') as master:
             with open(childPreselectedConfigName,'rb') as child:
                 shutil.copyfileobj(child, master)
         except:
-            print(directory + "has failed to provide a preselected.cfg")
+            print(directory + " has failed to provide a preselected.cfg")
