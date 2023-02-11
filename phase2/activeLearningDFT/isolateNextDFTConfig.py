@@ -9,12 +9,13 @@ import sys
 masterConfigFileLocation = "./preselected.cfg"
 mdRunsLocation = "../runs/MDRuns/"
 
-
-
 with open(masterConfigFileLocation,'wb') as master:
-    for childDirectories, descendantDirectories, files in os.walk(masterConfigFileLocation):
-        print(childDirectories)
-        for runDirectory in childDirectories:
-            childPreselectedConfigName = mdRunsLocation + runDirectory + "preselected.cfg"
-            with open(childPreselectedConfigName,'rb') as child:
-                shutil.copyfileobj(child, master)
+    #Walk through the tree of directories in MD Runs
+    #All child directories are run files which have no further children
+    
+    for directory, subdir, files in os.walk(mdRunsLocation):        
+        if directory == mdRunsLocation: continue;       # There is no preselected config in the parent directory of the runs
+          
+        childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
+        with open(childPreselectedConfigName,'rb') as child:
+            shutil.copyfileobj(child, master)
