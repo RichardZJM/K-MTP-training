@@ -1,8 +1,0 @@
-ATOMIC_SPECIES
-Na 22.99  Na.pbe-mt_fhi.UPF
-Cl 35.453 Cl.pbe-mt_fhi.UPF
-K  39.0983 K.pbe-mt_fhi.UPF
-N  14.0067 N.pbe-mt_fhi.UPF
-O  15.999  O.pbe-mt_fhi.UPF
-ATOMIC_POSITIONS angstrom
-Na  0   0   0

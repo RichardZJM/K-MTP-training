@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --account=def-hpcg1725
+#SBATCH --partition=reserved
+#SBATCH --qos=privileged
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --job-name=$jjj
+#SBATCH --output=out.run
+#SBATCH --time=0-00:45 # time (DD-HH:MM)
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+module load    quantumespresso/6.6
+
+mpirun -np 1 pw.x < $in > ../../../output/$out

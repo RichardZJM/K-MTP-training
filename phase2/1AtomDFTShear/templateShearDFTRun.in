@@ -1,0 +1,38 @@
+&control
+    disk_io = 'none',
+    prefix = 'K_expansion0',
+    calculation ='scf',
+    outdir = './out',
+    pseudo_dir = '/global/home/hpc5146'
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,
+    nat=1,
+    ntyp=1,
+    ecutwfc=60,
+    occupations='smearing',
+    smearing = 'gaussian',
+    degauss = 0.01,
+
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &cell
+ /
+CELL_PARAMETERS
+4.83583 $aaa  $aaa1
+  -4.83582   4.83585   4.8358231
+  -4.83581  -4.83586   4.83583111
+ATOMIC_SPECIES
+K  39.0983 K.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS angstrom
+K  0   0   0
+K_POINTS automatic
+8 8 8 0 0 0
