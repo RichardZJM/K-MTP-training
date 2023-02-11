@@ -18,7 +18,7 @@ dftRunTemplateLocation = "../../../2AtomDFT/template2AtomDFTRun.in"          #lo
 jobTemplateLocation = "../../../2AtomDFT/template2AtomDFTRunSubmit.qsub"
 
 baseline = 4.83583;                 # lattice parameter of K /2 (DFT) calculated (bohr)
-shears = np.arange(0.85, 1.16, 0.02)               #strains we wish to consider
+shears = np.arange(0.65, 1.36, 0.05)               #strains we wish to consider
 
 #Make and prepare a new directory to hold all runs if needed 
 os.chdir("../")
