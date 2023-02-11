@@ -22,3 +22,7 @@ with open(masterConfigFileLocation,'wb') as master:
                 shutil.copyfileobj(child, master)
         except:
             print(directory + " has failed to provide a preselected.cfg")
+            
+os.chdir("../mdLearning")
+os.system("/global/home/hpc5146/mlip-2/bin/mlp select-add /global/home/hpc5146/Projects/K-MTP-training/phase2/mdLearning/pot.mtp train.cfg ../activeLearningDFT/preselected.cfg ../activeLearningDFT/diff.cfg --als-filename=state.als")
+os.chdir("../activeLearningDFT")
