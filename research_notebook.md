@@ -369,7 +369,7 @@ Using python scripts
 2nd run MD simulations with active learning mode. (check each configuration to see whether it is risky) Nothing we can do
 
 Setup a new state.als file using a  new command:
-#./save/mlp calc-grade curr.mtp train.cfg train.cfg out.cfg --als-filename=state.als
+/global/home/hpc5146/mlip-2/bin/mlp calc-grade pot.mtp train.cfg train.cfg out.cfg --als-filename=state.als
 This file path us tbe specified in the MTP MD config ini file
 
 Create multiple MD files.
