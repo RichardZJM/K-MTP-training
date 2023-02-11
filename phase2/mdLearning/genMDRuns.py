@@ -14,16 +14,18 @@ try:
 except:
     pass
 
-mdRunTemplateLocation = "../../mdLearning/templateMDRun.in"          #location of md run, data input, and job templates 
-dataTemplateLocation = "../../mdLearning/templateData.dat"
-jobTemplateLocation = "../../mdLearning/templateMDRunSubmit.qsub"
+mdRunTemplateLocation = "../../../mdLearning/templateMDRun.in"          #location of md run, data input, and job templates 
+dataTemplateLocation = "../../../mdLearning/templateData.dat"
+jobTemplateLocation = "../../../mdLearning/templateMDRunSubmit.qsub"
 
-baseline = 5.118022063;                 # lattice parameter of K  (DFT) calculated
+baseline = 5.118022063;                 # lattice parameter of K  (DFT)  [angstroms]
 strains = np.arange(0.95, 1.06, 0.02)               #strains we wish to consider
-temperatures = [100, 300 , 400, 600 ]           # Temperature
+temperatures = [100, 300 , 400, 600 ]           # Temperatures [L]
 
 #Make and prepare a new directory to hold all runs if needed 
 os.chdir("../")
+os.system("mkdir runs")
+os.chdir("./runs")
 os.system(" mkdir MDRuns")
 os.chdir("./MDRuns")
 

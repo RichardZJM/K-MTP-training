@@ -27,7 +27,7 @@ os.chdir("./runs")
 os.system(" mkdir dftShear")
 os.chdir("./dftShear")
 
-os.system("pwd")
+# os.system("pwd")
 
 for shear in shears:
     # Generate the necessary folder and file names

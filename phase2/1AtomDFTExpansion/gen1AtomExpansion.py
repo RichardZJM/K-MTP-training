@@ -27,7 +27,7 @@ os.chdir("./runs")
 os.system(" mkdir dftExpansion")
 os.chdir("./dftExpansion")
 
-os.system("pwd")
+# os.system("pwd")
 
 for strain in strains:
     # Generate the necessary folder and file names
