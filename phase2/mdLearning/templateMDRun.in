@@ -6,7 +6,7 @@ read_data        $ddd
 
 mass            * 39.0983
 
-pair_style mlip /global/home/hpc5146/Projects/K-MTP-training/active_learning/mdLearning/mlip.ini
+pair_style mlip /global/home/hpc5146/Projects/K-MTP-training/phase2/mdLearning/mlip.ini
 pair_coeff * *
 
 neighbor	0.5 bin
