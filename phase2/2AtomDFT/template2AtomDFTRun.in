@@ -27,9 +27,9 @@
  &cell
  /
 CELL_PARAMETERS
-   ee ee ee
-   -ee ee ee
-   -ee -ee ee
+   $aaa1 $aaa2 $aaa3
+   -$aaa4 $aaa5 $aaa6
+   -$aaa7 -$aaa8 $aaa9
 ATOMIC_SPECIES
 K  39.0983 K.pbe-mt_fhi.UPF
 ATOMIC_POSITIONS crystal
