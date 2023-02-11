@@ -15,7 +15,10 @@ with open(masterConfigFileLocation,'wb') as master:
     
     for directory, subdir, files in os.walk(mdRunsLocation):        
         if directory == mdRunsLocation: continue;       # There is no preselected config in the parent directory of the runs
-          
-        childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
-        with open(childPreselectedConfigName,'rb') as child:
-            shutil.copyfileobj(child, master)
+         
+        try: 
+            childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
+            with open(childPreselectedConfigName,'rb') as child:
+                shutil.copyfileobj(child, master)
+        except:
+            print(directory + "has failed to provide a preselected.cfg")
