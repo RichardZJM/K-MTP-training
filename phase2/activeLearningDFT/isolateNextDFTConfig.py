@@ -13,6 +13,7 @@ mdRunsLocation = "../runs/MDRuns/"
 
 with open(masterConfigFileLocation,'wb') as master:
     for childDirectories, descendantDirectories, files in os.walk(masterConfigFileLocation):
+        print(childDirectories)
         for runDirectory in childDirectories:
             childPreselectedConfigName = mdRunsLocation + runDirectory + "preselected.cfg"
             with open(childPreselectedConfigName,'rb') as child:
