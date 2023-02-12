@@ -347,9 +347,11 @@ The rest of the week was mostly spent running simulations and Narval to better f
 
 ## Week 3
 
-Week 3 started by reconfiguring and troubleshooting the environment on the Narval setup to start running the MTP.  In the previous weeks, the MLIP interface had been installed improperly although it hadn't been detected due to the verification script mostly focused on confirming that LAMMPs itself had been installed correctly. As a personal note, in the future when I may need to reinstall the MTP interface package, the package must be cloned from the repository in its directory (ie. not in the same directory as the MLIP package). The library packages are created in the lib folder of the MLIP package and must be copied into the interface package manually. Additionally, the install script for the interface takes several minutes to run and produces detailed logs. This is important as failure to install the interface may still pass the validation script for LAMMPS. 
+Week 3 started by reconfiguring and troubleshooting the environment on the Narval setup to start running the MTP.  In the previous weeks, the MLIP interface had been installed improperly although it hadn't been detected due to the verification script mostly focused on confirming that LAMMPs itself had been installed correctly. As a personal note, in the future when I may need to reinstall the MTP interface package, the package must be cloned from the repository in its directory (ie. not in the same directory as the MLIP package). The library packages are created in the lib folder of the MLIP package and must be copied into the interface package manually. Additionally, the install script for the interface takes several minutes to run and produces detailed logs. This is important to verify as failure to install the interface may pass the validation script for LAMMPS. 
 
-After, resolving issues with the interface, I began to assemble the first training set. Using the shell script-based process obtained in the previous week, 
+After, resolving issues with the interface, I began to assemble the first training set. Using the shell script-based process obtained in the previous week, I was able to generate quantum mechancial datasets for specified ranges of strains and shears relative to the unstrained baseline cell. The question then became one of which method would be provide the best response in the trained potential. Although, latter retraining with more complex configurations would be necessary to caputure the behaviour of Potassium in an MD system, a strong starting point could potentially accelerate the learning process.
+
+However, I first started with a relatively arbitrary distriubtion of strains and shears to  
 
 
 
