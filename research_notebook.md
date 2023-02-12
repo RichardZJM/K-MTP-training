@@ -349,9 +349,57 @@ The rest of the week was mostly spent running simulations and Narval to better f
 
 Week 3 started by reconfiguring and troubleshooting the environment on the Narval setup to start running the MTP.  In the previous weeks, the MLIP interface had been installed improperly although it hadn't been detected due to the verification script mostly focused on confirming that LAMMPs itself had been installed correctly. As a personal note, in the future when I may need to reinstall the MTP interface package, the package must be cloned from the repository in its directory (ie. not in the same directory as the MLIP package). The library packages are created in the lib folder of the MLIP package and must be copied into the interface package manually. Additionally, the install script for the interface takes several minutes to run and produces detailed logs. This is important to verify as failure to install the interface may pass the validation script for LAMMPS. 
 
-After, resolving issues with the interface, I began to assemble the first training set. Using the shell script-based process obtained in the previous week, I was able to generate quantum mechancial datasets for specified ranges of strains and shears relative to the unstrained baseline cell. The question then became one of which method would be provide the best response in the trained potential. Although, latter retraining with more complex configurations would be necessary to caputure the behaviour of Potassium in an MD system, a strong starting point could potentially accelerate the learning process.
+After, resolving issues with the interface, I began to assemble the first training set. Using the shell script-based process obtained in the previous week, I was able to generate quantum mechanical datasets for specified ranges of strains and shears relative to the unstrained baseline cell. The question then became one of which method would provide the best response in the trained potential. Although later retraining with more complex configurations would be necessary to capture the behaviour of potassium, a strong starting point could potentially accelerate the learning process.
 
-However, I first started with a relatively arbitrary distriubtion of strains and shears to  
+However, I first started with a relatively arbitrary distribution of strains and shears to understand the process a bit better.  The process is documented below.
+
+First, DFT the results of the DFT calculation are compiled into a single output folder for easier manipulaiton. At this stage, the user needs to select the hyperparameters of the potential that they wish to train ($\text{lev}_{\max}$). As previously explained, the level of the potential and the Chebyshev polynomial in the radial basis sets, are two of the most important hyperparameters. The structure of an MTP and the current values of its trainable parameters are dictated in a text file. In the passive training process, the parameters are updated based on the optimization of the energy, force, and stress errors with respect to the training set. The MLIP package includes several untrained potentials which act as a starting point. Using a $\text{lev}_{max}$ of 8 and 8 members in the radial basis, the potential file resembles the following:
+
+```sh
+MTP
+version = 1.1.0
+potential_name = MTP1m
+species_count = 1       #Number of species (just K for me)
+potential_tag =
+radial_basis_type = RBChebyshev
+        min_dist = 2       # Minimum cutoff distance (angstroms)
+        max_dist = 5       # Maximal cutoff distance (angstrongs)
+        radial_basis_size = 8       #Number of Chebyshev Polynomials in basis set
+        radial_funcs_count = 2
+alpha_moments_count = 18         # Number of basis functions (combinations of moment tensor descriptors)
+alpha_index_basic_count = 11
+
+# The rest are just the values of the trainable parameters
+alpha_index_basic = {{0, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}, {0, 2, 0, 0}, {0, 1, 1, 0}, {0, 1, 0, 1}, {0, 0, 2, 0}, {0, 0, 1, 1}, {0, 0, 0, 2}, {1, 0, 0, 0}}
+alpha_index_times_count = 14
+alpha_index_times = {{0, 0, 1, 11}, {1, 1, 1, 12}, {2, 2, 1, 12}, {3, 3, 1, 12}, {4, 4, 1, 13}, {5, 5, 2, 13}, {6, 6, 2, 13}, {7, 7, 1, 13}, {8, 8, 2, 13}, {9, 9, 1, 13}, {0, 10, 1, 14}, {0, 11, 1, 15}, {0, 12, 1, 16}, {0, 15, 1, 17}}
+alpha_scalar_moments = 9
+alpha_moment_mapping = {0, 10, 11, 12, 13, 14, 15, 16, 17}
+```
+
+This setup yields 26 trainable parameters.
+
+Next, some processing must be applied to the QE outputs to translate the training information into a configuration file which is readable by the MLIP package. This is because, while there is an interface with LAMMPs, the MLIP package makes no assumptions on which quantum chemistry program is used to generate the training sets. Specifically, the training data needs to be assembled with the atomic positions and the resultant energy, force, and stress. The form is as follows:
+
+```sh
+BEGIN_CFG
+ Size          # Number of atoms
+    1
+ Supercell        # Parameters of the lattice vector (for periodic boundaries)
+         2.226339      2.226339      2.226339
+        -2.226339      2.226339      2.226339
+        -2.226339     -2.226339      2.226339
+# List of atom information
+ AtomData:  id type       cartes_x      cartes_y      cartes_z           fx          fy          fz
+             1    0       0.000000      0.000000      0.000000     0.000000    0.000000    0.000000         
+ Energy
+        -13.805967180600         # Energy prediction
+ PlusStress:  xx          yy          zz          yz          xz          xy
+         0.99491     0.99491     0.99491    -0.00000     0.00000    -0.00000        #Stress prediction
+ Feature   EFS_by       Qe
+ Feature   mindist      3.856132       
+END_CFG
+```
 
 
 
