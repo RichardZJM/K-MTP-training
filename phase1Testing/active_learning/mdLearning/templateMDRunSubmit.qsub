@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --account=def-hpcg1725
+#SBATCH --partition=reserved
+#SBATCH --qos=privileged
+
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --job-name=$jjj
+#SBATCH --output=out.run
+#SBATCH --time=0-00:45 # time (DD-HH:MM)
+
+
+module load       StdEnv/2020  gcc/9.3.0  cuda/11.2.2
+module load openmpi/4.0.3
+
+/global/home/hpc5146/interface-lammps-mlip-2/lmp_mpi < $in > $out

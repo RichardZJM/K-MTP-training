@@ -1,0 +1,12 @@
+**/K_expansion_bcc_runs
+**K_shear2_bcc_runs
+**/output
+**/reference
+**/minimum_lattice_parameter
+**/slurm*
+ENV
+2AtomRuns
+Na*
+MDRuns
+runs
+# **/md*

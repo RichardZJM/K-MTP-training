@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --account=def-hpcg1725
+#SBATCH --qos=privileged
+#SBATCH --ntasks=1
+#SBATCH --output=ininin.out
+#SBATCH --time=0-1:00 # time (DD-HH:MM)
+#SBATCH --mem-per-cpu=9G
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+module load    quantumespresso/6.6
+
+cd /global/home/hpc5146/Projects/K-MTP-training/active_learning/2AtomRuns/folderfolder
+
+mpirun -np 1 pw.x < ininin > ../../output/outoutout
