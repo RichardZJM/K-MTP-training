@@ -1,6 +1,6 @@
 # A Collection of the Important Commands for MTP Usage
 
-This document outlines several important commands which are niche (unique) to the MTP. I may often find myself copy/pasting these in the future.
+This document outlines several important commands which are niche (unique to the MTP) although they are often used when dealing with MTP.
 
 ### Passive Training of an MTP
 

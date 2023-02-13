@@ -1,7 +1,7 @@
 # MECH 461 Research Notebook
 https://github.com/RichardZJM/K-MTP-training
 
-##Introduction
+## Introduction
 This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
 
 ## Week 1
@@ -58,9 +58,9 @@ Additionally, we can perform binary tensor operations and contractions between v
 
 The level of an expression of moment tensor descriptors is given by the sum of the level of its constituents. 
 
-We ultimately choose the basis set of the MTP model based on a *maximum level*, $\textrm{lev}_{\max}$ which serves as one of the model's hyperparameters. The basis set consists of all combinations of moment tensor descriptors that use the above operands to contract down to a single scalar value such that the formed expression has a level no more than $\textrm{lev}_{\max}$.  Accordingly, the number of trainable parameters is heavily dependent on $\textrm{lev}_{\max}$, scaling exponentially.
+We ultimately choose the basis set of the MTP model based on a maximum level $\textrm{lev}_{\max}$ which serves as one of the model's hyperparameters. The basis set consists of all combinations of moment tensor descriptors that use the above operands to contract down to a single scalar value such that the formed expression has a level no more than the maximum value. 
 
-Now, consider the radial and angular components as characterized by the $\nu$ and $\mu$ of the particular moment tensor descriptor.
+Accordingly, the number of trainable parameters is heavily dependent on $\textrm{lev}_{\max}$ which scales exponentially.Now, consider the radial and angular components as characterized by the $\nu$ and $\mu$ of the particular moment tensor descriptor.
 
 #### Radial Component of the Moment Tensor Descriptor
 The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of the product of the members of the radial basis set, $Q^{(\Beta)(r_{ij})}$, and the corresponding trainable radial parameters $c^{\Beta} _ {\mu,z_i,z_j}$.
@@ -68,10 +68,10 @@ The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of
 $$f_\mu (r_{ij},z_i,z_j) = \sum ^ {N_o} _ {\Beta = 1} c^{(\Beta)} _ {\mu,z_i,z_j}  Q^{(\Beta)}(r_{ij})$$
 
 The number of members of the radial basis set, $N_o$ is chosen as a model hyperparameter. The basis set is conditionally evaluated based on the chosen cutoff radius and the minimum distance between atoms in the system, using Chebyshev polynomials on the interval $[R_{min}, R_{cut}]$.
-=
+
 $$Q^{(\Beta)}(r_{ij})=  \begin{cases}
     \phi ^{(\Beta)}(|r_{ij}|) (R_{cut} - |r_{ij}|)^2& |r_{ij}| < R_{cut} \\
-    0 & wk
+    0 & |r_{ij}| \geq R_{cut} 
 \end{cases}$$
 
 Where $\phi^(n)$ represents the $n$th Chebyshev polynomial. This generates a Chebyshev polynomial sequence that smoothly decays to zero at the cutoff radius.
@@ -353,9 +353,11 @@ After, resolving issues with the interface, I began to assemble the first traini
 
 However, I first started with a relatively arbitrary distribution of strains and shears to understand the process a bit better.  The process is documented below.
 
-### Format of the MTP
+### Format of the MTP File
 
-First, DFT the results of the DFT calculation are compiled into a single output folder for easier manipulaiton. At this stage, the user needs to select the hyperparameters of the potential that they wish to train ($\text{lev}_{\max}$). As previously explained, the level of the potential and the Chebyshev polynomial in the radial basis sets, are two of the most important hyperparameters. The structure of an MTP and the current values of its trainable parameters are dictated in a text file. In the passive training process, the parameters are updated based on the optimization of the energy, force, and stress errors with respect to the training set. The MLIP package includes several untrained potentials which act as a starting point. Using a $\text{lev}_{max}$ of 8 and 8 members in the radial basis, the potential file resembles the following:
+First, DFT the results of the DFT calculation are compiled into a single output folder for easier manipulaiton. At this stage, the user needs to select the hyperparameters of the potential that they wish to train ($\text{lev}_{\max}$). As previously explained, the level of the potential and the Chebyshev polynomial in the radial basis sets, are two of the most important hyperparameters. The structure of an MTP and the current values of its trainable parameters are dictated in a text file. In the passive training process, the parameters are updated based on the optimization of the energy, force, and stress errors with respect to the training set. The MLIP package includes several untrained potentials which act as a starting point. 
+
+Using a $\text{lev}_{max}$ of 8 and 8 members in the radial basis, the potential file resembles the following:
 
 ```sh
 MTP
@@ -412,8 +414,9 @@ Afterwards, the training of the MTP can be initiated using the mlp binary file w
 /home/zjm/mlip-2/bin/mlp train 08.mtp mlip_input.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
 ```
 
-Since this is a long and highly specific command which I will often use for the rest of the project, I decided to create an MTP command reference for easy access. The above command and MTP future will be stored and explained there instead. It should be attached to this package or is available here: 
+Since this is a long and highly specific command which I will often use for the rest of the project, I decided to create an MTP command reference for easy access. The above command and MTP future will be stored and explained there instead. It should be attached to this package or is available here: https://github.com/RichardZJM/K-MTP-training/blob/master/mtpCommands.md.
 
+When running this command on actual data, 
 
 # References
 https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe
