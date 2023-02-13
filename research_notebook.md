@@ -353,6 +353,8 @@ After, resolving issues with the interface, I began to assemble the first traini
 
 However, I first started with a relatively arbitrary distribution of strains and shears to understand the process a bit better.  The process is documented below.
 
+### Format of the MTP
+
 First, DFT the results of the DFT calculation are compiled into a single output folder for easier manipulaiton. At this stage, the user needs to select the hyperparameters of the potential that they wish to train ($\text{lev}_{\max}$). As previously explained, the level of the potential and the Chebyshev polynomial in the radial basis sets, are two of the most important hyperparameters. The structure of an MTP and the current values of its trainable parameters are dictated in a text file. In the passive training process, the parameters are updated based on the optimization of the energy, force, and stress errors with respect to the training set. The MLIP package includes several untrained potentials which act as a starting point. Using a $\text{lev}_{max}$ of 8 and 8 members in the radial basis, the potential file resembles the following:
 
 ```sh
@@ -379,7 +381,9 @@ alpha_moment_mapping = {0, 10, 11, 12, 13, 14, 15, 16, 17}
 
 This setup yields 26 trainable parameters.
 
-Next, some processing must be applied to the QE outputs to translate the training information into a configuration file which is readable by the MLIP package. This is because, while there is an interface with LAMMPs, the MLIP package makes no assumptions on which quantum chemistry program is used to generate the training sets. Specifically, the training data needs to be assembled with the atomic positions and the resultant energy, force, and stress. The form is as follows:
+### Format of Atomic Configurations
+
+Next, some processing must be applied to the QE outputs to translate the training information into a configuration file which is readable by the MLIP package. This is because, while there is an interface with LAMMPs, the MLIP package makes no assumptions on which quantum chemistry program is used to generate the training sets. Specifically, the training data needs to be assembled with the atomic positions and the resultant energy, force, and stress. The form is as follows, where a list of these configurations is assembled in the text file. 
 
 ```sh
 BEGIN_CFG
@@ -393,19 +397,27 @@ BEGIN_CFG
  AtomData:  id type       cartes_x      cartes_y      cartes_z           fx          fy          fz
              1    0       0.000000      0.000000      0.000000     0.000000    0.000000    0.000000         
  Energy
-        -13.805967180600         # Energy prediction
+        -13.805967180600         # Energy DFT values
  PlusStress:  xx          yy          zz          yz          xz          xy
-         0.99491     0.99491     0.99491    -0.00000     0.00000    -0.00000        #Stress prediction
+         0.99491     0.99491     0.99491    0.00000     0.00000    0.00000        #Stress DFT values
  Feature   EFS_by       Qe
  Feature   mindist      3.856132       
 END_CFG
 ```
+To convert from the form of a QE output to the configuration format python script is used to parse through the QE output. It searches through each one, accounting for configuration with more than 1 atom automatically. The current version, QE-OUTPUT.py, was previously developed by Hao as there is little difference between the functionality he needed and what I need for this step. One point of modification involved the Atom Data id tag. There was initially an issue where the type tag was enumerated from 1 instead of 0, which caused issues with the MTP training which was expecting a single species with type 0.
 
+Afterwards, the training of the MTP can be initiated using the mlp binary file within the mlip package. The command is as follows:
+
+```sh
+/home/zjm/mlip-2/bin/mlp train 08.mtp mlip_input.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
+```
+
+Since this is a long and highly specific command which I will often use for the rest of the project, I decided to create an MTP command reference for easy access. The above command and MTP future will be stored and explained there instead. It should be attached to this package or is available here: 
 
 
 # References
 https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe
-/home/zjm/mlip-2/bin/mlp train 08.mtp mlip_input.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
+
 
 /global/home/hpc5146/mlip-2/bin/mlp train 08.mtp train.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
 
