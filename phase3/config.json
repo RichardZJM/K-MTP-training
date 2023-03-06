@@ -1,0 +1,26 @@
+{
+  "1AtomDFTStrainRange": [0.85, 1.16],
+  "1AtomDFTStrainStep": 0.025,
+  "1AtomDFTShearRange": [0.85, 1.15],
+  "1AtomDFTShearStep": 0.2,
+  "2AtomMDTemperatures": [100, 300, 400, 600],
+  "2AtomMDStrainRange": [0.95, 1.06],
+  "2AtomMDStrainStep": 0.02,
+  "mlpFile": "/global/home/hpc5146/mlip-2/bin/mlp ",
+  "root": "/global/home/hpc5146/Projects/K-MTP-training/phase3",
+  "slurmParam": {
+    "account": "def-hpcg1725",
+    "partition": "reserved",
+    "qos": "reserved"
+  },
+  "dftJobParam": {
+    "cpus-per-task": "3",
+    "ntasks": "1",
+    "time": "0-02:00"
+  },
+  "mdJobParam": {
+    "cpus-per-task": "3",
+    "ntasks": "1",
+    "time": "0-02:00"
+  }
+}
