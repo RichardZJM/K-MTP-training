@@ -111,7 +111,7 @@ try:
             f.write(contentNew)
             f.truncate()
         
-        if (not dryRun): os.system("sbatch" + jobName)
+        if (not dryRun): os.system("sbatch " + jobName)
     
     for shear in DFT1AtomShears:
         folderName = DFT1AtomShearFolder + "/1AtomDFTshear" + str(round(shear,2))
@@ -149,7 +149,7 @@ try:
             f.write(contentNew)
             f.truncate()
         
-            if (not dryRun): os.system("sbatch" + jobName)
+            if (not dryRun): os.system("sbatch " + jobName)
         
     for strain in DFT2AtomStrains:
         folderName = DFT2AtomStrainFolder + "/2AtomDFTstrain" + str(round(strain,2))
@@ -186,7 +186,7 @@ try:
             f.write(contentNew)
             f.truncate()
         
-        if (not dryRun): os.system("sbatch" + jobName)
+        if (not dryRun): os.system("sbatch " + jobName)
         
     
 except Exception as e:
