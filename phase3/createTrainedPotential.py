@@ -57,11 +57,11 @@ try:
     
     DFT1AtomStrainFolder = initalGenerationFolder + "/1AtomDFTStrain"             #Same for all the different types of DFT runs
     DFT1AtomShearFolder = initalGenerationFolder + "/1AtomDFTShear"
-    DFT2AtomExpansionFolder = initalGenerationFolder + "/2AtomDFTStrain"
+    DFT2AtomStrainFolder = initalGenerationFolder + "/2AtomDFTStrain"
     
     if not os.path.exists(DFT1AtomStrainFolder): os.mkdir(DFT1AtomStrainFolder)
     if not os.path.exists(DFT1AtomShearFolder): os.mkdir(DFT1AtomShearFolder)
-    if not os.path.exists(DFT2AtomExpansionFolder): os.mkdir(DFT2AtomExpansionFolder)
+    if not os.path.exists(DFT2AtomStrainFolder): os.mkdir(DFT2AtomStrainFolder)
     
     # Now. we generate specifications of each run we will be making
     
@@ -128,7 +128,7 @@ try:
         with open (inputName, 'r+' ) as f:
             content = f.read()
             contentNew = re.sub("\$aaa", str(shear * params["baseLatticeParameter"] /2), content)      #substitute lattice vector marker with the lattice vector
-            contentNew = re.sub("\$bbb", str(params["baseLatticeParameter"] /2), content)      #substitute lattice vector marker with the lattice vector
+            contentNew = re.sub("\$bbb", str(params["baseLatticeParameter"] /2), contentNew)      #substitute lattice vector marker with the lattice vector
             contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
             contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
             f.seek(0)
@@ -152,7 +152,7 @@ try:
             if (not dryRun): os.system("sbatch" + jobName)
         
     for strain in DFT2AtomStrains:
-        folderName = DFT1AtomStrainFolder + "/2AtomDFTstrain" + str(round(strain,2))
+        folderName = DFT2AtomStrainFolder + "/2AtomDFTstrain" + str(round(strain,2))
         inputName = folderName + "/2AtomDFTstrain" + str(round(strain,2)) + ".in"
         jobName = folderName + "/2AtomDFTstrain" + str(round(strain,2)) + ".qsub"
         outputName = DFToutputFolder + "/2AtomDFTstrain" + str(round(strain,2)) + ".out"   

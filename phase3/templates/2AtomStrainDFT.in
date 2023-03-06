@@ -1,0 +1,39 @@
+&control
+    disk_io = 'none',
+    prefix = '2strainK',
+    calculation ='scf',
+    outdir = './out',
+    pseudo_dir = '$pseudo_dir'
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,
+    nat=2,
+    ntyp=1,
+    ecutwfc=60,
+    occupations='smearing',
+    smearing = 'gaussian',
+    degauss = 0.01,
+
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &cell
+ /
+CELL_PARAMETERS
+   $aaa1 $aaa2 $aaa3
+   -$aaa4 $aaa5 $aaa6
+   -$aaa7 -$aaa8 $aaa9
+ATOMIC_SPECIES
+K  39.0983 $pseudo
+ATOMIC_POSITIONS crystal
+K  0   0   0
+K 0.33 0.33 0.33
+K_POINTS automatic
+8 8 8 0 0 0
