@@ -5,10 +5,14 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=$cpus
 #SBATCH --job-name=$job
-#SBATCH --output=out.run
+#SBATCH --output=$outfile
 #SBATCH --time=$time # time (DD-HH:MM)
 
 module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
 module load    quantumespresso/6.6
 
 mpirun -np $cpus pw.x < $in > $out
+
+touch $root/progress/$job
+
+python $next $root

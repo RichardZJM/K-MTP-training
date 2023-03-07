@@ -2,7 +2,7 @@
     disk_io = 'none',
     prefix = 'shearK',
     calculation ='scf',
-    outdir = './out',
+    outdir = '$out',
     pseudo_dir = '$pseudo_dir'
     tstress = .true.
     tprnfor = .true.

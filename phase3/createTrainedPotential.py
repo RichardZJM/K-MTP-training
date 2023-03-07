@@ -52,12 +52,12 @@ else:
 
 # Try to look for missing values in the dict or issues in the formating.
 try:
-    initalGenerationFolder = rootFolder + "/initalGenerationDFT"   # First we generate a folder to hold all the inital DFT runs
-    if not os.path.exists(initalGenerationFolder): os.mkdir(initalGenerationFolder)
+    initialGenerationFolder = rootFolder + "/initialGenerationDFT"   # First we generate a folder to hold all the inital DFT runs
+    if not os.path.exists(initialGenerationFolder): os.mkdir(initialGenerationFolder)
     
-    DFT1AtomStrainFolder = initalGenerationFolder + "/1AtomDFTStrain"             #Same for all the different types of DFT runs
-    DFT1AtomShearFolder = initalGenerationFolder + "/1AtomDFTShear"
-    DFT2AtomStrainFolder = initalGenerationFolder + "/2AtomDFTStrain"
+    DFT1AtomStrainFolder = initialGenerationFolder + "/1AtomDFTStrain"             #Same for all the different types of DFT runs
+    DFT1AtomShearFolder = initialGenerationFolder + "/1AtomDFTShear"
+    DFT2AtomStrainFolder = initialGenerationFolder + "/2AtomDFTStrain"
     
     if not os.path.exists(DFT1AtomStrainFolder): os.mkdir(DFT1AtomStrainFolder)
     if not os.path.exists(DFT1AtomShearFolder): os.mkdir(DFT1AtomShearFolder)
@@ -73,7 +73,13 @@ try:
     template1AtomStrainDFT = templatesFolder + "/1AtomStrainDFT.in"
     template1AtomShearDFT = templatesFolder + "/1AtomShearDFT.in"
     template2AtomStrainDFT = templatesFolder + "/2AtomStrainDFT.in"
-    templateDFTJob = templatesFolder + "/jobDFT.qsub"
+    templateDFTJob = templatesFolder + "/jobInitialDFT.qsub"
+    
+    scriptsFolder = rootFolder + "/pythonScripts"               
+    followUpScript = scriptsFolder + "runMDCases.py"
+    
+    progressFolder = rootFolder + "/progress"
+    os.mkdir(progressFolder)
     
     # Generate and submit the 1Atom Strain runs
     for strain in DFT1AtomStrains:
@@ -93,6 +99,7 @@ try:
             contentNew = re.sub("\$aaa", str(strain * params["baseLatticeParameter"] /2), content)      #substitute lattice vector marker with the lattice vector
             contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
             contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+            contentNew = re.sub("\$out", folderName, contentNew)  
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -100,6 +107,7 @@ try:
         with open (jobName, 'r+' ) as f:
             content = f.read()
             contentNew = re.sub("\$job", "Strain" + str(strain), content) 
+            contentNew = re.sub("\$outfile", folderName + "out.run",contentNew) 
             contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
             contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
             contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
@@ -107,6 +115,8 @@ try:
             contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
             contentNew = re.sub("\$in", inputName, contentNew)      
             contentNew = re.sub("\$out", outputName, contentNew)
+            contentNew = re.sub("\$next", followUpScript, contentNew)
+            contentNew = re.sub("\$root", rootFolder, contentNew)
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -131,6 +141,7 @@ try:
             contentNew = re.sub("\$bbb", str(params["baseLatticeParameter"] /2), contentNew)      #substitute lattice vector marker with the lattice vector
             contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
             contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+            contentNew = re.sub("\$out", folderName, contentNew)  
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -138,6 +149,7 @@ try:
         with open (jobName, 'r+' ) as f:
             content = f.read()
             contentNew = re.sub("\$job", "Shear" + str(strain), content) 
+            contentNew = re.sub("\$outfile", folderName + "out.run",contentNew) 
             contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
             contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
             contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
@@ -145,6 +157,8 @@ try:
             contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
             contentNew = re.sub("\$in", inputName, contentNew)      
             contentNew = re.sub("\$out", outputName, contentNew)
+            contentNew = re.sub("\$next", followUpScript, contentNew)
+            contentNew = re.sub("\$root", rootFolder, contentNew)
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -168,6 +182,7 @@ try:
             contentNew = re.sub("\$aaa", str(strain * params["baseLatticeParameter"] /2), content)      #substitute lattice vector marker with the lattice vector
             contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
             contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+            contentNew = re.sub("\$out", folderName, contentNew)  
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -175,6 +190,7 @@ try:
         with open (jobName, 'r+' ) as f:
             content = f.read()
             contentNew = re.sub("\$job", "2Strain" + str(strain), content) 
+            contentNew = re.sub("\$outfile", folderName + "out.run",contentNew) 
             contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
             contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
             contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
@@ -182,12 +198,13 @@ try:
             contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
             contentNew = re.sub("\$in", inputName, contentNew)      
             contentNew = re.sub("\$out", outputName, contentNew)
+            contentNew = re.sub("\$next", followUpScript, contentNew)
+            contentNew = re.sub("\$root", rootFolder, contentNew)
             f.seek(0)
             f.write(contentNew)
             f.truncate()
         
         if (not dryRun): os.system("sbatch " + jobName)
-        
     
 except Exception as e:
     print("An error has occur during the generation of the initial files. Verify the formating of your JSON config file.")
