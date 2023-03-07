@@ -47,6 +47,7 @@ DFToutputFolder = rootFolder + "/outputDFT"
 templatesFolder = rootFolder + "/templates"
 scriptsFolder = rootFolder + "/pythonScripts"   
 mtpFolder = rootFolder + "/mtpProperties"
+slurmRunFolder = rootFolder + "/slurmRunOutputs"
 os.chdir(rootFolder)
 
 #region Inital Generation
@@ -60,6 +61,8 @@ else:
     pass
     # RUN NEXT PART OF THE SCRIPT
     # quit()
+if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
+
 
 # Try to look for missing values in the dict or issues in the formating.
 
@@ -247,6 +250,7 @@ with open (minddistJob, 'r+' ) as f:
             contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
             contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
             contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+            contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -273,6 +277,7 @@ with open (trainJob, 'r+' ) as f:
             contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
             contentNew = re.sub("\$mtp", mtpFile, contentNew)
             contentNew = re.sub("\$train", trainingConfigs, contentNew)
+            contentNew = re.sub("\$outfile", slurmRunFolder  + "/train.out", contentNew)
             f.seek(0)
             f.write(contentNew)
             f.truncate()
@@ -281,7 +286,7 @@ exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
 if(exitCode):
     print("The mindist call has failed. Potential may be unstable. Exiting...")
     quit()
-
+os.remove(trainJob)
 
 #endregion
 

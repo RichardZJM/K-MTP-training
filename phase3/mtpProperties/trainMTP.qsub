@@ -4,8 +4,8 @@
 #SBATCH --qos=privileged
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --job-name=mtp train
-#SBATCH --output=./mtpProperties/out.run
+#SBATCH --job-name=train
+#SBATCH --output=/global/home/hpc5146/Projects/K-MTP-training/phase3/slurmRunOutputs/train.out
 #SBATCH --time=00-00:10 # time (DD-HH:MM)
 #SBATCH --wait
 

@@ -4,8 +4,8 @@
 #SBATCH --qos=$qos
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --job-name=mtp train
-#SBATCH --output=./mtpProperties/out.run
+#SBATCH --job-name=train
+#SBATCH --output=$outfile
 #SBATCH --time=00-00:10 # time (DD-HH:MM)
 #SBATCH --wait
 
