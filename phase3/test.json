@@ -8,7 +8,7 @@
   "2AtomMDTemperatures": [100, 300, 400, 600],
   "2AtomMDStrainRange": [0.95, 1.06],
   "2AtomMDStrainStep": 0.02,
-  "mlpFile": "/global/home/hpc5146/mlip-2/bin/mlp",
+  "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
   "pseudopotentialDirectory": "/global/home/hpc5146",
   "pseudopotential": "K.pbe-mt_fhi.UPF",
   "mtpFile": "/global/home/hpc5146/Projects/K-MTP-training/phase3/templates/pot.mtp",

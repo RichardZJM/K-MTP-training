@@ -350,7 +350,6 @@ def QE_OUTPUT():
                         #print(Stress_S)
                         #print(Energy)
     
-    print('totat number of processed configurations', ' = ', Total)
-    subprocess.call("/global/home/hpc5146/mlip-2/bin/mlp mindist train.cfg", shell=True)
+    print("Total number of processed configurations = " +  str(Total))
 
 QE_OUTPUT()

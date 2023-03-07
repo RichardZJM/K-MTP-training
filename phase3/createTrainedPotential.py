@@ -122,7 +122,7 @@ for strain in DFT1AtomStrains:
         f.write(contentNew)
         f.truncate()
         
-if (not dryRun): subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
+    if (not dryRun): subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
 
 for shear in DFT1AtomShears:
     folderName = DFT1AtomShearFolder + "/1AtomDFTshear" + str(round(shear,2))
@@ -207,10 +207,33 @@ for strain in DFT2AtomStrains:
         
         if (not dryRun): subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
 
-print(subprocesses)
 
-exitCodes = [p.wait() for p in subprocesses]
-print(exitCodes)
+exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
+subprocesses = []
+failure = bool(sum(exitCodes))
+if failure:
+    print("One or more of the inital DFT runs has been unsuccessful. Exiting now...")
+    quit()
+    
+    
+ #-----------------------------------------------------------------------
+ # Start of the active learning loop
+ #-----------------------------------------------------------------------   
+    
+    
+    
+extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
+os.chdir(DFToutputFolder)
+exitCode = subprocess.Popen(["python", extractionScript]).wait()
+exitCode = subprocess.Popen([params["mlpBinary"], "mindist", "train.cfg"]).wait()
+os.chdir(rootFolder)
+
+
+if(exitCode):
+    print("The mindist call has failed. Potential may be unstable. Exiting...")
+    quit()
+
+
 # except Exception as e:
 #     print("An error has occur during the generation of the initial files. Verify the formating of your JSON config file.")
 #     raise Exception(e)

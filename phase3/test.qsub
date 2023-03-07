@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --account=def-hpcg1725
+#SBATCH --partition=reserved
+#SBATCH --qos=privileged
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --job-name=test
+#SBATCH --output=out.run
+#SBATCH --time=00-00:03 # time (DD-HH:MM)
+#SBATCH --wait
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+
+mpirun -np 1 /global/home/hpc5146/mlip-2/bin/mlp mindist train.cfg
