@@ -220,19 +220,28 @@ if failure:
  #endregion    
 
 #region Active Learning Loop
-#=======================================================================
-# Start of the active learning loop
-#=======================================================================   
 
 # Get some useful file locations for the active learning
 mtpFile = mtpFolder + "/pot.mtp"
 trainingConfigs = mtpFolder + "/train.cfg"
+iniFile = mtpFolder + "/mlip.ini"
+alsFile = mtpFolder + "/state.als"
 
+# Prepare mlip.ini
+iniTemplate = templatesFolder + "/mlip.ini"
+shutil.copyfile(iniTemplate, iniFile)
+with open (iniFile, 'r+' ) as f:
+            content = f.read()
+            contentNew = re.sub("\$mtp", params["mlpBinary"], content) 
+            contentNew = re.sub("\$select", str(params["selectThreshold"]), contentNew)
+            contentNew = re.sub("\$break", str(params["breakThreshold"]), contentNew)
+            contentNew = re.sub("\$als", alsFile, contentNew)
+            f.seek(0)
+            f.write(contentNew)
+            f.truncate()
+quit()
 
-    
-#-----------------------------------------------------------------------
-# Extraction of results from DFT runs and calculation of mindists
-#-----------------------------------------------------------------------   
+#region Extraction of DFT Results and Training
 extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
 minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
 minddistJob = DFToutputFolder + "/runMinDist.qsub"
@@ -287,7 +296,12 @@ if(exitCode):
     print("The mindist call has failed. Potential may be unstable. Exiting...")
     quit()
 os.remove(trainJob)
+#endregion
 
+#region Generating Appropriate MD Runs
+
+
+#endregion
 #endregion
 
 # except Exception as e:

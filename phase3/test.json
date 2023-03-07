@@ -8,6 +8,8 @@
   "2AtomMDTemperatures": [100, 300, 400, 600],
   "2AtomMDStrainRange": [0.95, 1.06],
   "2AtomMDStrainStep": 0.02,
+  "selectThreshold": 2.1,
+  "breakThreshold": 10.0,
   "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
   "pseudopotentialDirectory": "/global/home/hpc5146",
   "pseudopotential": "K.pbe-mt_fhi.UPF",
