@@ -56,13 +56,16 @@ os.chdir(rootFolder)
 
 logFile = rootFolder + "/createTrainedPotential.log"
 
-def printAndLog(message: str) -> None:
+def printAndLog(message):
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     datedMessage = dt_string + "   " + message
     print(datedMessage)
-    with open(logFile, "a") as myfile:  myfile.write(datedMessage)
-    
+    with open(logFile, "a") as myfile:  myfile.write(datedMessage + "\n")
+
+printAndLog("=============================================================")
+printAndLog("Starting New Potential Training !!!")
+printAndLog("=============================================================")
 
 if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
 if not os.path.exists(mdFolder): os.mkdir(mdFolder)
@@ -240,7 +243,7 @@ outConfigs = mtpFolder + "/out.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
-'''
+
 #region Generate an state als
 calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
 calcGradeJob = mtpFolder + "/calcGrade.qsub"
@@ -263,9 +266,9 @@ exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
 if(exitCode):
     printAndLog("The calc grade call has failed. Exiting...")
     quit()
+printAndLog("Generated new ALS file")
 os.remove(calcGradeJob)
 #endregion
-'''
 
 #Prepare MD Runs
 mdRunTemplate = templatesFolder + "/mdRun.in"
@@ -354,7 +357,7 @@ for numAtom in numAtomList:
     #endregion
     
     for i in range(params["maxIterPerNatom"]):
-        printAndLog(numAtom + " atoms, iteration: " + str(i+1))
+        printAndLog(str(numAtom) + " atoms, iteration: " + str(i+1) + " of up to " + str(params["maxIterPerNatom"]))
         
         #region Extraction of DFT Results and Training
         extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
@@ -435,6 +438,8 @@ for numAtom in numAtomList:
             # quit()
         printAndLog("MD Runs Completed")
         
+        os.remove(preselectedConfigs)
+        os.remove(selectedConfigs)
         with open(preselectedConfigs,'wb') as master:
         #Walk through the tree of directories in MD Runs
         #All child directories are run files which have no further children
@@ -447,6 +452,7 @@ for numAtom in numAtomList:
                     childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
                     with open(childPreselectedConfigName,'rb') as child:
                         shutil.copyfileobj(child, master)
+                    os.remove(childPreselectedConfigName)
                 except:
                     completedRuns += 1
         printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
@@ -481,7 +487,7 @@ for numAtom in numAtomList:
         
         
         #region Assemble and run diff DFT Runs
-        printAndLog("Commencing diff DFT Runs.")
+        
         superCellVectorsList = []
         numAtomsList = [] 
         posAtomsList = []
@@ -504,7 +510,8 @@ for numAtom in numAtomList:
                     configAtomicPositions[j] = np.array(fileLines[i+8+j].split(),dtype=float)[2:5]
                 posAtomsList.append(configAtomicPositions)
         
-        
+        printAndLog("There are " + str(len(numAtomsList)) + " new diff DFT configurations.")
+        printAndLog("Commencing diff DFT Runs.")
         # We can generate the input and job submission files in the usual way now
         dftRunTemplateLocation = templatesFolder + "/diffDFT.in"          #location of dft run, data input, and job templates 
         jobTemplateLocation = templatesFolder + "/dftRun.qsub"

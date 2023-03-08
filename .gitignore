@@ -18,4 +18,6 @@ slurmRunOutputs
 mdLearningRuns
 mtpProperties
 diffDFT
-phase3/mtpProperties/pot.mtp
+**/pot.mtp
+**/CRASH
+**/createTrainedPotential.log
