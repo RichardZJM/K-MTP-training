@@ -243,33 +243,6 @@ outConfigs = mtpFolder + "/out.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
-
-#region Generate an state als
-calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
-calcGradeJob = mtpFolder + "/calcGrade.qsub"
-shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
-with open (calcGradeJob, 'r+' ) as f:
-        content = f.read()
-        contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-        contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-        contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
-        contentNew = re.sub("\$mtp", mtpFile, contentNew)
-        contentNew = re.sub("\$als", alsFile, contentNew)
-        contentNew = re.sub("\$train", trainingConfigs, contentNew)
-        contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
-        f.seek(0)
-        f.write(contentNew)
-        f.truncate()
-exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
-if(exitCode):
-    printAndLog("The calc grade call has failed. Exiting...")
-    quit()
-printAndLog("Generated new ALS file")
-os.remove(calcGradeJob)
-#endregion
-
 #Prepare MD Runs
 mdRunTemplate = templatesFolder + "/mdRun.in"
 dataTemplate = templatesFolder + "/mdRun.dat"
@@ -391,6 +364,32 @@ for numAtom in numAtomList:
         # Copy the newly formed training config to the mtpProperties
         os.system("mv train.cfg " + trainingConfigs)
         os.chdir(rootFolder)
+            
+        #region Generate an state als
+        calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
+        calcGradeJob = mtpFolder + "/calcGrade.qsub"
+        shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
+        with open (calcGradeJob, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
+                contentNew = re.sub("\$mtp", mtpFile, contentNew)
+                contentNew = re.sub("\$als", alsFile, contentNew)
+                contentNew = re.sub("\$train", trainingConfigs, contentNew)
+                contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+        exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
+        if(exitCode):
+            printAndLog("The calc grade call has failed. Exiting...")
+            quit()
+        printAndLog("Generated new ALS file")
+        os.remove(calcGradeJob)
+        #endregion
 
         # Generate and run train job file (job file must be used to avoid clogging login nodes)
         trainJobTemplate = templatesFolder + "/trainMTP.qsub"
@@ -485,9 +484,7 @@ for numAtom in numAtomList:
         printAndLog("Diff DFT configurations selected.")
         #endregion
         
-        
         #region Assemble and run diff DFT Runs
-        
         superCellVectorsList = []
         numAtomsList = [] 
         posAtomsList = []
@@ -583,7 +580,7 @@ for numAtom in numAtomList:
         else: 
             pass
         printAndLog("Diff DFT calculations complete. Starting next iteration.")
-        quit()
+        # quit()
         #endregion
         
 #endregion

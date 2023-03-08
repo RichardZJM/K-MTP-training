@@ -23,7 +23,7 @@
     "qos": "privileged"
   },
   "dftJobParam": {
-    "cpus": "3",
+    "cpus": "10",
     "time": "0-02:00"
   },
   "mdJobParam": {

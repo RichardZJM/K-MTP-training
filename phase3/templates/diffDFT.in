@@ -11,8 +11,8 @@
     ibrav=0,
     nat=$nnn,
     ntyp=1,
-    vdw_corr='XDM'
-    ecutwfc=60,
+    vdw_corr='grimme-d2'
+    ecutwfc=50,
     occupations='smearing',
     smearing = 'gaussian',
     degauss = 0.01,
@@ -37,4 +37,4 @@ K  39.0983 $pseudo
 ATOMIC_POSITIONS crystal
    $aaa
 K_POINTS automatic
-6 6 6 0 0 0
+4 4 4 0 0 0
