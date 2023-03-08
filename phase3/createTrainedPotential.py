@@ -19,8 +19,8 @@ import subprocess
 # As QE and LAMMPS runs must be submitted through the coumpute nodes, we need to record when the last of a QE run is completed. 
 # This done by adding a completion file to a directory. The end of each run will count the number of completed file to verify whether all runs have completed.
 
+#region Folder Setup
 # A configuration file can be specified from the user to get model hyperparameters
-
 configFile = "config.json"           # First system argument, generates and performs run if specified
 try:
      if sys.argv[1] != None: configFile = sys.argv[1];
@@ -48,27 +48,21 @@ templatesFolder = rootFolder + "/templates"
 scriptsFolder = rootFolder + "/pythonScripts"   
 mtpFolder = rootFolder + "/mtpProperties"
 slurmRunFolder = rootFolder + "/slurmRunOutputs"
+mdFolder = rootFolder + "/mdLearningRuns"
+initialGenerationFolder = rootFolder + "/initialGenerationDFT" 
 os.chdir(rootFolder)
 
-#region Inital Generation
-#=======================================================================
-# Generation of initial DFT results
-#=======================================================================   
-# If there are already inital DFT results, simply pass and continue with the learning step
-
+if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
+if not os.path.exists(mdFolder): os.mkdir(mdFolder)
+if not os.path.exists(initialGenerationFolder): os.mkdir(initialGenerationFolder)
 if not os.path.exists(DFToutputFolder): os.mkdir(DFToutputFolder)
 else: 
     pass
     # RUN NEXT PART OF THE SCRIPT
     # quit()
-if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
+#endregion
 
-
-# Try to look for missing values in the dict or issues in the formating.
-
-initialGenerationFolder = rootFolder + "/initialGenerationDFT"   # First we generate a folder to hold all the inital DFT runs
-if not os.path.exists(initialGenerationFolder): os.mkdir(initialGenerationFolder)
-
+#region Inital Generation
 DFT1AtomStrainFolder = initialGenerationFolder + "/1AtomDFTStrain"             #Same for all the different types of DFT runs
 DFT1AtomShearFolder = initialGenerationFolder + "/1AtomDFTShear"
 DFT2AtomStrainFolder = initialGenerationFolder + "/2AtomDFTStrain"
@@ -227,6 +221,11 @@ trainingConfigs = mtpFolder + "/train.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
+mdRunTemplate = templatesFolder + "/mdRun.in"
+dataTemplate = templatesFolder + "/mdRun.dat"
+jobTemplate = templatesFolder + "/mdRun.qsub"
+
+
 # Prepare mlip.ini
 iniTemplate = templatesFolder + "/mlip.ini"
 shutil.copyfile(iniTemplate, iniFile)
@@ -239,70 +238,133 @@ with open (iniFile, 'r+' ) as f:
             f.seek(0)
             f.write(contentNew)
             f.truncate()
-quit()
 
-#region Extraction of DFT Results and Training
-extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
-minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
-minddistJob = DFToutputFolder + "/runMinDist.qsub"
+#Load the MDRuns to use
+temperatures = params["MDTemperatures"]
+strains = np.arange(params["MDStrainRange"][0],params["MDStrainRange"][1],params["MDStrainStep"] )
+numAtomList = params["MDNumberAtoms"]
+baseline = params["baseLatticeParameter"]
 
-# Extract the outputs from the individual files and assemble a training config file
-# Then, run mindidst on it
-os.chdir(DFToutputFolder)
-exitCode = subprocess.Popen(["python", extractionScript]).wait()
-shutil.copyfile(minddistJobTemplate, minddistJob)
+for numAtom in numAtomList:
+    
+    #region Generate MDRuns
+    for strain in strains:
+        for temperature in temperatures:
+            # Generate the necessary folder and file names
+            folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+            inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+            dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+            jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+            outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+            
+            # Generate a new directory for each MD Run 
+            if not os.path.exists(folderName): os.mkdir(folderName)
+           
+            # Copy the templates for the LAMMPS input and data files
+            shutil.copyfile(mdRunTemplate, inputName)
+            shutil.copyfile(dataTemplate, dataName)
+            shutil.copyfile(jobTemplate, jobName)
+            
+            # Make modifications to the LAMMPS input using regex substitutions
+            with open (inputName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$ttt", str(temperature), content)      #substitute temperature marker with the temperature
+                contentNew = re.sub("\$ddd", dataName, contentNew)       #subsitute data file name marker with the data file name
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+                
+            # Make modifications to the data file using regex substitutions
+            with open (dataName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$aaa", str(baseline*strain), content)      #substitute lattice parameter marker with the strained cell dimensions
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+                
+            # Make modifications to the job file using regex substitutions
+            with open (jobName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + str(strain), content) 
+                contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+                contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
+                contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
+                contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
+                contentNew = re.sub("\$in", inputName, contentNew)      
+                contentNew = re.sub("\$out", outputName, contentNew)
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+            
+    #endregion
 
-# Generate and run mindist job file (job file must be used to avoid clogging login nodes)
-with open (minddistJob, 'r+' ) as f:
-            content = f.read()
-            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-            contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
-            f.seek(0)
-            f.write(contentNew)
-            f.truncate()
-        
-exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
-if(exitCode):
-    print("The mindist call has failed. Potential may be unstable. Exiting...")
+
     quit()
+    #region Extraction of DFT Results and Training
+    extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
+    minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
+    minddistJob = DFToutputFolder + "/runMinDist.qsub"
 
-os.remove(minddistJob)
-# Copy the newly formed training config to the mtpProperties
-os.system("mv train.cfg " + trainingConfigs)
-os.chdir(rootFolder)
+    # Extract the outputs from the individual files and assemble a training config file
+    # Then, run mindidst on it
+    os.chdir(DFToutputFolder)
+    exitCode = subprocess.Popen(["python", extractionScript]).wait()
+    shutil.copyfile(minddistJobTemplate, minddistJob)
 
-# Generate and run train job file (job file must be used to avoid clogging login nodes)
-trainJobTemplate = templatesFolder + "/trainMTP.qsub"
-trainJob = mtpFolder + "/trainMTP.qsub"
-shutil.copyfile(trainJobTemplate, trainJob)
-with open (trainJob, 'r+' ) as f:
-            content = f.read()
-            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-            contentNew = re.sub("\$mtp", mtpFile, contentNew)
-            contentNew = re.sub("\$train", trainingConfigs, contentNew)
-            contentNew = re.sub("\$outfile", slurmRunFolder  + "/train.out", contentNew)
-            f.seek(0)
-            f.write(contentNew)
-            f.truncate()
+    # Generate and run mindist job file (job file must be used to avoid clogging login nodes)
+    with open (minddistJob, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+            
+    exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
+    if(exitCode):
+        print("The mindist call has failed. Potential may be unstable. Exiting...")
+        quit()
 
-exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
-if(exitCode):
-    print("The mindist call has failed. Potential may be unstable. Exiting...")
-    quit()
-os.remove(trainJob)
-#endregion
+    os.remove(minddistJob)
+    # Copy the newly formed training config to the mtpProperties
+    os.system("mv train.cfg " + trainingConfigs)
+    os.chdir(rootFolder)
 
-#region Generating Appropriate MD Runs
+    # Generate and run train job file (job file must be used to avoid clogging login nodes)
+    trainJobTemplate = templatesFolder + "/trainMTP.qsub"
+    trainJob = mtpFolder + "/trainMTP.qsub"
+    shutil.copyfile(trainJobTemplate, trainJob)
+    with open (trainJob, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                contentNew = re.sub("\$mtp", mtpFile, contentNew)
+                contentNew = re.sub("\$train", trainingConfigs, contentNew)
+                contentNew = re.sub("\$outfile", slurmRunFolder  + "/train.out", contentNew)
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+
+    exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
+    if(exitCode):
+        print("The mindist call has failed. Potential may be unstable. Exiting...")
+        quit()
+    os.remove(trainJob)
+    #endregion
+
+    #region Generating Appropriate MD Runs
 
 
-#endregion
-#endregion
+    #endregion
+    #endregion
 
 # except Exception as e:
 #     print("An error has occur during the generation of the initial files. Verify the formating of your JSON config file.")
