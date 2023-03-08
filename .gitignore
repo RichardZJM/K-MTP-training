@@ -16,6 +16,4 @@ initialGenerationDFT
 out.run
 slurmRunOutputs
 mdLearningRuns
-phase3/mtpProperties/mlip.ini
-phase3/mtpProperties/out.cfg
-phase3/mtpProperties/state.als
+mtpProperties

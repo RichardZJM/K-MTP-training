@@ -218,11 +218,13 @@ if failure:
 mtpFile = mtpFolder + "/pot.mtp"
 trainingConfigs = mtpFolder + "/train.cfg"
 preselectedConfigs = mtpFolder + "/preselected.cfg"
+selectedConfigs = mtpFolder + "/selected.cfg"
 diffConfigs = mtpFolder + "/diff.cfg"
 outConfigs = mtpFolder + "/out.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
+'''
 # Generate an state als
 calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
 calcGradeJob = mtpFolder + "/calcGrade.qsub"
@@ -241,15 +243,14 @@ with open (calcGradeJob, 'r+' ) as f:
         f.seek(0)
         f.write(contentNew)
         f.truncate()
-            
 exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
 if(exitCode):
     print("The calc grade call has failed. Exiting...")
     quit()
 os.remove(calcGradeJob)
+'''
 
-
-#Praper MD Runs
+#Prepare MD Runs
 mdRunTemplate = templatesFolder + "/mdRun.in"
 dataTemplate = templatesFolder + "/mdRun.dat"
 jobTemplate = templatesFolder + "/mdRun.qsub"
@@ -331,21 +332,69 @@ for numAtom in numAtomList:
             
     #endregion
     
+    '''
     for strain in strains:
         for temperature in temperatures:
             folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
             jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
             subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
-
+    '''
+    
+    #region Assemble Preselected and Generate Diff CFG
     exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
     os.chdir(rootFolder)
     subprocesses = []
     
     if bool(sum(exitCodes)):
-        print("Number of runs with preselected configurations: " + str(sum(exitCodes)))
-        quit()  
-    quit()
+        pass
+    else: 
+        print("Active training of " + str(numAtom) + " has been completed!")
+        # continue
+        # quit()
     
+    with open(preselectedConfigs,'wb') as master:
+    #Walk through the tree of directories in MD Runs
+    #All child directories are run files which have no further children
+        completedRuns = 0
+        runs = 0
+        for directory, subdir, files in os.walk(mdFolder):        
+            if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
+            runs +=1
+            try: 
+                childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
+                with open(childPreselectedConfigName,'rb') as child:
+                    shutil.copyfileobj(child, master)
+            except:
+                completedRuns += 1
+    print("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
+    
+    # Generate the diff cfg
+    selectAddJobTemplate = templatesFolder + "/selectAdd.qsub"
+    selectAddJob = mtpFolder + "/selectAdd.qsub"
+    shutil.copyfile(selectAddJobTemplate, selectAddJob)
+    with open (selectAddJob, 'r+' ) as f:
+            content = f.read()
+            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+            contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
+            contentNew = re.sub("\$mtp", mtpFile, contentNew)
+            contentNew = re.sub("\$als", alsFile, contentNew)
+            contentNew = re.sub("\$train", trainingConfigs, contentNew)
+            contentNew = re.sub("\$preselected", preselectedConfigs, contentNew)
+            contentNew = re.sub("\$selected", selectedConfigs, contentNew)
+            contentNew = re.sub("\$diff", diffConfigs, contentNew)
+            f.seek(0)
+            f.write(contentNew)
+            f.truncate()
+    exitCode = subprocess.Popen(["sbatch", selectAddJob]).wait()
+    if(exitCode):
+        print("The calc grade call has failed. Exiting...")
+        quit()
+    os.remove(selectAddJob)
+    #endregion
+    quit()
     
     #region Extraction of DFT Results and Training
     extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
