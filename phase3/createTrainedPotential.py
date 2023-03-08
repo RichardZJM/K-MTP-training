@@ -340,9 +340,9 @@ for numAtom in numAtomList:
     exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
     os.chdir(rootFolder)
     subprocesses = []
-    failure = bool(sum(exitCodes))
-    if failure:
-        print("One or more of the md runs has been unsuccessful. Exiting now...")
+    
+    if bool(sum(exitCodes)):
+        print("Number of runs with preselected configurations: " + str(sum(exitCodes)))
         quit()  
     quit()
     
