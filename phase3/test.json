@@ -9,7 +9,7 @@
   "MDTemperatures": [100, 300, 400, 600],
   "MDStrainRange": [0.95, 1.06],
   "MDStrainStep": 0.02,
-  "selectThreshold": 2.1,
+  "selectThreshold": 1.1,
   "breakThreshold": 10.0,
   "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
   "pseudopotentialDirectory": "/global/home/hpc5146",

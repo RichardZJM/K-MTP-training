@@ -32,7 +32,7 @@ try:
     f = open(configFile)
     params = json.load(f)
 except:
-    raise Exception(configFile + "not found or not in JSON format.")
+    raise Exception(configFile + " not found or not in JSON format.")
 
 dryRun = False           # Second argument. Performs dry run.
 try:
@@ -217,20 +217,49 @@ if failure:
 # Get some useful file locations for the active learning
 mtpFile = mtpFolder + "/pot.mtp"
 trainingConfigs = mtpFolder + "/train.cfg"
+preselectedConfigs = mtpFolder + "/preselected.cfg"
+diffConfigs = mtpFolder + "/diff.cfg"
+outConfigs = mtpFolder + "/out.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
+# Generate an state als
+calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
+calcGradeJob = mtpFolder + "/calcGrade.qsub"
+shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
+with open (calcGradeJob, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+        contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+        contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
+        contentNew = re.sub("\$mtp", mtpFile, contentNew)
+        contentNew = re.sub("\$als", alsFile, contentNew)
+        contentNew = re.sub("\$train", trainingConfigs, contentNew)
+        contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+            
+exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
+if(exitCode):
+    print("The calc grade call has failed. Exiting...")
+    quit()
+os.remove(calcGradeJob)
+
+
+#Praper MD Runs
 mdRunTemplate = templatesFolder + "/mdRun.in"
 dataTemplate = templatesFolder + "/mdRun.dat"
 jobTemplate = templatesFolder + "/mdRun.qsub"
-
 
 # Prepare mlip.ini
 iniTemplate = templatesFolder + "/mlip.ini"
 shutil.copyfile(iniTemplate, iniFile)
 with open (iniFile, 'r+' ) as f:
             content = f.read()
-            contentNew = re.sub("\$mtp", params["mlpBinary"], content) 
+            contentNew = re.sub("\$mtp", mtpFile, content) 
             contentNew = re.sub("\$select", str(params["selectThreshold"]), contentNew)
             contentNew = re.sub("\$break", str(params["breakThreshold"]), contentNew)
             contentNew = re.sub("\$als", alsFile, contentNew)
@@ -246,7 +275,7 @@ baseline = params["baseLatticeParameter"]
 
 for numAtom in numAtomList:
     
-    #region Generate MDRuns
+    #region Generate MDRuns Folders
     for strain in strains:
         for temperature in temperatures:
             # Generate the necessary folder and file names
@@ -267,8 +296,9 @@ for numAtom in numAtomList:
             # Make modifications to the LAMMPS input using regex substitutions
             with open (inputName, 'r+' ) as f:
                 content = f.read()
-                contentNew = re.sub("\$ttt", str(temperature), content)      #substitute temperature marker with the temperature
-                contentNew = re.sub("\$ddd", dataName, contentNew)       #subsitute data file name marker with the data file name
+                contentNew = re.sub("\$ttt", str(temperature), content)  
+                contentNew = re.sub("\$ddd", dataName, contentNew)      
+                contentNew = re.sub("\$ini", iniFile, contentNew)       
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
@@ -286,6 +316,7 @@ for numAtom in numAtomList:
                 content = f.read()
                 contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
                 contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+                contentNew = re.sub("\$folder", folderName, contentNew) 
                 contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
                 contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
                 contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
@@ -297,21 +328,25 @@ for numAtom in numAtomList:
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
+            
     #endregion
-
+    
     for strain in strains:
         for temperature in temperatures:
+            folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
             jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
-            subprocesses.Popen(["sbatch", jobName])
+            subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
 
-    print(subprocesses)
     exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
+    os.chdir(rootFolder)
     subprocesses = []
     failure = bool(sum(exitCodes))
     if failure:
         print("One or more of the md runs has been unsuccessful. Exiting now...")
         quit()  
     quit()
+    
+    
     #region Extraction of DFT Results and Training
     extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
     minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
