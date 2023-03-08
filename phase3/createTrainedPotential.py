@@ -437,8 +437,9 @@ for numAtom in numAtomList:
             # quit()
         printAndLog("MD Runs Completed")
         
-        os.remove(preselectedConfigs)
-        os.remove(selectedConfigs)
+        try: os.remove(preselectedConfigs)
+        except: pass
+        
         with open(preselectedConfigs,'wb') as master:
         #Walk through the tree of directories in MD Runs
         #All child directories are run files which have no further children
@@ -451,7 +452,6 @@ for numAtom in numAtomList:
                     childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
                     with open(childPreselectedConfigName,'rb') as child:
                         shutil.copyfileobj(child, master)
-                    os.remove(childPreselectedConfigName)
                 except:
                     completedRuns += 1
         printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
