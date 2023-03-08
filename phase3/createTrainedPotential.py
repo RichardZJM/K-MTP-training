@@ -355,7 +355,7 @@ for numAtom in numAtomList:
     
     for i in range(params["maxIterPerNatom"]):
         printAndLog(numAtom + " atoms, iteration: " + str(i+1))
-        '''
+        
         #region Extraction of DFT Results and Training
         extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
         minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
@@ -478,7 +478,7 @@ for numAtom in numAtomList:
         os.remove(selectAddJob)
         printAndLog("Diff DFT configurations selected.")
         #endregion
-        '''
+        
         
         #region Assemble and run diff DFT Runs
         printAndLog("Commencing diff DFT Runs.")
