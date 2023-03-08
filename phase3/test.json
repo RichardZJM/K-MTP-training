@@ -11,6 +11,7 @@
   "MDStrainStep": 0.02,
   "selectThreshold": 2.1,
   "breakThreshold": 10.0,
+  "maxIterPerNatom": 1,
   "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
   "pseudopotentialDirectory": "/global/home/hpc5146",
   "pseudopotential": "K.pbe-mt_fhi.UPF",
@@ -23,7 +24,7 @@
     "qos": "privileged"
   },
   "dftJobParam": {
-    "cpus": "1",
+    "cpus": "3",
     "time": "0-02:00"
   },
   "mdJobParam": {

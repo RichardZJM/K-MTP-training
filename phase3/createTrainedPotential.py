@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import json
 import subprocess
+from datetime import datetime
 
 # This script generates the a fully trained mtp file from a starting point
 # It is designed to be automated on an HPC enviroment which runs Slurm workload manager
@@ -49,11 +50,23 @@ scriptsFolder = rootFolder + "/pythonScripts"
 mtpFolder = rootFolder + "/mtpProperties"
 slurmRunFolder = rootFolder + "/slurmRunOutputs"
 mdFolder = rootFolder + "/mdLearningRuns"
+diffDFTFolder = rootFolder + "/diffDFT"
 initialGenerationFolder = rootFolder + "/initialGenerationDFT" 
 os.chdir(rootFolder)
 
+logFile = rootFolder + "/createTrainedPotential.log"
+
+def printAndLog(message: str) -> None:
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    datedMessage = dt_string + "   " + message
+    print(datedMessage)
+    with open(logFile, "a") as myfile:  myfile.write(datedMessage)
+    
+
 if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
 if not os.path.exists(mdFolder): os.mkdir(mdFolder)
+if not os.path.exists(diffDFTFolder): os.mkdir(diffDFTFolder)
 if not os.path.exists(initialGenerationFolder): os.mkdir(initialGenerationFolder)
 if not os.path.exists(DFToutputFolder): os.mkdir(DFToutputFolder)
 else: 
@@ -81,7 +94,7 @@ DFT2AtomStrains = np.arange(params["2AtomDFTStrainRange"][0],params["2AtomDFTStr
 template1AtomStrainDFT = templatesFolder + "/1AtomStrainDFT.in"
 template1AtomShearDFT = templatesFolder + "/1AtomShearDFT.in"
 template2AtomStrainDFT = templatesFolder + "/2AtomStrainDFT.in"
-templateDFTJob = templatesFolder + "/jobInitialDFT.qsub"
+templateDFTJob = templatesFolder + "/dftRun.qsub"
 
 subprocesses = []
 
@@ -208,12 +221,15 @@ exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial g
 subprocesses = []
 failure = bool(sum(exitCodes))
 if failure:
-    print("One or more of the inital DFT runs has been unsuccessful. Exiting now...")
+    printAndLog("One or more of the inital DFT runs has been unsuccessful. Exiting now...")
     quit()  
+
+printAndLog("Initial generation of DFT training dataset has completed.")
 #endregion    
 
-#region Active Learning Loop
+#region Active Learning
 
+#region Active Learning Setup
 # Get some useful file locations for the active learning
 mtpFile = mtpFolder + "/pot.mtp"
 trainingConfigs = mtpFolder + "/train.cfg"
@@ -225,7 +241,7 @@ iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
 '''
-# Generate an state als
+#region Generate an state als
 calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
 calcGradeJob = mtpFolder + "/calcGrade.qsub"
 shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
@@ -245,9 +261,10 @@ with open (calcGradeJob, 'r+' ) as f:
         f.truncate()
 exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
 if(exitCode):
-    print("The calc grade call has failed. Exiting...")
+    printAndLog("The calc grade call has failed. Exiting...")
     quit()
 os.remove(calcGradeJob)
+#endregion
 '''
 
 #Prepare MD Runs
@@ -273,8 +290,12 @@ temperatures = params["MDTemperatures"]
 strains = np.arange(params["MDStrainRange"][0],params["MDStrainRange"][1],params["MDStrainStep"] )
 numAtomList = params["MDNumberAtoms"]
 baseline = params["baseLatticeParameter"]
+#endregion
+
+printAndLog("Starting the active learning loop")
 
 for numAtom in numAtomList:
+    printAndLog("Beginning active learning of " + str(numAtom) + " atoms.") 
     
     #region Generate MDRuns Folders
     for strain in strains:
@@ -329,135 +350,236 @@ for numAtom in numAtomList:
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
-            
+    printAndLog("Generated MD runs.")
     #endregion
     
-    '''
-    for strain in strains:
-        for temperature in temperatures:
-            folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-            jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
-            subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
-    '''
-    
-    #region Assemble Preselected and Generate Diff CFG
-    exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
-    os.chdir(rootFolder)
-    subprocesses = []
-    
-    if bool(sum(exitCodes)):
-        pass
-    else: 
-        print("Active training of " + str(numAtom) + " has been completed!")
-        # continue
-        # quit()
-    
-    with open(preselectedConfigs,'wb') as master:
-    #Walk through the tree of directories in MD Runs
-    #All child directories are run files which have no further children
-        completedRuns = 0
-        runs = 0
-        for directory, subdir, files in os.walk(mdFolder):        
-            if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
-            runs +=1
-            try: 
-                childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
-                with open(childPreselectedConfigName,'rb') as child:
-                    shutil.copyfileobj(child, master)
-            except:
-                completedRuns += 1
-    print("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
-    
-    # Generate the diff cfg
-    selectAddJobTemplate = templatesFolder + "/selectAdd.qsub"
-    selectAddJob = mtpFolder + "/selectAdd.qsub"
-    shutil.copyfile(selectAddJobTemplate, selectAddJob)
-    with open (selectAddJob, 'r+' ) as f:
-            content = f.read()
-            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-            contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
-            contentNew = re.sub("\$mtp", mtpFile, contentNew)
-            contentNew = re.sub("\$als", alsFile, contentNew)
-            contentNew = re.sub("\$train", trainingConfigs, contentNew)
-            contentNew = re.sub("\$preselected", preselectedConfigs, contentNew)
-            contentNew = re.sub("\$selected", selectedConfigs, contentNew)
-            contentNew = re.sub("\$diff", diffConfigs, contentNew)
-            f.seek(0)
-            f.write(contentNew)
-            f.truncate()
-    exitCode = subprocess.Popen(["sbatch", selectAddJob]).wait()
-    if(exitCode):
-        print("The calc grade call has failed. Exiting...")
-        quit()
-    os.remove(selectAddJob)
-    #endregion
-    quit()
-    
-    #region Extraction of DFT Results and Training
-    extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
-    minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
-    minddistJob = DFToutputFolder + "/runMinDist.qsub"
+    for i in range(params["maxIterPerNatom"]):
+        printAndLog(numAtom + " atoms, iteration: " + str(i+1))
+        '''
+        #region Extraction of DFT Results and Training
+        extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
+        minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
+        minddistJob = DFToutputFolder + "/runMinDist.qsub"
 
-    # Extract the outputs from the individual files and assemble a training config file
-    # Then, run mindidst on it
-    os.chdir(DFToutputFolder)
-    exitCode = subprocess.Popen(["python", extractionScript]).wait()
-    shutil.copyfile(minddistJobTemplate, minddistJob)
+        # Extract the outputs from the individual files and assemble a training config file
+        # Then, run mindidst on it
+        os.chdir(DFToutputFolder)
+        exitCode = subprocess.Popen(["python", extractionScript]).wait()
+        shutil.copyfile(minddistJobTemplate, minddistJob)
 
-    # Generate and run mindist job file (job file must be used to avoid clogging login nodes)
-    with open (minddistJob, 'r+' ) as f:
+        # Generate and run mindist job file (job file must be used to avoid clogging login nodes)
+        with open (minddistJob, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                    contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+                
+        exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
+        if(exitCode):
+            print("The mindist call has failed. Potential may be unstable. Exiting...")
+            quit()
+
+        os.remove(minddistJob)
+        # Copy the newly formed training config to the mtpProperties
+        os.system("mv train.cfg " + trainingConfigs)
+        os.chdir(rootFolder)
+
+        # Generate and run train job file (job file must be used to avoid clogging login nodes)
+        trainJobTemplate = templatesFolder + "/trainMTP.qsub"
+        trainJob = mtpFolder + "/trainMTP.qsub"
+        shutil.copyfile(trainJobTemplate, trainJob)
+        with open (trainJob, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                    contentNew = re.sub("\$mtp", mtpFile, contentNew)
+                    contentNew = re.sub("\$train", trainingConfigs, contentNew)
+                    contentNew = re.sub("\$outfile", slurmRunFolder  + "/train.out", contentNew)
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+
+        exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
+        if(exitCode):
+            print("The mindist call has failed. Potential may be unstable. Exiting...")
+            quit()
+        os.remove(trainJob)
+        printAndLog("Passive training iteration completed.")
+        #endregion
+        
+        # Run the MD Jobs
+        printAndLog("Starting MD Runs")
+        for strain in strains:
+            for temperature in temperatures:
+                folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+                jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+                subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
+        
+        #region Assemble Preselected and Generate Diff CFG
+        exitCodes = [p.wait() for p in subprocesses]        # Wait for all the mdRuns to finish
+        os.chdir(rootFolder)
+        subprocesses = []
+        
+        if bool(sum(exitCodes)):
+            pass
+        else: 
+            print("Active training of " + str(numAtom) + " has been completed!")
+            # continue
+            # quit()
+        printAndLog("MD Runs Completed")
+        
+        with open(preselectedConfigs,'wb') as master:
+        #Walk through the tree of directories in MD Runs
+        #All child directories are run files which have no further children
+            completedRuns = 0
+            runs = 0
+            for directory, subdir, files in os.walk(mdFolder):        
+                if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
+                runs +=1
+                try: 
+                    childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
+                    with open(childPreselectedConfigName,'rb') as child:
+                        shutil.copyfileobj(child, master)
+                except:
+                    completedRuns += 1
+        printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
+        
+        # Generate the diff cfg
+        selectAddJobTemplate = templatesFolder + "/selectAdd.qsub"
+        selectAddJob = mtpFolder + "/selectAdd.qsub"
+        shutil.copyfile(selectAddJobTemplate, selectAddJob)
+        with open (selectAddJob, 'r+' ) as f:
                 content = f.read()
                 contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
                 contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
                 contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
                 contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-                contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
-                f.seek(0)
-                f.write(contentNew)
-                f.truncate()
-            
-    exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
-    if(exitCode):
-        print("The mindist call has failed. Potential may be unstable. Exiting...")
-        quit()
-
-    os.remove(minddistJob)
-    # Copy the newly formed training config to the mtpProperties
-    os.system("mv train.cfg " + trainingConfigs)
-    os.chdir(rootFolder)
-
-    # Generate and run train job file (job file must be used to avoid clogging login nodes)
-    trainJobTemplate = templatesFolder + "/trainMTP.qsub"
-    trainJob = mtpFolder + "/trainMTP.qsub"
-    shutil.copyfile(trainJobTemplate, trainJob)
-    with open (trainJob, 'r+' ) as f:
-                content = f.read()
-                contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
                 contentNew = re.sub("\$mtp", mtpFile, contentNew)
+                contentNew = re.sub("\$als", alsFile, contentNew)
                 contentNew = re.sub("\$train", trainingConfigs, contentNew)
-                contentNew = re.sub("\$outfile", slurmRunFolder  + "/train.out", contentNew)
+                contentNew = re.sub("\$preselected", preselectedConfigs, contentNew)
+                contentNew = re.sub("\$selected", selectedConfigs, contentNew)
+                contentNew = re.sub("\$diff", diffConfigs, contentNew)
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
+        exitCode = subprocess.Popen(["sbatch", selectAddJob]).wait()
+        if(exitCode):
+            printAndLog("The select add call has failed. Exiting...")
+            quit()
+        os.remove(selectAddJob)
+        printAndLog("Diff DFT configurations selected.")
+        #endregion
+        '''
+        
+        #region Assemble and run diff DFT Runs
+        printAndLog("Commencing diff DFT Runs.")
+        superCellVectorsList = []
+        numAtomsList = [] 
+        posAtomsList = []
+        
+        with open(diffConfigs, 'r') as txtfile:
+            fileLines = txtfile.readlines()
+            index = np.where(np.array(fileLines) == "BEGIN_CFG\n")[0]   #Seach for indiicides which match the beginning of a configuration
+            for i in index:
+                
+                configNumAtoms = int(fileLines[i+2].split()[0])
+                numAtomsList.append(configNumAtoms)     #Read numAtoms
+                
+                v1 = np.array(fileLines[i+4].split(),dtype=float)       #Read supercell
+                v2 = np.array(fileLines[i+5].split(),dtype=float)
+                v3 = np.array(fileLines[i+6].split(),dtype=float)
+                superCellVectorsList.append([v1,v2,v3])         
+                
+                configAtomicPositions = np.zeros((configNumAtoms,3))           #Temporary arrary to hold atomic positions
+                for j in range(configNumAtoms):
+                    configAtomicPositions[j] = np.array(fileLines[i+8+j].split(),dtype=float)[2:5]
+                posAtomsList.append(configAtomicPositions)
+        
+        
+        # We can generate the input and job submission files in the usual way now
+        dftRunTemplateLocation = templatesFolder + "/diffDFT.in"          #location of dft run, data input, and job templates 
+        jobTemplateLocation = templatesFolder + "/dftRun.qsub"
 
-    exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
-    if(exitCode):
-        print("The mindist call has failed. Potential may be unstable. Exiting...")
+        for i in range(len(superCellVectorsList)):
+            # Generate the necessary folder and file names (use a fairly unique identifier from the sum of position vectors)
+            # identifier = datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + random()
+            identifier = posAtomsList[i][-1][0] + posAtomsList[i][-1][1] + posAtomsList[i][-1][2]
+            folderName = diffDFTFolder + "/" +str(identifier)
+            inputName = folderName + "/diffDFTRun" + str(identifier) + ".in"
+            jobName = folderName + "/diffDFTRun" + str(identifier) + ".qsub"
+            outputName = DFToutputFolder + "/diffDFTRun" + str(identifier) +".out"
+            
+            numAtoms = numAtomsList[i]          # Extract the config info into variables for easier future usage
+            superCell = superCellVectorsList[i]
+            atomPositions = posAtomsList[i]
+            
+            if not os.path.exists(folderName): os.mkdir(folderName)
+            
+            # Copy the templates for the QE input and data files
+            shutil.copyfile(dftRunTemplateLocation, inputName)
+            shutil.copyfile(jobTemplateLocation, jobName)
+            
+            # Make modifications to the QE input using regex substitutions
+            with open (inputName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$nnn", str(numAtoms), content)      #substitute nat marker with the number of atoms
+                contentNew = re.sub("\$v1", str(superCell[0])[1:-1], contentNew)          #Same with supercell vectors.
+                contentNew = re.sub("\$v2", str(superCell[1])[1:-1], contentNew)
+                contentNew = re.sub("\$v3", str(superCell[2])[1:-1], contentNew)
+                contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
+                contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+                contentNew = re.sub("\$out", folderName, contentNew)  
+                
+                # Generate a series of string representing the list of atoms and positions
+                atomPositionsString = []        
+                for a in np.arange(numAtoms):
+                    atomPositionsString.append(' K %f %f %f 0 0 0  \n' % (posAtomsList[i][a][0], posAtomsList[i][a][1], posAtomsList[i][a][2]))         
+                atomPositions = ' '.join(atomPositionsString)    
+                contentNew = re.sub("\$aaa", atomPositions, contentNew)         #Subsitiute it in for the marker
+                
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+                
+            # Make modifications to the job file using regex substitutions
+            with open (jobName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$job", "diffDFT" + str(identifier), content) 
+                contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+                contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                contentNew = re.sub("\$cpus", params["dftJobParam"]["cpus"], contentNew) 
+                contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
+                contentNew = re.sub("\$in", inputName, contentNew)      
+                contentNew = re.sub("\$out", outputName, contentNew)
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+            subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
+        
+        exitCodes = [p.wait() for p in subprocesses]        # Wait for all the diffDFT to finish
+        subprocesses = []
+        
+        if bool(sum(exitCodes)):
+            printAndLog("One or more of the diff DFT runs has failed. Potential may be unstable. Exiting...")
+            quit()
+        else: 
+            pass
+        printAndLog("Diff DFT calculations complete. Starting next iteration.")
         quit()
-    os.remove(trainJob)
-    #endregion
-
-    #region Generating Appropriate MD Runs
-
-
-    #endregion
-    #endregion
+        #endregion
+        
+#endregion
 
 # except Exception as e:
 #     print("An error has occur during the generation of the initial files. Verify the formating of your JSON config file.")

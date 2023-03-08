@@ -17,3 +17,5 @@ out.run
 slurmRunOutputs
 mdLearningRuns
 mtpProperties
+diffDFT
+phase3/mtpProperties/pot.mtp

@@ -6,6 +6,7 @@
 #SBATCH --cpus-per-task=$cpus
 #SBATCH --job-name=$job
 #SBATCH --output=$outfile
+#SBATCH --mem-per-cpu=4G
 #SBATCH --time=$time # time (DD-HH:MM)
 #SBATCH --wait
 
