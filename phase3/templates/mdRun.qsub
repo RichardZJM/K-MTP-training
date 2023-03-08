@@ -7,6 +7,7 @@
 #SBATCH --job-name=$job
 #SBATCH --output=out.run
 #SBATCH --time=$time # time (DD-HH:MM)
+#SBATCH --wait
 
 
 module load       StdEnv/2020  gcc/9.3.0  cuda/11.2.2

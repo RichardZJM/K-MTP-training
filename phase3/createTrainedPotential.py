@@ -209,9 +209,8 @@ subprocesses = []
 failure = bool(sum(exitCodes))
 if failure:
     print("One or more of the inital DFT runs has been unsuccessful. Exiting now...")
-    quit()
-  
- #endregion    
+    quit()  
+#endregion    
 
 #region Active Learning Loop
 
@@ -252,10 +251,10 @@ for numAtom in numAtomList:
         for temperature in temperatures:
             # Generate the necessary folder and file names
             folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-            inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-            dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-            jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-            outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+            inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".in"
+            dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".dat"
+            jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+            outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)+ ".out"
             
             # Generate a new directory for each MD Run 
             if not os.path.exists(folderName): os.mkdir(folderName)
@@ -285,7 +284,7 @@ for numAtom in numAtomList:
             # Make modifications to the job file using regex substitutions
             with open (jobName, 'r+' ) as f:
                 content = f.read()
-                contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + str(strain), content) 
+                contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
                 contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
                 contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
                 contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
@@ -298,10 +297,20 @@ for numAtom in numAtomList:
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
-            
     #endregion
 
+    for strain in strains:
+        for temperature in temperatures:
+            jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+            subprocesses.Popen(["sbatch", jobName])
 
+    print(subprocesses)
+    exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
+    subprocesses = []
+    failure = bool(sum(exitCodes))
+    if failure:
+        print("One or more of the md runs has been unsuccessful. Exiting now...")
+        quit()  
     quit()
     #region Extraction of DFT Results and Training
     extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
