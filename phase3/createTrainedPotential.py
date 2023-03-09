@@ -166,7 +166,7 @@ for shear in DFT1AtomShears:
     
     with open (jobName, 'r+' ) as f:
         content = f.read()
-        contentNew = re.sub("\$job", "Shear" + str(strain), content) 
+        contentNew = re.sub("\$job", "Shear" + str(shear), content) 
         contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
         contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
         contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
@@ -224,7 +224,7 @@ exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial g
 subprocesses = []
 failure = bool(sum(exitCodes))
 if failure:
-    printAndLog("One or more of the inital DFT runs has been unsuccessful. Exiting now...")
+    printAndLog( str(sum(exitCodes)) + " of the inital DFT runs has been unsuccessful. Exiting now...")
     quit()  
 
 printAndLog("Initial generation of DFT training dataset has completed.")
@@ -430,7 +430,7 @@ for numAtom in numAtomList:
         subprocesses = []
         
         if bool(sum(exitCodes)):
-            pass
+            printAndLog( str(sum([1 for x in exitCodes if x != 0])) + " risky configurations found.")
         else: 
             printAndLog("No risky configurations found.")
         printAndLog("MD Runs Completed")
