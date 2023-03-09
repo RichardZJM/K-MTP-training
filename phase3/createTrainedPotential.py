@@ -432,9 +432,7 @@ for numAtom in numAtomList:
         if bool(sum(exitCodes)):
             pass
         else: 
-            print("Active training of " + str(numAtom) + " has been completed!")
-            # continue
-            # quit()
+            printAndLog("No risky configurations found.")
         printAndLog("MD Runs Completed")
         
         try: os.remove(preselectedConfigs)
@@ -447,14 +445,16 @@ for numAtom in numAtomList:
             runs = 0
             for directory, subdir, files in os.walk(mdFolder):        
                 if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
-                runs +=1
+                runs +=1 
+                
+                childPreselectedConfigName = directory + "/preselected.cfg"   
                 try: 
-                    childPreselectedConfigName = directory + "/preselected.cfg"         #Copy the preselected files to the master preselected 
+                         #Copy the preselected files to the master preselected 
                     with open(childPreselectedConfigName,'rb') as child:
                         shutil.copyfileobj(child, master)
-                    os.remove(childPreselectedConfigName)
                 except:
                     completedRuns += 1
+                os.remove(childPreselectedConfigName)
         printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
         
         # Generate the diff cfg
@@ -580,7 +580,7 @@ for numAtom in numAtomList:
             quit()
         else: 
             pass
-        printAndLog("Diff DFT calculations complete. Starting next iteration.")
+        printAndLog("Diff DFT calculations complete.")
         # quit()
         #endregion
         
