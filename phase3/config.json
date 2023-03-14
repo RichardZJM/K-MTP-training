@@ -6,7 +6,7 @@
   "2AtomDFTStrainRange": [0.85, 1.16],
   "2AtomDFTStrainStep": 0.15,
   "MDNumberAtoms": [2],
-  "MDTemperatures": [100, 300, 400, 600],
+  "MDTemperatures": [100, 300, 400, 800],
   "MDStrainRange": [0.95, 1.06],
   "MDStrainStep": 0.02,
   "selectThreshold": 2.1,
@@ -17,6 +17,7 @@
   "pseudopotential": "K.pbe-mt_fhi.UPF",
   "lmpMPIFile": "/global/home/hpc5146/interface-lammps-mlip-2/lmp_mpi",
   "baseLatticeParameter": 9.67166,
+  "maxAtomPlacementTries": 30,
   "slurmParam": {
     "account": "def-hpcg1725",
     "partition": "reserved",

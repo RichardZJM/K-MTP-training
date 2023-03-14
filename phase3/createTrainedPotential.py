@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import json
 import subprocess
+import random
 from datetime import datetime
 
 # This script generates the a fully trained mtp file from a starting point
@@ -224,7 +225,7 @@ exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial g
 subprocesses = []
 failure = bool(sum(exitCodes))
 if failure:
-    printAndLog( str(sum(exitCodes)) + " of the inital DFT runs has been unsuccessful. Exiting now...")
+    printAndLog( str(sum([1 for x in exitCodes if x != 0])) + " of the inital DFT runs has been unsuccessful. Exiting now...")
     quit()  
 
 printAndLog("Initial generation of DFT training dataset has completed.")
@@ -274,59 +275,131 @@ for numAtom in numAtomList:
     printAndLog("Beginning active learning of " + str(numAtom) + " atoms.") 
     
     #region Generate MDRuns Folders
-    for strain in strains:
-        for temperature in temperatures:
-            # Generate the necessary folder and file names
-            folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-            inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".in"
-            dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".dat"
-            jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
-            outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)+ ".out"
-            
-            # Generate a new directory for each MD Run 
-            if not os.path.exists(folderName): os.mkdir(folderName)
-           
-            # Copy the templates for the LAMMPS input and data files
-            shutil.copyfile(mdRunTemplate, inputName)
-            shutil.copyfile(dataTemplate, dataName)
-            shutil.copyfile(jobTemplate, jobName)
-            
-            # Make modifications to the LAMMPS input using regex substitutions
-            with open (inputName, 'r+' ) as f:
-                content = f.read()
-                contentNew = re.sub("\$ttt", str(temperature), content)  
-                contentNew = re.sub("\$ddd", dataName, contentNew)      
-                contentNew = re.sub("\$ini", iniFile, contentNew)       
-                f.seek(0)
-                f.write(contentNew)
-                f.truncate()
+    
+    # For the 2 atom configurations
+    if(numAtom == 2):
+        for strain in strains:
+            for temperature in temperatures:
+                # Generate the necessary folder and file names
+                folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+                inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".in"
+                dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".dat"
+                jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+                outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)+ ".out"
                 
-            # Make modifications to the data file using regex substitutions
-            with open (dataName, 'r+' ) as f:
-                content = f.read()
-                contentNew = re.sub("\$aaa", str(baseline*strain), content)      #substitute lattice parameter marker with the strained cell dimensions
-                f.seek(0)
-                f.write(contentNew)
-                f.truncate()
+                # Generate a new directory for each MD Run 
+                if not os.path.exists(folderName): os.mkdir(folderName)
+            
+                # Copy the templates for the LAMMPS input and data files
+                shutil.copyfile(mdRunTemplate, inputName)
+                shutil.copyfile(dataTemplate, dataName)
+                shutil.copyfile(jobTemplate, jobName)
                 
-            # Make modifications to the job file using regex substitutions
-            with open (jobName, 'r+' ) as f:
-                content = f.read()
-                contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
-                contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
-                contentNew = re.sub("\$folder", folderName, contentNew) 
-                contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
-                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
-                contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
-                contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
-                contentNew = re.sub("\$in", inputName, contentNew)      
-                contentNew = re.sub("\$out", outputName, contentNew)
-                f.seek(0)
-                f.write(contentNew)
-                f.truncate()
-    printAndLog("Generated MD runs.")
+                # Make modifications to the LAMMPS input using regex substitutions
+                with open (inputName, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$ttt", str(temperature), content)  
+                    contentNew = re.sub("\$ddd", dataName, contentNew)      
+                    contentNew = re.sub("\$ini", iniFile, contentNew)       
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+                    
+                # Make modifications to the data file using regex substitutions
+                with open (dataName, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$aaa", str(baseline*strain * 0.529177) , content)      #substitute lattice parameter marker with the strained cell dimensions
+                    contentNew = re.sub("\$mmm", str(baseline*strain/2 * 0.529177), contentNew)      #substitute lattice parameter marker with the strained cell dimensions
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+                    
+                # Make modifications to the job file using regex substitutions
+                with open (jobName, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
+                    contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+                    contentNew = re.sub("\$folder", folderName, contentNew) 
+                    contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                    contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
+                    contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
+                    contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
+                    contentNew = re.sub("\$in", inputName, contentNew)      
+                    contentNew = re.sub("\$out", outputName, contentNew)
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+        printAndLog("Generated MD runs.")
+    
+    # # For the mutli atom configurations (random generation)
+    # # Calculate a random configuration witht the specified number of atoms. 
+    # atomPositions = [] 
+    # latticeParameter = strain * params["baseLatticeParameter"]
+    # for i in range(params["baseLatticeParameter"]):         #Add a limit to the number of tries to place an atom
+    #     x = random.uniform(0, latticeParameter)
+    #     y = random.uniform(0, latticeParameter)
+    #     z = random.uniform(0, latticeParameter)
+    #     for atomPosition in atomPositions:
+            
+            
+    # else:
+    #     for strain in strains:
+    #         for temperature in temperatures:
+    #             # Generate the necessary folder and file names
+    #             folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+    #             inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".in"
+    #             dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".dat"
+    #             jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+    #             outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)+ ".out"
+                
+    #             # Generate a new directory for each MD Run 
+    #             if not os.path.exists(folderName): os.mkdir(folderName)
+            
+    #             # Copy the templates for the LAMMPS input and data files
+    #             shutil.copyfile(mdRunTemplate, inputName)
+    #             shutil.copyfile(dataTemplate, dataName)
+    #             shutil.copyfile(jobTemplate, jobName)
+                
+    #             # Make modifications to the LAMMPS input using regex substitutions
+    #             with open (inputName, 'r+' ) as f:
+    #                 content = f.read()
+    #                 contentNew = re.sub("\$ttt", str(temperature), content)  
+    #                 contentNew = re.sub("\$ddd", dataName, contentNew)      
+    #                 contentNew = re.sub("\$ini", iniFile, contentNew)       
+    #                 f.seek(0)
+    #                 f.write(contentNew)
+    #                 f.truncate()
+                    
+    #             # Make modifications to the data file using regex substitutions
+    #             with open (dataName, 'r+' ) as f:
+    #                 content = f.read()
+    #                 contentNew = re.sub("\$aaa", str(baseline*strain), content)      #substitute lattice parameter marker with the strained cell dimensions
+    #                 f.seek(0)
+    #                 f.write(contentNew)
+    #                 f.truncate()
+                    
+    #             # Make modifications to the job file using regex substitutions
+    #             with open (jobName, 'r+' ) as f:
+    #                 content = f.read()
+    #                 contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
+    #                 contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+    #                 contentNew = re.sub("\$folder", folderName, contentNew) 
+    #                 contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+    #                 contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+    #                 contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+    #                 contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
+    #                 contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
+    #                 contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
+    #                 contentNew = re.sub("\$in", inputName, contentNew)      
+    #                 contentNew = re.sub("\$out", outputName, contentNew)
+    #                 f.seek(0)
+    #                 f.write(contentNew)
+    #                 f.truncate()
+    #     printAndLog("Generated MD runs.")
+        
+    
     #endregion
     
     for i in range(params["maxIterPerNatom"]):

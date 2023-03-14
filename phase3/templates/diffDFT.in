@@ -16,7 +16,6 @@
     occupations='smearing',
     smearing = 'gaussian',
     degauss = 0.01,
-
  /
  &electrons
     mixing_mode='plain',
@@ -25,14 +24,11 @@
  &ions
     ion_dynamics = 'bfgs'
  /
- &cell
- /
 CELL_PARAMETERS angstrom
    $v1
    $v2
    $v3
-
-ATOMIC_SPECIES
+ATOMIC_SPECIES bohr
 K  39.0983 $pseudo
 ATOMIC_POSITIONS crystal
    $aaa

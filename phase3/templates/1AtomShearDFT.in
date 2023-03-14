@@ -15,7 +15,6 @@
     occupations='smearing',
     smearing = 'gaussian',
     degauss = 0.01,
-
  /
  &electrons
     mixing_mode='plain',
@@ -24,9 +23,7 @@
  &ions
     ion_dynamics = 'bfgs'
  /
- &cell
- /
-CELL_PARAMETERS
+CELL_PARAMETERS bohr
    $bbb1 $aaa2 $aaa3
    -$bbb4 $bbb5 $bbb6
    -$bbb7 -$bbb8 $bbb9
