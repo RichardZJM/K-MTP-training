@@ -527,10 +527,11 @@ for numAtom in numAtomList:
         try: os.remove(preselectedConfigs)
         except: pass
         
+        completedRuns = 0
         with open(preselectedConfigs,'wb') as master:
         #Walk through the tree of directories in MD Runs
         #All child directories are run files which have no further children
-            completedRuns = 0
+            
             runs = 0
             for directory, subdir, files in os.walk(mdFolder):        
                 if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
