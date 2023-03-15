@@ -11,7 +11,7 @@
   "MDStrainStep": 0.02,
   "selectThreshold": 2.1,
   "breakThreshold": 10.0,
-  "maxIterPerNatom": 3,
+  "maxIterPerNatom": 4,
   "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
   "pseudopotentialDirectory": "/global/home/hpc5146",
   "pseudopotential": "K.pbe-mt_fhi.UPF",

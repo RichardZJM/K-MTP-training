@@ -499,7 +499,7 @@ for numAtom in numAtomList:
 
         exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
         if(exitCode):
-            print("The mindist call has failed. Potential may be unstable. Exiting...")
+            print("The train call has failed. Potential may be unstable. Exiting...")
             quit()
         os.remove(trainJob)
         printAndLog("Passive training iteration completed.")

@@ -10,6 +10,11 @@ try:
 except:
     pass
 
+preserveInitial = False         # Second argument. Performs dry run.
+try:
+     if sys.argv[2] == "save": preserveInitial = True
+except:
+    pass
 
 
 rootFolder = os.path.dirname(os.path.realpath(__file__))              # Get useful folder locations
@@ -32,8 +37,9 @@ alsFile = mtpFolder + "/state.als"
 # if  os.path.exists(slurmRunFolder): shutil.rmtree(slurmRunFolder)
 if  os.path.exists(mdFolder): shutil.rmtree(mdFolder)
 if  os.path.exists(diffDFTFolder): shutil.rmtree(diffDFTFolder)
-if  os.path.exists(initialGenerationFolder): shutil.rmtree(initialGenerationFolder)
 if  os.path.exists(DFToutputFolder): shutil.rmtree(DFToutputFolder)
+
+if  os.path.exists(initialGenerationFolder) and not preserveInitial: shutil.rmtree(initialGenerationFolder)
 
 if  os.path.exists(mtpFile): os.remove(mtpFile)
 if  os.path.exists(trainingConfigs): os.remove(trainingConfigs)
