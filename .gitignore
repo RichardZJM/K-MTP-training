@@ -21,3 +21,7 @@ diffDFT
 **/pot.mtp
 **/CRASH
 **/createTrainedPotential.log
+phase1Testing/initial_test_md/dump.txt
+phase1Testing/initial_test_md/log.lammps
+phase1Testing/initial_test_md/out.run
+phase1Testing/initial_test_md/pot.mtp
