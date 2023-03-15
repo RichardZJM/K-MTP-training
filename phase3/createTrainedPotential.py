@@ -603,6 +603,11 @@ for numAtom in numAtomList:
         dftRunTemplateLocation = templatesFolder + "/diffDFT.in"          #location of dft run, data input, and job templates 
         jobTemplateLocation = templatesFolder + "/dftRun.qsub"
 
+        # Break if we find no more preselected configurations ahead of the iteration cap 
+        if len(superCellVectorsList) == 0:
+            print("No preselected configurations found. Moving to next atom count.")
+            break
+        
         for i in range(len(superCellVectorsList)):
             # Generate the necessary folder and file names (use a fairly unique identifier from the sum of position vectors)
             # identifier = datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + random()
