@@ -417,6 +417,7 @@ for numAtom in numAtomList:
         printAndLog("Generated MD runs.")
         
     #endregion
+    if (os.path.exists(mdFolder)): shutil.rmtree(mdFolder)
     
     for i in range(params["maxIterPerNatom"]):
         printAndLog(str(numAtom) + " atoms, iteration: " + str(i+1) + " of up to " + str(params["maxIterPerNatom"]))
@@ -531,11 +532,8 @@ for numAtom in numAtomList:
         with open(preselectedConfigs,'wb') as master:
         #Walk through the tree of directories in MD Runs
         #All child directories are run files which have no further children
-            
-            runs = 0
             for directory, subdir, files in os.walk(mdFolder):        
                 if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
-                runs +=1 
                 
                 childPreselectedConfigName = directory + "/preselected.cfg"   
                 try: 
