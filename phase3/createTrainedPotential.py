@@ -334,6 +334,7 @@ for numAtom in numAtomList:
                     f.truncate()
         printAndLog("Generated MD runs.")
 
+    #For Multi Atom Generations
     else:
         for strain in strains:
             # For the mutli atom configurations (random generation)
@@ -341,7 +342,6 @@ for numAtom in numAtomList:
             atomPositions = [] 
             latticeParameter = strain * params["baseLatticeParameter"] * (numAtom/2)**(1/3) * 0.529177
             for i in range (numAtom):
-                print(i)
                 for _ in range(params["maxAtomPlacementTries"]):         #Add a limit to the number of tries to place an atom
                     x = random.uniform(0, latticeParameter)
                     y = random.uniform(0, latticeParameter)
@@ -357,7 +357,6 @@ for numAtom in numAtomList:
                         break
                 
             atomPositionsString = []        
-            print(atomPositions)
             for a in np.arange(numAtom):
                 atomPositionsString.append(' %d 1 %f %f %f \n' % (a+1,atomPositions[a][0], atomPositions[a][1], atomPositions[a][2]))         
             atomPositions = ' '.join(atomPositionsString)    
@@ -542,10 +541,11 @@ for numAtom in numAtomList:
                          #Copy the preselected files to the master preselected 
                     with open(childPreselectedConfigName,'rb') as child:
                         shutil.copyfileobj(child, master)
+                    os.remove(childPreselectedConfigName)
                 except:
                     completedRuns += 1
-                os.remove(childPreselectedConfigName)
-        printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(runs))
+                
+        printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(len(temperatures)*len(strains)))
         
         # Generate the diff cfg
         selectAddJobTemplate = templatesFolder + "/selectAdd.qsub"
