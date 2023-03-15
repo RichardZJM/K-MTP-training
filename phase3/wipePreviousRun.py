@@ -29,20 +29,20 @@ outConfigs = mtpFolder + "/out.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
 
-if  os.path.exists(slurmRunFolder): os.remove(slurmRunFolder)
-if  os.path.exists(mdFolder): os.remove(mdFolder)
-if  os.path.exists(diffDFTFolder): os.remove(diffDFTFolder)
-if  os.path.exists(initialGenerationFolder): os.remove(initialGenerationFolder)
-if  os.path.exists(DFToutputFolder): os.remove(DFToutputFolder)
+# if  os.path.exists(slurmRunFolder): shutil.rmtree(slurmRunFolder)
+if  os.path.exists(mdFolder): shutil.rmtree(mdFolder)
+if  os.path.exists(diffDFTFolder): shutil.rmtree(diffDFTFolder)
+if  os.path.exists(initialGenerationFolder): shutil.rmtree(initialGenerationFolder)
+if  os.path.exists(DFToutputFolder): shutil.rmtree(DFToutputFolder)
 
-if  os.path.exists(mtpFile): os.remove(slurmRunFolder)
-if  os.path.exists(trainingConfigs): os.remove(mdFolder)
-if  os.path.exists(preselectedConfigs): os.remove(diffDFTFolder)
-if  os.path.exists(selectedConfigs): os.remove(initialGenerationFolder)
-if  os.path.exists(diffConfigs): os.remove(DFToutputFolder)
-if  os.path.exists(outConfigs): os.remove(DFToutputFolder)
-if  os.path.exists(iniFile): os.remove(DFToutputFolder)
-if  os.path.exists(alsFile): os.remove(DFToutputFolder)
+if  os.path.exists(mtpFile): os.remove(mtpFile)
+if  os.path.exists(trainingConfigs): os.remove(trainingConfigs)
+if  os.path.exists(preselectedConfigs): os.remove(preselectedConfigs)
+if  os.path.exists(selectedConfigs): os.remove(selectedConfigs)
+if  os.path.exists(diffConfigs): os.remove(diffConfigs)
+if  os.path.exists(outConfigs): os.remove(outConfigs)
+if  os.path.exists(iniFile): os.remove(iniFile)
+if  os.path.exists(alsFile): os.remove(alsFile)
 
 freshMTP = mtpFolder + "/" + loadedMTP + ".mtp"
 
