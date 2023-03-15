@@ -25,3 +25,11 @@ phase1Testing/initial_test_md/dump.txt
 phase1Testing/initial_test_md/log.lammps
 phase1Testing/initial_test_md/out.run
 phase1Testing/initial_test_md/pot.mtp
+ai_md/aimd.qsub
+ai_md/prist.md.in
+ai_md/prist.md.out
+phase1Testing/initial_test_md/dump.txt
+phase1Testing/initial_test_md/log.lammps
+phase1Testing/initial_test_md/out.run
+phase1Testing/initial_test_md/pot.mtp
+phase3/bfgs.log

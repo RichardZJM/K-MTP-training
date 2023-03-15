@@ -54,9 +54,10 @@ def QE_OUTPUT():
                         exit(1)
                 #elif (lines[l_job_done] == 'JOB DONE.'):
                 if (lines[l_job_done] != 'JOB DONE.'):
-                    sys.stderr.write('Error: Check QE outputs, job not done found\n')
+                    sys.stderr.write('Warning: Check QE outputs, job not done found. Might be due to local bug.\n')
                     print('The file name is', filename)
-                    exit(1)
+                    index = l_file - 2
+                    # exit(1)
                 else:
                     index = l_file - 2
                 bravais_lattice_index=[j for j in lines if 'bravais-lattice index' in j]

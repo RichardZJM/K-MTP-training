@@ -196,7 +196,7 @@ for strain in DFT2AtomStrains:
             # Make modifications to the QE input using regex substitutions
         with open (inputName, 'r+' ) as f:
             content = f.read()
-            contentNew = re.sub("\$aaa", str(round(strain * params["baseLatticeParameter"] /2,5)), content)      #substitute lattice vector marker with the lattice vector
+            contentNew = re.sub("\$aaa", str(round(strain * params["baseLatticeParameter"] ,5)), content)      #substitute lattice vector marker with the lattice vector
             contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
             contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
             contentNew = re.sub("\$out", folderName, contentNew)  

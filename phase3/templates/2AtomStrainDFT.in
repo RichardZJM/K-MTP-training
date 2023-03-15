@@ -24,13 +24,13 @@
     ion_dynamics = 'bfgs'
  /
 CELL_PARAMETERS bohr
-   $aaa1 $aaa2 $aaa3
-   -$aaa4 $aaa5 $aaa6
-   -$aaa7 -$aaa8 $aaa9
+   $aaa1 0 0
+   0 $aaa5 0
+   0 0 $aaa9
 ATOMIC_SPECIES
 K  39.0983 $pseudo
 ATOMIC_POSITIONS crystal
 K  0   0   0
-K 0.33 0.33 0.33
+K 0.5 0.5 0.5
 K_POINTS automatic
 6 6 6 0 0 0
