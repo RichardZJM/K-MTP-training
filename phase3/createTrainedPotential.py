@@ -557,7 +557,7 @@ for numAtom in numAtomList:
                 contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
                 contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
                 contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-                contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
+                contentNew = re.sub("\$outfile", slurmRunFolder + "/selectAdd.out", contentNew)
                 contentNew = re.sub("\$mtp", mtpFile, contentNew)
                 contentNew = re.sub("\$als", alsFile, contentNew)
                 contentNew = re.sub("\$train", trainingConfigs, contentNew)
