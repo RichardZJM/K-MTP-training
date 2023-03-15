@@ -33,4 +33,4 @@ K  39.0983 $pseudo
 ATOMIC_POSITIONS angstrom
    $aaa
 K_POINTS automatic
-2 2 2 0 0 0
+3 3 3 0 0 0

@@ -276,7 +276,8 @@ for numAtom in numAtomList:
     printAndLog("Beginning active learning of " + str(numAtom) + " atoms.") 
     
     #region Generate MDRuns Folders
-    
+    if (os.path.exists(mdFolder)): shutil.rmtree(mdFolder)
+    os.mkdir(mdFolder)
     # For the 2 atom configurations
     if(numAtom == 2):
         for strain in strains:
@@ -417,7 +418,7 @@ for numAtom in numAtomList:
         printAndLog("Generated MD runs.")
         
     #endregion
-    if (os.path.exists(mdFolder)): shutil.rmtree(mdFolder)
+    
     
     for i in range(params["maxIterPerNatom"]):
         printAndLog(str(numAtom) + " atoms, iteration: " + str(i+1) + " of up to " + str(params["maxIterPerNatom"]))
