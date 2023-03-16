@@ -3,13 +3,13 @@
 #SBATCH --partition=$partition
 #SBATCH --qos=$qos
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=4
 #SBATCH --job-name=train
 #SBATCH --output=$outfile
-#SBATCH --time=00-00:10 # time (DD-HH:MM)
+#SBATCH --time=00-00:20 # time (DD-HH:MM)
 #SBATCH --mem-per-cpu=8G
 #SBATCH --wait
 
 module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
 
-mpirun -np 1 $mlp train $mtp $train --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=$mtp
+mpirun -np 4 --oversubscribe $mlp train $mtp $train --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=$mtp

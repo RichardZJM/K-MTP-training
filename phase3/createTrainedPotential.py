@@ -344,9 +344,9 @@ for numAtom in numAtomList:
             latticeParameter = strain * params["baseLatticeParameter"] * (numAtom/2)**(1/3) * 0.529177
             for i in range (numAtom):
                 for _ in range(params["maxAtomPlacementTries"]):         #Add a limit to the number of tries to place an atom
-                    x = random.uniform(0, latticeParameter)
-                    y = random.uniform(0, latticeParameter)
-                    z = random.uniform(0, latticeParameter)
+                    x = random.uniform(0.5, latticeParameter-0.5)
+                    y = random.uniform(0.5, latticeParameter-0.5)
+                    z = random.uniform(0.5, latticeParameter-0.5)
                     validPosition = True
                     for atomPosition in atomPositions:
                         distance = (x-atomPosition[0])**2 + (y-atomPosition[1])**2 + (z-atomPosition[2])**2
