@@ -33,3 +33,7 @@ phase1Testing/initial_test_md/log.lammps
 phase1Testing/initial_test_md/out.run
 phase1Testing/initial_test_md/pot.mtp
 phase3/bfgs.log
+validation/miniMTP.txt.xml
+validation/out.cfg
+validation/outMTP.txt
+validation/miniMTP.txt

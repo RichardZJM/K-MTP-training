@@ -5,7 +5,7 @@
   "1AtomDFTShearStep": 0.1,
   "2AtomDFTStrainRange": [0.9, 1.11],
   "2AtomDFTStrainStep": 0.025,
-  "MDNumberAtoms": [2, 3, 5, 7],
+  "MDNumberAtoms": [2],
   "MDTemperatures": [100, 300, 400, 800],
   "MDStrainRange": [0.95, 1.06],
   "MDStrainStep": 0.02,
