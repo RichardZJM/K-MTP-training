@@ -44,7 +44,8 @@ if  os.path.exists(DFToutputFolder): shutil.rmtree(DFToutputFolder)
 if  os.path.exists(initialGenerationFolder) and not preserveInitial: shutil.rmtree(initialGenerationFolder)
 
 if  os.path.exists(mtpFile): os.remove(mtpFile)
-if  os.path.exists(mtpFile): os.remove(mtpJobFile)
+if  os.path.exists(bfgsLog): os.remove(bfgsLog)
+if  os.path.exists(mtpJobFile): os.remove(mtpJobFile)
 if  os.path.exists(trainingConfigs): os.remove(trainingConfigs)
 if  os.path.exists(preselectedConfigs): os.remove(preselectedConfigs)
 if  os.path.exists(selectedConfigs): os.remove(selectedConfigs)
@@ -55,6 +56,6 @@ if  os.path.exists(alsFile): os.remove(alsFile)
 
 freshMTP = mtpFolder + "/" + loadedMTP + ".mtp"
 
-shutil.copy(freshMTP,mtpFile)
+shutil.copy(freshMTP, mtpFile)
 
 os.chdir(rootFolder)
