@@ -46,6 +46,7 @@ def QE_OUTPUT():
                 l_file = len(lines)
                 l_job_done = l_file - 2
                 
+                deadfile = False
                 #print(lines[l_file - 2])
                 for line in lines:
                     if ('convergence NOT achieved after ' in line):
@@ -53,12 +54,16 @@ def QE_OUTPUT():
                         print('The file name is', filename)
                         exit(1)
                 #elif (lines[l_job_done] == 'JOB DONE.'):
+              
                 if (lines[l_job_done] != 'JOB DONE.'):
                     sys.stderr.write('Warning: Check QE outputs, job not done found. Might be due to local bug. Skipping...\n')
                     print('The file name is', filename)
+                    os.remove(filename)
+                    deadfile = True
                     continue
                 else:
                     index = l_file - 2
+                    
                 bravais_lattice_index=[j for j in lines if 'bravais-lattice index' in j]
                 number_of_atoms_cell=[j for j in lines if 'number of atoms/cell' in j]
                 number_of_atomic_types=[j for j in lines if 'number of atomic types' in j]

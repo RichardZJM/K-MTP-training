@@ -268,6 +268,8 @@ temperatures = params["MDTemperatures"]
 strains = np.arange(params["MDStrainRange"][0],params["MDStrainRange"][1],params["MDStrainStep"] )
 numAtomList = params["MDNumberAtoms"]
 baseline = params["baseLatticeParameter"]
+maxIterPerNatom = params["maxIterPerNatom"]
+maxIters = {numAtomList[i] : maxIterPerNatom[i] for i in range(len(numAtomList))}
 #endregion
 
 printAndLog("Starting the active learning loop")
@@ -337,11 +339,10 @@ for numAtom in numAtomList:
 
     #For Multi Atom Generations
     else:
-        for strain in strains:
-            # For the mutli atom configurations (random generation)
+        # For the mutli atom configurations (random generation)
             # Calculate a random configuration witht the specified number of atoms. 
             atomPositions = [] 
-            latticeParameter = strain * params["baseLatticeParameter"] * (numAtom/2)**(1/3) * 0.529177
+            latticeParameter = strains[0] * params["baseLatticeParameter"] * (numAtom/2)**(1/3) * 0.529177
             for i in range (numAtom):
                 for _ in range(params["maxAtomPlacementTries"]):         #Add a limit to the number of tries to place an atom
                     x = random.uniform(0.5, latticeParameter-0.5)
@@ -350,78 +351,81 @@ for numAtom in numAtomList:
                     validPosition = True
                     for atomPosition in atomPositions:
                         distance = (x-atomPosition[0])**2 + (y-atomPosition[1])**2 + (z-atomPosition[2])**2
-                        if(distance < 2): 
+                        print(distance)
+                        if(distance < 4): 
                             validPosition = False
                             break
                     if(validPosition): 
                         atomPositions.append([x,y,z])
                         break
-                
+            
             atomPositionsString = []        
             for a in np.arange(numAtom):
                 atomPositionsString.append(' %d 1 %f %f %f \n' % (a+1,atomPositions[a][0], atomPositions[a][1], atomPositions[a][2]))         
             atomPositions = ' '.join(atomPositionsString)    
+            print(atomPositionsString)
+            for strain in strains:    
+                for temperature in temperatures:
+                    latticeParameter = strain * params["baseLatticeParameter"] * (numAtom/2)**(1/3) * 0.529177
                     
-            for temperature in temperatures:
-                # Generate the necessary folder and file names
-                folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
-                inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".in"
-                dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".dat"
-                jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
-                outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)+ ".out"
+                    # Generate the necessary folder and file names
+                    folderName = mdFolder +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)
+                    inputName =   folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".in"
+                    dataName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".dat"
+                    jobName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+                    outputName =  folderName +  "/N" + str(numAtom) + "T" + str (temperature) + "S" + str(strain)+ ".out"
+                    
+                    # Generate a new directory for each MD Run 
+                    if not os.path.exists(folderName): os.mkdir(folderName)
                 
-                # Generate a new directory for each MD Run 
-                if not os.path.exists(folderName): os.mkdir(folderName)
-            
-                # Copy the templates for the LAMMPS input and data files
-                shutil.copyfile(mdRunTemplate, inputName)
-                shutil.copyfile(multiDataTemplate, dataName)
-                shutil.copyfile(jobTemplate, jobName)
-                
-                # Make modifications to the LAMMPS input using regex substitutions
-                with open (inputName, 'r+' ) as f:
-                    content = f.read()
-                    contentNew = re.sub("\$ttt", str(temperature), content)  
-                    contentNew = re.sub("\$ddd", dataName, contentNew)      
-                    contentNew = re.sub("\$ini", iniFile, contentNew)       
-                    f.seek(0)
-                    f.write(contentNew)
-                    f.truncate()
+                    # Copy the templates for the LAMMPS input and data files
+                    shutil.copyfile(mdRunTemplate, inputName)
+                    shutil.copyfile(multiDataTemplate, dataName)
+                    shutil.copyfile(jobTemplate, jobName)
                     
-                # Make modifications to the data file using regex substitutions
-                with open (dataName, 'r+' ) as f:
-                    content = f.read()
-                    contentNew = re.sub("\$aaa", str(latticeParameter), content)      #substitute lattice parameter marker with the strained cell dimensions
-                    contentNew = re.sub("\$mmm", atomPositions, contentNew)
-                    contentNew = re.sub("\$n", str(numAtom), contentNew)
-                    f.seek(0)
-                    f.write(contentNew)
-                    f.truncate()
-                    
-                # Make modifications to the job file using regex substitutions
-                with open (jobName, 'r+' ) as f:
-                    content = f.read()
-                    contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
-                    contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
-                    contentNew = re.sub("\$folder", folderName, contentNew) 
-                    contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
-                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                    contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
-                    contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
-                    contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
-                    contentNew = re.sub("\$in", inputName, contentNew)      
-                    contentNew = re.sub("\$out", outputName, contentNew)
-                    f.seek(0)
-                    f.write(contentNew)
-                    f.truncate()
-        printAndLog("Generated MD runs.")
+                    # Make modifications to the LAMMPS input using regex substitutions
+                    with open (inputName, 'r+' ) as f:
+                        content = f.read()
+                        contentNew = re.sub("\$ttt", str(temperature), content)  
+                        contentNew = re.sub("\$ddd", dataName, contentNew)      
+                        contentNew = re.sub("\$ini", iniFile, contentNew)       
+                        f.seek(0)
+                        f.write(contentNew)
+                        f.truncate()
+                        
+                    # Make modifications to the data file using regex substitutions
+                    with open (dataName, 'r+' ) as f:
+                        content = f.read()
+                        contentNew = re.sub("\$aaa", str(latticeParameter), content)      #substitute lattice parameter marker with the strained cell dimensions
+                        contentNew = re.sub("\$mmm", atomPositions, contentNew)
+                        contentNew = re.sub("\$n", str(numAtom), contentNew)
+                        f.seek(0)
+                        f.write(contentNew)
+                        f.truncate()
+                        
+                    # Make modifications to the job file using regex substitutions
+                    with open (jobName, 'r+' ) as f:
+                        content = f.read()
+                        contentNew = re.sub("\$job", "N" + str(numAtom) + "T" + str(temperature) + "S" +str(strain), content) 
+                        contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+                        contentNew = re.sub("\$folder", folderName, contentNew) 
+                        contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+                        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                        contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
+                        contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
+                        contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
+                        contentNew = re.sub("\$in", inputName, contentNew)      
+                        contentNew = re.sub("\$out", outputName, contentNew)
+                        f.seek(0)
+                        f.write(contentNew)
+                        f.truncate()
+            printAndLog("Generated MD runs.")
         
     #endregion
     
-    
-    for i in range(params["maxIterPerNatom"]):
-        printAndLog(str(numAtom) + " atoms, iteration: " + str(i+1) + " of up to " + str(params["maxIterPerNatom"]))
+    for i in range(maxIters[numAtom]):
+        printAndLog(str(numAtom) + " atoms, iteration: " + str(i+1) + " of up to " + str(maxIters[numAtom]))
         
         #region Extraction of DFT Results and Training
         extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
@@ -457,29 +461,30 @@ for numAtom in numAtomList:
         os.chdir(rootFolder)
             
         #region Generate an state als
-        calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
-        calcGradeJob = mtpFolder + "/calcGrade.qsub"
-        shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
-        with open (calcGradeJob, 'r+' ) as f:
-                content = f.read()
-                contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-                contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
-                contentNew = re.sub("\$mtp", mtpFile, contentNew)
-                contentNew = re.sub("\$als", alsFile, contentNew)
-                contentNew = re.sub("\$train", trainingConfigs, contentNew)
-                contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
-                f.seek(0)
-                f.write(contentNew)
-                f.truncate()
-        exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
-        if(exitCode):
-            printAndLog("The calc grade call has failed. Exiting...")
-            quit()
-        printAndLog("Generated new ALS file")
-        os.remove(calcGradeJob)
+        if not os.path.exists(alsFile):
+            calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
+            calcGradeJob = mtpFolder + "/calcGrade.qsub"
+            shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
+            with open (calcGradeJob, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                    contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
+                    contentNew = re.sub("\$mtp", mtpFile, contentNew)
+                    contentNew = re.sub("\$als", alsFile, contentNew)
+                    contentNew = re.sub("\$train", trainingConfigs, contentNew)
+                    contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+            exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
+            if(exitCode):
+                printAndLog("The calc grade call has failed. Exiting...")
+                quit()
+            printAndLog("Generated new ALS file")
+            os.remove(calcGradeJob)
         #endregion
 
         # Generate and run train job file (job file must be used to avoid clogging login nodes)

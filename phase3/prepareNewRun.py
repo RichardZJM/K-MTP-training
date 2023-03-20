@@ -26,6 +26,7 @@ diffDFTFolder = rootFolder + "/diffDFT"
 initialGenerationFolder = rootFolder + "/initialGenerationDFT" 
 
 mtpFile = mtpFolder + "/pot.mtp"
+mtpJobFile = mtpFile + "/trainMTP.qsub"
 trainingConfigs = mtpFolder + "/train.cfg"
 preselectedConfigs = mtpFolder + "/preselected.cfg"
 selectedConfigs = mtpFolder + "/selected.cfg"
@@ -33,6 +34,7 @@ diffConfigs = mtpFolder + "/diff.cfg"
 outConfigs = mtpFolder + "/out.cfg"
 iniFile = mtpFolder + "/mlip.ini"
 alsFile = mtpFolder + "/state.als"
+bfgsLog = rootFolder + "/bfgs.log"
 
 # if  os.path.exists(slurmRunFolder): shutil.rmtree(slurmRunFolder)
 if  os.path.exists(mdFolder): shutil.rmtree(mdFolder)
@@ -42,6 +44,7 @@ if  os.path.exists(DFToutputFolder): shutil.rmtree(DFToutputFolder)
 if  os.path.exists(initialGenerationFolder) and not preserveInitial: shutil.rmtree(initialGenerationFolder)
 
 if  os.path.exists(mtpFile): os.remove(mtpFile)
+if  os.path.exists(mtpFile): os.remove(mtpJobFile)
 if  os.path.exists(trainingConfigs): os.remove(trainingConfigs)
 if  os.path.exists(preselectedConfigs): os.remove(preselectedConfigs)
 if  os.path.exists(selectedConfigs): os.remove(selectedConfigs)

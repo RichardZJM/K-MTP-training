@@ -1,9 +1,8 @@
 import os
 import numpy as np
 
+pairs = {}
 
-distances = np.arange(9.5,10.6,0.1)
-counter = 0
 
 if os.path.exists("outMTP.txt"): os.remove("outMTP.txt")
 
@@ -13,7 +12,14 @@ with open("out.cfg", 'r') as txtfile:
             for i in index:
                 
                 energy = float(fileLines[i+10])   #Read energy
-                print(energy)
-                with open ("outMTP.txt","a") as file:
-                    file.write(str(round(distances[counter],1)) + " " + str(energy*0.0734985857) + "\n" )
-                counter += 1
+                # print(energy)
+                
+               
+                v1 = np.array(fileLines[i+4].split(),dtype=float)       #Read supercell
+                latticeParam  = max(v1) * 1.88973 * 2
+                pairs[latticeParam] = str(energy*0.0734985857)
+                
+                
+for lat,eng in sorted(pairs.items(), key = lambda x: x[0]):
+    with open ("outMTP.txt","a") as file:
+        file.write(str(lat) + "\t" + eng + "\n")
