@@ -12,7 +12,7 @@
     nat=$nnn,
     ntyp=1,
     vdw_corr='grimme-d2'
-    ecutwfc=50,
+    ecutwfc=60,
     occupations='smearing',
     smearing = 'gaussian',
     degauss = 0.01,
