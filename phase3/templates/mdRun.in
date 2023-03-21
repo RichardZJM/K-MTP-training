@@ -1,10 +1,14 @@
-units           metal
-atom_style	atomic
-boundary        p p p
-box tilt large
-read_data        $ddd
+units            metal
+dimension        3
+boundary         p p p
 
-mass            * 39.0983
+
+atom_style       atomic
+lattice          bcc $base
+region           whole block 0 $111 0 $222 0 $333 units lattice
+create_box       1  whole
+create_atoms     1 region whole
+mass             1 39.0983
 
 pair_style mlip $ini
 pair_coeff * *
