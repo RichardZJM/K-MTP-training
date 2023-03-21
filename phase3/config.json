@@ -20,6 +20,7 @@
   "pseudopotential": "K.pbe-mt_fhi.UPF",
   "lmpMPIFile": "/global/home/hpc5146/interface-lammps-mlip-2/lmp_mpi",
   "baseLatticeParameter": 9.6568,
+  "baseKPoints": 8,
   "slurmParam": {
     "account": "def-hpcg1725",
     "partition": "reserved",

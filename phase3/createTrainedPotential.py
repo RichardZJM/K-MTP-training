@@ -534,6 +534,8 @@ for config in configs:
             numAtoms = numAtomsList[i]          # Extract the config info into variables for easier future usage
             superCell = superCellVectorsList[i]
             atomPositions = posAtomsList[i]
+            #Use the inverse scaling property of k points to scale the computational burden based on the diff dft cell size
+            kpoints = [int((params["baseLatticeParameter"]*0.529177)*params["baseKPoints"]//max(x)+ 1) for x in superCell]
             
             if not os.path.exists(folderName): os.mkdir(folderName)
             
@@ -548,6 +550,9 @@ for config in configs:
                 contentNew = re.sub("\$v1", str(superCell[0])[1:-1], contentNew)          #Same with supercell vectors.
                 contentNew = re.sub("\$v2", str(superCell[1])[1:-1], contentNew)
                 contentNew = re.sub("\$v3", str(superCell[2])[1:-1], contentNew)
+                contentNew = re.sub("\$k1", str(kpoints[0]), contentNew)          #Same with supercell vectors.
+                contentNew = re.sub("\$k2", str(kpoints[1]), contentNew)
+                contentNew = re.sub("\$k3", str(kpoints[2]), contentNew)
                 contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
                 contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
                 contentNew = re.sub("\$out", folderName, contentNew)  
@@ -562,7 +567,6 @@ for config in configs:
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
-                
             # Make modifications to the job file using regex substitutions
             with open (jobName, 'r+' ) as f:
                 content = f.read()
