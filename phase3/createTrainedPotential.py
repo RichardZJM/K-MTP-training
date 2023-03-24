@@ -398,6 +398,7 @@ for config in configs:
         # Generate and run train job file (job file must be used to avoid clogging login nodes)
         trainJobTemplate = templatesFolder + "/trainMTP.qsub"
         trainJob = mtpFolder + "/trainMTP.qsub"
+        trainOutput = slurmRunFolder + "/train.out"
         shutil.copyfile(trainJobTemplate, trainJob)
         with open (trainJob, 'r+' ) as f:
                     content = f.read()
@@ -417,7 +418,18 @@ for config in configs:
             print("The train call has failed. Potential may be unstable. Exiting...")
             quit()
         os.remove(trainJob)
+        avgEnergyError = "Not Found"
+        avgForceError = "Not Found"
+        with open(trainOutput, "r") as txtfile:
+            lines = txtfile.readlines()
+            for i,line in enumerate(lines):
+                if(line == "Energy per atom:\n"):
+                    avgEnergyError = lines[i+3][31:]
+                if(line == "Forces:\n"):
+                    avgForceError = lines[i+3][31:]
         printAndLog("Passive training iteration completed.")
+        printAndLog("Average energy per atom error: " + avgEnergyError)
+        printAndLog("Average energy per atom error: " + avgForceError)
         #endregion
         
         # Run the MD Jobs

@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --account=def-hpcg1725
+#SBATCH --partition=reserved
+#SBATCH --qos=privileged
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --job-name=TrainMTP
+#SBATCH --output=/global/home/hpc5146/Projects/K-MTP-training/phase3/slurmRunOutputs/create.out
+#SBATCH --mem-per-cpu=8G
+#SBATCH --time=0-08:00 # time (DD-HH:MM)
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=17zjm1@queensu.ca
+#SBATCH
+
+source  ../ENV/bin/activate
+python createTrainedPotential.py
