@@ -424,12 +424,12 @@ for config in configs:
             lines = txtfile.readlines()
             for i,line in enumerate(lines):
                 if(line == "Energy per atom:\n"):
-                    avgEnergyError = lines[i+3][31:]
+                    avgEnergyError = lines[i+3][31:-1]
                 if(line == "Forces:\n"):
-                    avgForceError = lines[i+3][31:]
+                    avgForceError = lines[i+3][31:-1]
         printAndLog("Passive training iteration completed.")
         printAndLog("Average energy per atom error: " + avgEnergyError)
-        printAndLog("Average energy per atom error: " + avgForceError)
+        printAndLog("Average force per atom error: " + avgForceError)
         #endregion
         
         # Run the MD Jobs

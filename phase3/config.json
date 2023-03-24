@@ -14,7 +14,7 @@
     [3, 3, 3]
   ],
   "maxItersPerConfig": [20, 10, 10, 10, 5, 2],
-  "MDTemperatures": [100, 330, 800],
+  "MDTemperatures": [100, 300, 400, 800],
   "MDStrainRange": [0.95, 1.06],
   "MDStrainStep": 0.02,
   "selectThreshold": 2.1,
