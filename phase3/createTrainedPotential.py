@@ -76,7 +76,7 @@ if not os.path.exists(DFToutputFolder): os.mkdir(DFToutputFolder)
 else: 
     pass
     # RUN NEXT PART OF THE SCRIPT
-    # quit()
+    # exit(1)
 #endregion
 
 #region Inital Generation
@@ -226,7 +226,7 @@ subprocesses = []
 failure = bool(sum(exitCodes))
 if failure:
     printAndLog( str(sum([1 for x in exitCodes if x != 0])) + " of the inital DFT runs has been unsuccessful. Exiting now...")
-    quit()  
+    exit(1)  
 
 printAndLog("Initial generation of DFT training dataset has completed.")
 #endregion    
@@ -361,7 +361,7 @@ for config in configs:
         exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
         if(exitCode):
             print("The mindist call has failed. Potential may be unstable. Exiting...")
-            quit()
+            exit(1)
 
         os.remove(minddistJob)
         # Copy the newly formed training config to the mtpProperties
@@ -390,7 +390,7 @@ for config in configs:
             exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
             if(exitCode):
                 printAndLog("The calc grade call has failed. Exiting...")
-                quit()
+                exit(1)
             printAndLog("Generated new ALS file")
             os.remove(calcGradeJob)
         #endregion
@@ -416,7 +416,7 @@ for config in configs:
         exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
         if(exitCode):
             print("The train call has failed. Potential may be unstable. Exiting...")
-            quit()
+            exit(1)
         os.remove(trainJob)
         avgEnergyError = "Not Found"
         avgForceError = "Not Found"
@@ -495,7 +495,7 @@ for config in configs:
         exitCode = subprocess.Popen(["sbatch", selectAddJob]).wait()
         if(exitCode):
             printAndLog("The select add call has failed. Exiting...")
-            quit()
+            exit(1)
         os.remove(selectAddJob)
         printAndLog("Diff DFT configurations selected.")
         #endregion
@@ -604,7 +604,7 @@ for config in configs:
         else: 
             pass
         printAndLog("Diff DFT calculations complete.")
-        # quit()
+        # exit(1)
         #endregion
         
 #endregion
