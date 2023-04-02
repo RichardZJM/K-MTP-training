@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --job-name=TrainMTP
-#SBATCH --output=/global/home/hpc5146/Projects/K-MTP-training/phase3/slurmRunOutputs/create.out
+#SBATCH --output=./create.out
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=0-010:00 # time (DD-HH:MM)
 #SBATCH --mail-type=FAIL
