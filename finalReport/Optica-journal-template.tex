@@ -17,31 +17,36 @@
 
 \title{Training and Validation of Moment Tensor Potentials for Potassium Metal}
 
-\author[1,*,**]{ Richard Meng}
-\author[1]{Author Two}
-\author[1]{Author Three}
+\author[1,2,3]{ Richard Meng}
+\author[1]{Laurent  Béland}
+\author[1]{Hao Sun}
 
 \affil[1]{Department of Mechanical and Materials Engineering, Queen's University, 45 Union St, Kingston, ON K7L 3N6}
-\affil[2]{School of Science, University of Technology, 2000 J St. NW, Washington DC, 20036}
-\affil[3]{School of Optics, University of Technology, 2000 J St. NW, Washington DC, 20036}
 
-\affil[*]{contact@richardzjm.com}
-\affil[**]{17zjm1@queensu.ca}
+\affil[2]{contact@richardzjm.com}
+\affil[3]{17zjm1@queensu.ca}
 
 \begin{abstract}
 This template can be used to approximate final page count for submission to Optica Publishing Group’s journals \emph{Applied Optics}, \emph{Journal of Optical Communications and Networking}, JOSA A, JOSA B, \emph{Optics Letters}, \emph{Optica}, and \emph{Photonics Research}. Use the shortarticle/true option for \emph{Optics Letters} and short \emph{Optica} articles.  Authors may also \href{https://opticaopen.org}{submit articles} prepared using this template to the Optica Publishing Group preprint server, \href{https://preprints.opticaopen.org}{Optica Open}. However, doing so is optional. Please refer to the submission guidelines found there. Note that copyright and licensing information should no longer be added to your Journal or Optica Open manuscript.
 \end{abstract}
 
-\setboolean{displaycopyright}{false} % Do not include copyright or licensing information in submission.
+\setboolean{displaycopyright}{true} % Do not include copyright or licensing information in submission.
 
 \begin{document}
 
 \maketitle
 
 \section{Introduction}
-See \href{https://opg.optica.org/submit/templates/default.cfm}{Style Guide} and \href{https://opg.optica.org/submit/templates/default.cfm}{Manuscript Templates} pages for more details. 
+Molecular Dynamics has been an invaluable tool in fields such as computational chemistry, materials science, and pharmaceutical drug discovery, for modelling and predicting the properties of compounds. 
+ 
+Atom-scale materials modelling requires a description of the energies and forces associated to interatomic interactions. Quantum chemistry techniques like Density Functional Theory (DFT) or Hartree-Fock methods provide such a description but are limited to systems of modest size. For instance, obtaining the interatomic forces in a system with a few hundred atoms can require tens of hours, even if using a hundred or so computer cores in parallel.
+Interatomic pair potentials overcome this size limitation and can be based on simple functional forms to reflect the various types of bonding exhibited in solids. Using these potentials, interatomic forces can be calculated in microseconds, enabling simulations that can reach much larger time and length scales, but at the cost of lost accuracy compared to DFT.
 
-If you have a question while using this template on {Overleaf}, please use the help menu (``?'') on the top bar to search for help or ask us a question using our \href{https://www.overleaf.com/contact}{contact form}.
+In recent years, machine learning potentials have emerged as an alternative that bridges the accuracy/cost compromise between pair potentials and DFT. These include neural network and graph neural network potentials, Gaussian process regression potentials and linear regression potentials.
+The moment tensor potential (MTP) falls in the latter category. The MTP considers radial interactions by fitting to polynomial basis sets and accounts for angular effects with nested outer products on position vectors. The MTP uses a complete basis set that is analytically differentiable and invariant under rotation, translation, and reflection. MTPs are trained on the output of DFT calculations.
+The MTP has been of recent interest to the Nuclear Materials group and Queen's MME Professor LK Béland who had been in contact with ECE professor Ryan Grant. Professor Grant specializes in the parallelization of algorithms and high-performance computing and is familiar with the development of LAMMPS, a popular atom-scale simulation software suite. Interfaces are available to apply the MTP in LAMMPS, although some algorithmic and efficiency limitations could be improved upon. In particular, I would like to parallelize some important aspects of the MTP training scheme which are currently only implemented as a serial code.
+
+\subsection[short]{title}{here}
 
 \section{Corresponding author}
 
