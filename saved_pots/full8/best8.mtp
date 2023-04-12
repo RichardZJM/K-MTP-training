@@ -6,7 +6,7 @@ species_count = 1
 potential_tag = 
 radial_basis_type = RBChebyshev
 	min_dist = 1.500000000000000e+00
-	max_dist = 5.200000000000000e+00
+	max_dist = 6
 	radial_basis_size = 8
 	radial_funcs_count = 2
 	radial_coeffs

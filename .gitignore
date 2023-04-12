@@ -42,3 +42,5 @@ lattice_minimization
 ai_md
 configurationalValidation
 massRuns
+mdMTPRun*
+anims
