@@ -30,15 +30,20 @@
 This template can be used to approximate final page count for submission to Optica Publishing Group’s journals \emph{Applied Optics}, \emph{Journal of Optical Communications and Networking}, JOSA A, JOSA B, \emph{Optics Letters}, \emph{Optica}, and \emph{Photonics Research}. Use the shortarticle/true option for \emph{Optics Letters} and short \emph{Optica} articles.  Authors may also \href{https://opticaopen.org}{submit articles} prepared using this template to the Optica Publishing Group preprint server, \href{https://preprints.opticaopen.org}{Optica Open}. However, doing so is optional. Please refer to the submission guidelines found there. Note that copyright and licensing information should no longer be added to your Journal or Optica Open manuscript.
 \end{abstract}
 
-\setboolean{displaycopyright}{true} % Do not include copyright or licensing information in submission.
+\setboolean{displaycopyright}{false} % Do not include copyright or licensing information in submission.
+\doi{\url{www.richardzjm.com/projects}}
 
 \begin{document}
 
 \maketitle
 
 \section{Introduction}
-Molecular Dynamics has been an invaluable tool in fields such as computational chemistry, materials science, and pharmaceutical drug discovery, for modelling and predicting the properties of compounds. 
- 
+Molecular Dynamics (MD) has been an invaluable tool in fields such as computational chemistry, materials science, and pharmaceutical drug discovery, for modelling the motions of atoms and predicting the properties of compounds \cite{karplus2002molecular}. MD models atomic motions using a classical representation of atoms, representing them as particles and applying the interatomic forces to numerically solve the equations of motion.
+
+Quantum chemistry methods provide perhaps the best descriptor of the interatomic methods. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a high-fidelity force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a  system of moderate size.  A single timestep in a DFT MD run of 56 atoms took several hours on 48 cores. 
+
+Interatomic potentials, less expensive descriptors which approximate interatomic forces predictions, are usually used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between all pairs of atoms with a simple function of pair-wise separation. More sophisticated many-body potentials like EAM potentials for metals and 
+
 Atom-scale materials modelling requires a description of the energies and forces associated to interatomic interactions. Quantum chemistry techniques like Density Functional Theory (DFT) or Hartree-Fock methods provide such a description but are limited to systems of modest size. For instance, obtaining the interatomic forces in a system with a few hundred atoms can require tens of hours, even if using a hundred or so computer cores in parallel.
 Interatomic pair potentials overcome this size limitation and can be based on simple functional forms to reflect the various types of bonding exhibited in solids. Using these potentials, interatomic forces can be calculated in microseconds, enabling simulations that can reach much larger time and length scales, but at the cost of lost accuracy compared to DFT.
 
