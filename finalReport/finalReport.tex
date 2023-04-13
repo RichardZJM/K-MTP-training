@@ -30,8 +30,8 @@
 This template can be used to approximate final page count for submission to Optica Publishing Group’s journals \emph{Applied Optics}, \emph{Journal of Optical Communications and Networking}, JOSA A, JOSA B, \emph{Optics Letters}, \emph{Optica}, and \emph{Photonics Research}. Use the shortarticle/true option for \emph{Optics Letters} and short \emph{Optica} articles.  Authors may also \href{https://opticaopen.org}{submit articles} prepared using this template to the Optica Publishing Group preprint server, \href{https://preprints.opticaopen.org}{Optica Open}. However, doing so is optional. Please refer to the submission guidelines found there. Note that copyright and licensing information should no longer be added to your Journal or Optica Open manuscript.
 \end{abstract}
 
-\setboolean{displaycopyright}{false} % Do not include copyright or licensing information in submission.
-\doi{\url{www.richardzjm.com/projects}}
+\setboolean{displaycopyright}{false}
+\doi{\url{https://www.richardzjm.com/projects} \\ \url{https://github.com/RichardZJM/K-MTP-training}}
 
 \begin{document}
 
@@ -42,14 +42,23 @@ Molecular Dynamics (MD) has been an invaluable tool in fields such as computatio
 
 Quantum chemistry methods provide perhaps the best descriptor of the interatomic methods. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a high-fidelity force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a  system of moderate size.  A single timestep in a DFT MD run of 56 atoms took several hours on 48 cores. 
 
-Interatomic potentials, less expensive descriptors which approximate interatomic forces predictions, are usually used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between all pairs of atoms with a simple function of pair-wise separation. More sophisticated many-body potentials like EAM potentials for metals and 
+Interatomic potentials, less expensive descriptors which approximate interatomic forces predictions, are usually used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between all pairs of atoms with a simple function of pair-wise separation. More sophisticated many-body potentials like EAM potentials for metals and the bond order potentials for covalent solids have seen widespread practical use \cite{MatSci}. Much of recent research in interatomic potential development has been focused on machine learning (ML) potentials. These offer an improvable and adaptable approach to force modelling which is more made accessible by the relative ease of training data acquisition through quantum modelling methods. Some of the common categories of ML potentials include neural networks, Gaussian approximation potentials, and linear regression on basis sets \cite{mlip}.
 
-Atom-scale materials modelling requires a description of the energies and forces associated to interatomic interactions. Quantum chemistry techniques like Density Functional Theory (DFT) or Hartree-Fock methods provide such a description but are limited to systems of modest size. For instance, obtaining the interatomic forces in a system with a few hundred atoms can require tens of hours, even if using a hundred or so computer cores in parallel.
-Interatomic pair potentials overcome this size limitation and can be based on simple functional forms to reflect the various types of bonding exhibited in solids. Using these potentials, interatomic forces can be calculated in microseconds, enabling simulations that can reach much larger time and length scales, but at the cost of lost accuracy compared to DFT.
+The Moment Tensor Potential (MTP) falls into this last category, making considerations for the radial and angular interactions. These contributions are evaluated within a cutoff radius, taking the sum of learnable linear combinations on the atom-atom positions \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the value of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on-the-fly for further training.
 
-In recent years, machine learning potentials have emerged as an alternative that bridges the accuracy/cost compromise between pair potentials and DFT. These include neural network and graph neural network potentials, Gaussian process regression potentials and linear regression potentials.
-The moment tensor potential (MTP) falls in the latter category. The MTP considers radial interactions by fitting to polynomial basis sets and accounts for angular effects with nested outer products on position vectors. The MTP uses a complete basis set that is analytically differentiable and invariant under rotation, translation, and reflection. MTPs are trained on the output of DFT calculations.
-The MTP has been of recent interest to the Nuclear Materials group and Queen's MME Professor LK Béland who had been in contact with ECE professor Ryan Grant. Professor Grant specializes in the parallelization of algorithms and high-performance computing and is familiar with the development of LAMMPS, a popular atom-scale simulation software suite. Interfaces are available to apply the MTP in LAMMPS, although some algorithmic and efficiency limitations could be improved upon. In particular, I would like to parallelize some important aspects of the MTP training scheme which are currently only implemented as a serial code.
+\section{MTP Architecture}
+The MTP interatomic potential is best understood as a representation of polynomials. A smooth potential function can be approximated by a polynomial which can be chosen to be symmetrical with respect to reflection and rotations, allowing it to act as a basis.
+
+
+\section{Objectives}
+As an interatomic potential of interest to the Queen's Nuclear Materials Group, we look to explore the behaviour and validity of the MTP for Potassium metal. Precisely we aim to:
+\begin{itemize}
+  \itemsep0em
+  \item Train general-purpose MTPs of potassium metal for temperature ranges which span the solid and liquid phases, under reasonable levels of pressure and strain. 
+  \item Explore the effects of various MD learning simulations and training schemes on the active learning of an MTP.
+  \item  Test the sensitivity of the MTP to hyperparameters and the initial, randomized learnable parameters. 
+  \item Validate the MTP with physical property prediction against DFT results: elastic properties, radial distribution function (RDF), and configuration errors.
+\end{itemize}
 
 \subsection[short]{title}{here}
 
