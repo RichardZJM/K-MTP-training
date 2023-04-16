@@ -40,11 +40,11 @@ This template can be used to approximate final page count for submission to Opti
 \section{Introduction}
 Molecular Dynamics (MD) has been an invaluable tool in fields such as computational chemistry, materials science, and pharmaceutical drug discovery, for modelling the motions of atoms and predicting the properties of compounds \cite{karplus2002molecular}. MD models atomic motions using a classical representation of atoms, representing them as particles and applying the interatomic forces to numerically solve the equations of motion.
 
-Quantum chemistry methods provide perhaps the best descriptor of the interatomic methods. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a high-fidelity force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a  system of moderate size.  A single timestep in a DFT MD run of 56 atoms took several hours on 48 cores. 
+Quantum chemistry methods provide perhaps the best descriptor of the interatomic methods. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a high-fidelity force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a system of moderate size.  A single timestep in a DFT MD run of 56 atoms took several hours on 48 cores. 
 
 Interatomic potentials, less expensive descriptors which approximate interatomic forces predictions, are usually used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between all pairs of atoms with a simple function of pair-wise separation. More sophisticated many-body potentials like EAM potentials for metals and the bond order potentials for covalent solids have seen widespread practical use \cite{MatSci}. Much of recent research in interatomic potential development has been focused on machine learning (ML) potentials. These offer an improvable and adaptable approach to force modelling which is more made accessible by the relative ease of training data acquisition through quantum modelling methods. Some of the common categories of ML potentials include neural networks, Gaussian approximation potentials, and linear regression on basis sets \cite{mlip}.
 
-The Moment Tensor Potential (MTP) falls into this last category, making considerations for the radial and angular interactions. These contributions are evaluated within a cutoff radius, taking the sum of learnable linear combinations on the atom-atom positions \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the value of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on-the-fly for further training.
+The Moment Tensor Potential (MTP) falls into this last category, making considerations for the radial and angular interactions. These contributions are evaluated within a cutoff radius, taking the sum of learnable linear combinations on the atom-atom positions \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the value of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on the fly for further training through DFT calculations.
 
 \section{MTP Architecture}
 Here we provide a brief overview of the MTP architecture. More rigorous representations can be obtained from the source paper \cite{mtp}.
@@ -115,14 +115,20 @@ Thus, for each training configuration, we can formulate a vector of the per-conf
 \end{bmatrix}
 \]
 
-In cases where there are more training configurations than we have basis functions, $m < n$, this matrix would be tall. Applying the D-optimality criterion, the $m$ rows which compose the $m$ by $m$ square submatrix, $A$, that has the largest determinant magnitude are taken to be the most linearly independent members of the training set. When the MTP is used in an MD simulation, it can assess whether a newly encountered configuration, $\textrm{cfg_x}$ would increase the magnitude of $A$'s determinant. MTP can then find the configuration in A which increases $A$'s determinant's magnitude the most using Algorithm 1 
 
-\begin{equation}
-  (c_1(\textrm{cfg}_x) \cdots c_m(\textrm{cfg}_x)) = (b_1)
+In cases where there are more training configurations than we have basis functions, $m < n$, this matrix would be tall. Applying the D-optimality criterion, the $m$ rows which compose the $m$ by $m$ square submatrix, $A$, that has the largest determinant magnitude are taken to be the most linearly independent members of the training set. When the MTP is used in an MD simulation, it can assess whether a newly encountered configuration, $\textrm{cfg}_x$ would increase the magnitude of $A$'s determinant. MTP evaluates $c_i(\textrm{cfg}_x)$, the degree to which the determinant would be changed should the new configuration $x$ replace the $i$th member of the current submatrix $A$, using \ref{eq:actLearn}.
+
+\begin{equation} \label{eq:actLearn}
+  c(\textrm{cfg}_x)  = (c_1(\textrm{cfg}_x) \cdots c_m(\textrm{cfg}_x)) = (b_1(\textrm{cfg}_x) \cdots b_m(\textrm{cfg}_x)) A^{-1}
 \end{equation}
 
+The extrapolation grade is then defined at the maximum possible change in the magnitude of the determinant of $A$, This is equivalent to the maximum of the vector $c(\textrm{cfg}_x)$.
 
+\begin{equation}
+  \gamma(\textrm{cfg}_x) = \max c_1(\textrm{cfg}_x)
+\end{equation}
 
+Should the extrapolation grade be below 1, the newly encountered configuration is conceptually interpolating relative to the existing database. Grades above 1 correspond to interpolation or a new configuration. Interpolation would imply that adding the new configuration would allow the training set to encompass a richer (more linearly independent) representation, providing an evaluation criterion for determining future training on the fly. When a new configuration is added, it replaces the corresponding member in the submatrix $A$.
 
 \section{Objectives}
 As an interatomic potential of interest to the Queen's Nuclear Materials Group, we look to explore the behaviour and validity of the MTP for Potassium metal. Precisely we aim to:
@@ -134,7 +140,10 @@ As an interatomic potential of interest to the Queen's Nuclear Materials Group, 
   \item Validate the MTP with physical property prediction against DFT results: elastic properties, radial distribution function (RDF), and configuration errors.
 \end{itemize}
 
-\subsection[short]{title}{here}
+\section{Methodology}
+To produce generally applicable MTPs, and examine the practical applicability of the MTP, we emphasize the importance of a \textit{representative} training scheme for the target phases and environments. To examine potassium metal in solid and liquid phases, we target representative performance within 100-1000K, with minor strains and pressures.
+
+We first set a baseline of 
 
 \section{Corresponding author}
 
