@@ -98,22 +98,29 @@ Since the contribution is reliant on a linear combination of the basis functions
 When choosing the hyperparameters of an MTP, we define a maximum level, $\textrm{lev}_max$, and take all contractions of moment tensor descriptors which have a level less than or equal to this maximum level. Two other key hyperparameters in the MTP model are the cutoff radii (lower and upper bound) and the number of elements in the basis set.
 
 \section{Active Learning}
-The MTP is also capable of active learning, which allows the MTP to evaluate new configurations it encounters in use. When given a set of training configurations, each training configuration will produce a set of basis functions for each atom. These per-atom basis function values can be summed up to generate a per-configuration value of each basis function.
+The MTP is also capable of active learning, which allows the MTP to evaluate new configurations it encounters in use. When given a set of training configurations, each training configuration will produce a set of basis functions for each atom \cite{mlip}. These per-atom basis function values can be summed up to generate a per-configuration value of each basis function.
 
 \begin{equation}
   E^{MTP}(\textrm{cfg}) = \sum_i \sum_\alpha^m \xi_\alpha B_\alpha (n_i) = \sum_\alpha^m \xi_\alpha (\sum_i  B_\alpha (n_i)) = \sum_\alpha^m \xi_\alpha b_\alpha
 \end{equation}
 
-Thus, for each training configuration, we can formulate a vector of the per-configuration value of the basis functions, $b(\textrm{cfg})$. Taking these vectors of rows, we can form a matrix with a height equal to the number of training configurations and a width equal to the number of basis functions in the chosen level of MTP. 
+Thus, for each training configuration, we can formulate a vector of the per-configuration value of the basis functions, $b(\textrm{cfg})$. Taking these vectors of rows, we can form a matrix with a height equal to the number of training configurations and a width equal to the number of basis functions in the chosen level of MTP.  For $n$ training configurations with $m$ basis functions we have that,
 
 \[
-\begin{bmatrix}
-    x_{11}       & x_{12} & x_{13} & \dots & x_{1n} \\
-    x_{21}       & x_{22} & x_{23} & \dots & x_{2n} \\
-    \hdotsfor{5} \\
-    x_{d1}       & x_{d2} & x_{d3} & \dots & x_{dn}
+\begin{bmatrix} 
+    b_{1}(\textrm{cfg}_1)  & b_{1}(\textrm{cfg}_2)  & \cdots & b_{\alpha}(\textrm{cfg}_1) \\
+    b_{2}(\textrm{cfg}_2)  & b_{2}(\textrm{cfg}_2)  & \cdots & b_{\alpha}(\textrm{cfg}_2) \\
+    \vdots & \vdots & \ddots & \vdots \\ 
+    b_{1}(\textrm{cfg}_n)       & b_{2}(\textrm{cfg}_n)  & \dots & b_{\alpha}(\textrm{cfg}_n) 
 \end{bmatrix}
 \]
+
+In cases where there are more training configurations than we have basis functions, $m < n$, this matrix would be tall. Applying the D-optimality criterion, the $m$ rows which compose the $m$ by $m$ square submatrix, $A$, that has the largest determinant magnitude are taken to be the most linearly independent members of the training set. When the MTP is used in an MD simulation, it can assess whether a newly encountered configuration, $\textrm{cfg_x}$ would increase the magnitude of $A$'s determinant. MTP can then find the configuration in A which increases $A$'s determinant's magnitude the most using Algorithm 1 
+
+\begin{equation}
+  (c_1(\textrm{cfg}_x) \cdots c_m(\textrm{cfg}_x)) = (b_1)
+\end{equation}
+
 
 
 
