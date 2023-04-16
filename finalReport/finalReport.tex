@@ -47,7 +47,74 @@ Interatomic potentials, less expensive descriptors which approximate interatomic
 The Moment Tensor Potential (MTP) falls into this last category, making considerations for the radial and angular interactions. These contributions are evaluated within a cutoff radius, taking the sum of learnable linear combinations on the atom-atom positions \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the value of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on-the-fly for further training.
 
 \section{MTP Architecture}
-The MTP interatomic potential is best understood as a representation of polynomials. A smooth potential function can be approximated by a polynomial which can be chosen to be symmetrical with respect to reflection and rotations, allowing it to act as a basis.
+Here we provide a brief overview of the MTP architecture. More rigorous representations can be obtained from the source paper \cite{mtp}.
+
+In the MTP, the total energy of a configuration, $E^{MTP} (\textrm{cfg}) $, is represented by the total contributions, $V(n_i)$, of the local environment of each atom, shown in Equation \ref{eq:configEnergy}.  $V(n_i)$ is represented by the relative positions of atoms within a cutoff radius of the $i$th atom.
+
+\begin{equation} \label{eq:configEnergy}
+  E^{MTP} (\textrm{cfg}) = \sum_{i=1}^{n} V(n_i)
+\end{equation}
+
+For each atom, the contribution is a linear combination of a set of learnable weights, $\xi = \{\xi_\alpha\}$ and the basis set, shown in Equation \ref{eq:basisSet}.
+
+\begin{equation} \label{eq:basisSet}
+  V(n_i) = \sum_{\alpha} \xi_\alpha   B_\alpha (n_i)
+\end{equation}
+
+The elements of this basis set are formed from but not necessarily directly formed from moment tensor descriptors or simply \textit{moments}. A moment, $M_{\mu,\nu}$,  is characterized by a $\mu$ and a $\nu$ value, and has level, $\textrm{lev}_{max}$, which is given by \ref{eq:levelMTP}.
+
+\begin{equation} \label{eq:levelMTP}
+  \textrm{lev}M_{\mu,\nu} = 2 + 4\mu + \nu
+\end{equation}
+
+Each moment, given by Equation \ref{eq:moment}, has a radial part, $f_\mu (|r_{ij}|,z_i,z_j) $, characterized by the moment's $\mu$ value,  based on the distance between atoms, $|r_{ij}|$, and the species, $z_i$ and $z_j$. It also has an angular part, given by $r_{ij} ^{\otimes \nu}$.
+
+\begin{equation} \label{eq:moment}
+  M_{\mu,\nu} (n_i)= \sum_{j} f_\mu (|r_{ij}|,z_i,z_j) r_{ij} ^{\otimes \nu}
+\end{equation}
+
+\subsection{Radial Considerations}
+The radial component, given by Equation \ref{eq:radial}, expands into a linear combination of a set of learnable weights $c = \{c^{(\beta)} _ {\mu,z_i,z_j} \}$, on a basis set of radial functions.
+
+\begin{equation} \label{eq:radial}
+  f_\mu (|r_{ij}|,z_i,z_j) = \sum ^ {N_o} _ {\beta = 1} c^{(\beta)} _ {\mu,z_i,z_j}  Q^{(\beta)}(|r_{ij}|)
+\end{equation}
+
+The radial functions, given in Equation \ref{eq:cheby}, are simply members of a polynomial basis set, usually Chebyshev polynomials of the first order, $\phi$, which are quadratically smoothed towards the cutoff radius, $R_{\textrm{cut}}$, to preserve a continuous second derivative.
+
+\begin{equation} \label{eq:cheby}
+  Q^{(\beta)}(|r_{ij}|)=  \begin{cases}
+    \phi ^{(\beta)}(|r_{ij}|) (R_{\textrm{cut}} - |r_{ij}|)^2& |r_{ij}| < R_{\textrm{cut}} \\
+    0 & |r_{ij}| \geq R_{\textrm{cut}} 
+\end{cases}
+\end{equation}
+
+\subsection{Angular Considerations}
+The angular component, $r_{ij} ^{\otimes \nu}$, represents the outer product of $\nu$ copies of the relative position vectors between atoms $i$ and $j$. This yields a tensor of dimension equal to $\nu$. These values are not scalars, although they could yield scalars on their contraction.
+
+\subsection{Contraction of Tensors}
+Since the contribution is reliant on a linear combination of the basis functions, moments cannot directly be applied to form the basis functions due to the tensors possibly having different ranks. Instead, contractions are performed on some number of moments, which can ultimately lead to a scalar value. Much like moments have levels, the level of a contraction of moments is the sum of the levels of the constituent moments.
+
+When choosing the hyperparameters of an MTP, we define a maximum level, $\textrm{lev}_max$, and take all contractions of moment tensor descriptors which have a level less than or equal to this maximum level. Two other key hyperparameters in the MTP model are the cutoff radii (lower and upper bound) and the number of elements in the basis set.
+
+\section{Active Learning}
+The MTP is also capable of active learning, which allows the MTP to evaluate new configurations it encounters in use. When given a set of training configurations, each training configuration will produce a set of basis functions for each atom. These per-atom basis function values can be summed up to generate a per-configuration value of each basis function.
+
+\begin{equation}
+  E^{MTP}(\textrm{cfg}) = \sum_i \sum_\alpha^m \xi_\alpha B_\alpha (n_i) = \sum_\alpha^m \xi_\alpha (\sum_i  B_\alpha (n_i)) = \sum_\alpha^m \xi_\alpha b_\alpha
+\end{equation}
+
+Thus, for each training configuration, we can formulate a vector of the per-configuration value of the basis functions, $b(\textrm{cfg})$. Taking these vectors of rows, we can form a matrix with a height equal to the number of training configurations and a width equal to the number of basis functions in the chosen level of MTP. 
+
+\[
+\begin{bmatrix}
+    x_{11}       & x_{12} & x_{13} & \dots & x_{1n} \\
+    x_{21}       & x_{22} & x_{23} & \dots & x_{2n} \\
+    \hdotsfor{5} \\
+    x_{d1}       & x_{d2} & x_{d3} & \dots & x_{dn}
+\end{bmatrix}
+\]
+
 
 
 \section{Objectives}

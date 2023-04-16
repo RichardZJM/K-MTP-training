@@ -21,10 +21,10 @@ As an atomistic potential, the MTP method describes the energy of a system as a 
 The energy of each atom can be defined as the weighted summations through a set of basis functions:
 
 $$
-V(n_i) = \sum_{\alpha} \xi_\alpha   \Beta_\alpha
+V(n_i) = \sum_{\alpha} \xi_\alpha   \beta_\alpha
 $$
 
-The weightings, $\xi_\alpha$, are trainable parameters in the machine learning of the algorithm. $\Beta_\alpha$ are the members of the basis function to the level specified as a model hyperparameter.
+The weightings, $\xi_\alpha$, are trainable parameters in the machine learning of the algorithm. $\beta_\alpha$ are the members of the basis function to the level specified as a model hyperparameter.
 
 The basis functions are constructed with moment tensor descriptors. These moment tensor descriptors contain radial and angular components which capture the geometric representation of the system environment local to the atom whose energy is being calculated (as defined by a cutoff radius). 
 
@@ -63,14 +63,14 @@ We ultimately choose the basis set of the MTP model based on a maximum level $\t
 Accordingly, the number of trainable parameters is heavily dependent on $\textrm{lev}_{\max}$ which scales exponentially.Now, consider the radial and angular components as characterized by the $\nu$ and $\mu$ of the particular moment tensor descriptor.
 
 #### Radial Component of the Moment Tensor Descriptor
-The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of the product of the members of the radial basis set, $Q^{(\Beta)(r_{ij})}$, and the corresponding trainable radial parameters $c^{\Beta} _ {\mu,z_i,z_j}$.
+The radial component, $f_\mu (r_{ij},z_i,z_j)$, is described as the summation of the product of the members of the radial basis set, $Q^{(\beta)(r_{ij})}$, and the corresponding trainable radial parameters $c^{\beta} _ {\mu,z_i,z_j}$.
 
-$$f_\mu (r_{ij},z_i,z_j) = \sum ^ {N_o} _ {\Beta = 1} c^{(\Beta)} _ {\mu,z_i,z_j}  Q^{(\Beta)}(r_{ij})$$
+$$f_\mu (r_{ij},z_i,z_j) = \sum ^ {N_o} _ {\beta = 1} c^{(\beta)} _ {\mu,z_i,z_j}  Q^{(\beta)}(r_{ij})$$
 
 The number of members of the radial basis set, $N_o$ is chosen as a model hyperparameter. The basis set is conditionally evaluated based on the chosen cutoff radius and the minimum distance between atoms in the system, using Chebyshev polynomials on the interval $[R_{min}, R_{cut}]$.
 
-$$Q^{(\Beta)}(r_{ij})=  \begin{cases}
-    \phi ^{(\Beta)}(|r_{ij}|) (R_{cut} - |r_{ij}|)^2& |r_{ij}| < R_{cut} \\
+$$Q^{(\beta)}(r_{ij})=  \begin{cases}
+    \phi ^{(\beta)}(|r_{ij}|) (R_{cut} - |r_{ij}|)^2& |r_{ij}| < R_{cut} \\
     0 & |r_{ij}| \geq R_{cut} 
 \end{cases}$$
 
@@ -82,7 +82,7 @@ The angular component is a series of $\nu$ outer products performed on the posit
 #### MTP Model Overview
 Overall,  the MTP potential provides a framework atop which radial and angular components are considered. Additionally, the tensor operations performed on the descriptors maintain the model's invariance to permutations, rotations, reflection, and translation. MTP has two hyperparameters which affect its accuracy and computational cost: $N_o$ and $\textrm{lev}_{\max}$ which determine the number of basis functions expressions and the number of Chebyshev polynomials evaluated in the radial basis set. 
 
-The trainable parameters of the model are weightings with respect to the moment tensor basis sets and the radial basis sets, $\xi_\alpha$ and $c^{\Beta} _ {\mu,z_i,z_j}$ respectively. Collectively, the vector of trainable parameters will be further expressed as $x$.
+The trainable parameters of the model are weightings with respect to the moment tensor basis sets and the radial basis sets, $\xi_\alpha$ and $c^{\beta} _ {\mu,z_i,z_j}$ respectively. Collectively, the vector of trainable parameters will be further expressed as $x$.
 
 
 
