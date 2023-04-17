@@ -47,7 +47,7 @@ Interatomic potentials, less expensive descriptors which approximate interatomic
 The Moment Tensor Potential (MTP) falls into this last category, making considerations for the radial and angular interactions. These contributions are evaluated within a cutoff radius, taking the sum of learnable linear combinations on the atom-atom positions \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the value of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on the fly for further training through DFT calculations.
 
 \section{MTP Architecture}
-Here we provide a brief overview of the MTP architecture. More rigorous representations can be obtained from the source paper \cite{mtp}.
+We provide a brief overview of the linearly-parameterized MTP architecture. More rigorous explanations are available from the source paper \cite{mtp}.
 
 In the MTP, the total energy of a configuration, $E^{MTP} (\textrm{cfg}) $, is represented by the total contributions, $V(n_i)$, of the local environment of each atom, shown in Equation \ref{eq:configEnergy}.  $V(n_i)$ is represented by the relative positions of atoms within a cutoff radius of the $i$th atom.
 
@@ -140,10 +140,16 @@ As an interatomic potential of interest to the Queen's Nuclear Materials Group, 
   \item Validate the MTP with physical property prediction against DFT results: elastic properties, radial distribution function (RDF), and configuration errors.
 \end{itemize}
 
-\section{Methodology}
-To produce generally applicable MTPs, and examine the practical applicability of the MTP, we emphasize the importance of a \textit{representative} training scheme for the target phases and environments. To examine potassium metal in solid and liquid phases, we target representative performance within 100-1000K, with minor strains and pressures.
 
-We first set a baseline of 
+\section{Methodology}
+
+\subsection{Simulation Software and Hardware}
+To perform DFT calculations, we utilize the Quantum Esperso PWF code \cite{QE}. Molecular Dynamics are performed using LAMMPS  \cite{LAMMPS}. The MTPs being trained are available from the MLIP package which can be complied with a LAMMPS interface \cite{mlip}. We perform the calculation on the Digital Research Alliance of Canada Narval Cluster and the Queen's University Frontenac Cluster. Most simulations are performed on a single core with some of the more intensive calculations performed on 24 or 48 cores. 
+
+\subsection{DFT Parameters and Base Lattice Parameter}
+To produce generally applicable MTPs, and examine the practical applicability of the MTP, we emphasize the importance of a \textit{representative} training scheme for the target phases and environments. To examine potassium metal in reasonable solid and liquid phases, we target performance within 100-1000K, with minor strains and pressures.
+
+We first select a
 
 \section{Corresponding author}
 
