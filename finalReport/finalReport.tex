@@ -149,7 +149,18 @@ To perform DFT calculations, we utilize the Quantum Esperso PWF code \cite{QE}. 
 \subsection{DFT Parameters and Base Lattice Parameter}
 To produce generally applicable MTPs, and examine the practical applicability of the MTP, we emphasize the importance of a \textit{representative} training scheme for the target phases and environments. To examine potassium metal in reasonable solid and liquid phases, we target performance within 100-1000K, with minor strains and pressures.
 
-We first select a
+DFT calculations are performed using the Quantum Espresso pseudopotential \cite{DFT}. We start by performing convergence testing for the k-point count (8 for a single BCC lattice) and the plane-wave cutoff values (60 Ry). Using, a range of DFT calculations, we arrive at a predicted lattice parameter of 5.11 Å. Future training and simulations were based on these baseline values. 
+
+\subsection{Training of MTPs}
+Before subjecting MTPs to MD runs to train through active learning, we initially train the MTP on a sufficient amount of configurations to provide a base representation of the behaviour. We settled on a range of single-atom configurations of BCC potassium under triaxial strain, $[0.75, 1.25]$; single-atom configurations under shear strain, $[0, 0.785]$; and two-atom configurations under triaxial strain $[0.9, 1.1]$. 
+
+After the initial training, we subject the MTPs to a bottom-up training scheme in which we introduce the MTP to parallel MD simulations of BCC lattice cells under a range of conditions (pressures and temperatures) for a simulation cell size. When an MTP is \textit{}{sufficiently trained} a simulation cell size, we expose it to the subsequent simulation size in the training scheme. The rationale behind such an approach is to capture most of the interactions between potassium atoms at lower simulation cell sizes, and thus reduce the amount of overall computation required, especially considering the non-linear scaling of DFT.  Furthermore, we wish to limit the rate at which the MTP learns, for fear that learning from excessively extrapolative configurations may cause the number of training configurations not within the submatrix $A$ to become excessively sparse. 
+
+  We formalize \textit{}{sufficiently trained} using the criteria proposed by the MLIP package \cite{mlip}.
+
+
+
+
 
 \section{Corresponding author}
 
