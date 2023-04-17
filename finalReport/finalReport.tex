@@ -156,11 +156,45 @@ Before subjecting MTPs to MD runs to train through active learning, we initially
 
 After the initial training, we subject the MTPs to a bottom-up training scheme in which we introduce the MTP to parallel MD simulations of BCC lattice cells under a range of conditions (pressures and temperatures) for a simulation cell size. When an MTP is \textit{}{sufficiently trained} a simulation cell size, we expose it to the subsequent simulation size in the training scheme. The rationale behind such an approach is to capture most of the interactions between potassium atoms at lower simulation cell sizes, and thus reduce the amount of overall computation required, especially considering the non-linear scaling of DFT.  Furthermore, we wish to limit the rate at which the MTP learns, for fear that learning from excessively extrapolative configurations may cause the number of training configurations not within the submatrix $A$ to become excessively sparse. 
 
-  We formalize \textit{}{sufficiently trained} using the criteria proposed by the MLIP package \cite{mlip}.
+  We define \textit{}{sufficiently trained} using the criteria proposed by the MLIP package \cite{mlip}. Using the extrapolation grade, we use preselect configurations with values in the range $[2, 10)$ for further training, and take grades larger than 10 as risky configurations, terminating the active MD run and initiating the retraining of the MTP. In the retraining, preselected configurations that are too similar are removed, generating the selected configurations for which DFT calculations are performed and expanding the training set. A diagram of this scheme is shown in Figure \ref{fig:extrapolation}.
 
+  \begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{assets/grade.png}
+    \caption{Configuration categorization based on extrapolation grade}
+    \label{fig:extrapolation}
+  \end{figure}
 
+  We take an MTP to be \textit{sufficiently trained} relative to a simulation cell size when all the parallel MD runs return no preselected configurations. We take an MTP to have completed learning when it has passed through all of the simulation cell sizes in the scheme.
 
+  In the bottom-up training approach, we choose six simulation cell sizes, shown in Table \ref{tab:stages}. Each stage consists of BCC unit cells of potassium. In the parallel MD runs, the dimensions of these are modified by the applied strains. The final scheme was chosen through experimentation as $3\times 3\times 3$ tended to produce no preselected configurations at all.
 
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Training Scheme Stages}
+  \begin{tabular}{cccc}
+  \hline
+  Stage & $X$ count & $Y$ count & $Z$ count\\
+  \hline
+  1 & 1 & 1 & 1\\
+  2 & 1 & 1 & 2\\
+  3 & 1 & 1 & 3\\
+  4 & 1 & 2 & 2\\
+  5 & 2 & 2 & 2\\
+  6 & 3 & 3 & 3\\
+  \hline
+  \end{tabular}
+  \label{tab:stages}
+\end{table}
+
+Overall, the complete training of the MTPs can be summarized by the flowchart in \ref{fig:scheme}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/trainingScheme.png}
+  \caption{Configuration categorization based on extrapolation grade}
+  \label{fig:scheme}
+\end{figure}
 
 \section{Corresponding author}
 
