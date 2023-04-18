@@ -232,14 +232,31 @@ To explore the effect of the initial parameters on the MTPs training, we prepare
 As expected, the average training errors for force and energy decrease with the level of the MTP. We also find that for a given training dataset per level of MTP, the variance of the initial parameters affects the training errors more for lower MTP levels, and for force errors more than energy errors which are reasonable as force is the derivative of energy. 
 
 \subsection{Solid Potassium Validation}
-To validate the results of the ensembles of trained MTP for elastic properties, energy calculations of BCC lattices near the baseline lattice parameter are prepared for each MTP. The resultant plot is available in 
+To validate the results of the ensembles of trained MTP for elastic properties, energy calculations of BCC lattices near the baseline lattice parameter are prepared for each MTP. The resultant plot is available in Figure \ref{fig:elastic}.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\linewidth]{assets/curve.png}
   \caption{Elastic curve predictions. General purpose MTPs, DFT reference, and specialized MTP (08s). 95\% confidence interval.}
-  \label{fig:errors}
+  \label{fig:elastic}
 \end{figure}
+
+We generally find fairly poor performance when trying to predict the elastic curve using the general-purpose MTPs of all levels. Interestingly, it appears that the predictions are not necessarily better for MTPs of higher levels, with MTP 8 performing the best out of all the levels. One possibility is overfitting, as suggested by the less symmetrical and irregular elastic curves produced by the MTPs of higher levels although we suspect that the issue may lie with the training sets for the available levels of MTPs. Since the initial training sets are closely representative of the elastic curve and are consistent between all the MTPs, the MTPs with a smaller number would have a higher proportion of their training data related to the elastic curve, giving a better representation. To further illustrate this we utilize active learning on MTP08, the best performer, with a training scheme specialized for solid data, yielding a near-perfect agreement with the DFT reference. Using, a $2^{nd}$ order Birch fit, \ref{tab:elastic} shows the predicted values 
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Elastic }
+  \begin{tabular}{cccc}
+  \hline
+  Property & DFT &  MTP08 & MTP08\\ 
+  \hline
+  Lattice Parameter [Å] & 5.11 & 5.04 & 5.12\\
+  Bulk Modulus [GPa]& 3.9 & 3.3 & 3.8\\
+  Equilibirum Volume [Å$^3$]& 66.72 & 64.02 & 67.33\\
+  \hline
+  \end{tabular}
+  \label{tab:elastic}
+\end{table}
 
 \subsection{Configurational Errors}
 We begin by validating the MTP against very similar runs to the training set. From a previous unrelated active learning runs, we 
