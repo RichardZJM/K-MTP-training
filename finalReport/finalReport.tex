@@ -231,7 +231,7 @@ To explore the effect of the initial parameters on the MTPs training, we prepare
 
 As expected, the average training errors for force and energy decrease with the level of the MTP. We also find that for a given training dataset per level of MTP, the variance of the initial parameters affects the training errors more for lower MTP levels, and for force errors more than energy errors which are reasonable as force is the derivative of energy. 
 
-\subsection{Solid Potassium Validation}
+\subsection{Solid Potassium Predictions}
 To validate the results of the ensembles of trained MTP for elastic properties, energy calculations of BCC lattices near the baseline lattice parameter are prepared for each MTP. The resultant plot is available in Figure \ref{fig:elastic}.
 
 \begin{figure}[ht]
@@ -258,7 +258,7 @@ We generally find fairly poor accuracy when trying to predict the elastic curve 
   \label{tab:elastic}
 \end{table}
 
-We find that the MTP gives overall good performance for most cases although its predictions of very specific properties that rely on precise prediction in a narrow range of conditions may be lacking for the MTP level examined. This limitation is especially true for MTPs which span diverse representations like different phases, and we find that lower-level MTPs can still provide good predictions when specifically trained. However, the MTP levels being examined are still relatively low, and higher levels may lead to a richer representation. In cases where specific conditions are of interest, we would strongly recommend performing active learning on training scenarios adapted to the conditions or experiencing with significantly higher MTP levels.
+We find that the MTP gives overall good performance for most cases although its predictions of very specific properties that rely on precise prediction in a narrow range of conditions may be lacking for the MTP level examined. This limitation is especially true for MTPs which span diverse representations like different phases, and we find that lower-level MTPs can still provide good predictions when specifically trained. However, the MTP levels being examined are still relatively low, and higher levels may lead to a richer representation. In cases where specific conditions are of interest, we would strongly recommend performing active learning on training scenarios adapted to the conditions or experiencing significantly higher MTP levels.
 
 \subsection{Liquid Potassium Predictions}
 To assess the validity of the MTP for property prediction in the liquid phase, we rely on radial distribution function (RDF) prediction. Due to the lack of quantum mechanical reference liquid potassium data in the literature, we perform our own \textit{ab initio} (DFT-based) MD runs. To generate this reference benchmark, we took an arbitrary 54-atom iteration from one of the previously discarded active learning runs as an initial frame to an \textit{ab initio} run at 600K. Due to the computational expense and limited time scope of the project, only 0.01 ps of the simulation were available for RDF calculation. Combined with the relatively small simulation cell, the reference data is noisy and certain peaks are exaggerated. Next for each MTP ensemble, the MTP with the lowest training error from each ensemble was subject to an NVT starting from a BCC simulation cell of 16000 atoms at 600K. Figure \ref{fig:rdf} shows the resultant RDFs.
@@ -270,10 +270,14 @@ To assess the validity of the MTP for property prediction in the liquid phase, w
   \label{fig:rdf}
 \end{figure}
 
-Overall, the MTPs examined are all within excellent agreement with each other except for MTP6 which was not stable in the larger simulations, losing atoms. Within the limited quality of the \textit{ab initio} data, we would also agree that there appears to be a good agreement between the predictions and the reference. The spikes, especially those at a radius of approximately 4.5 Å, have softened as the simulation has progressed and the liquid potassium atoms shift further from their initial positions. We expect an excellent match given sufficient computation.
+Overall, the MTPs examined are all within excellent agreement with each other except for MTP6 which was not stable in the larger simulations, losing atoms. Within the limited quality of the \textit{ab initio} data, we would also agree that there appears to be a good agreement between the predictions and the reference. The spikes, especially those at a radius of approximately 4.5 Å, have softened as the simulation has progressed and the liquid potassium atoms shift further from their initial positions. We expect an even better match given sufficient computation.
 
 \subsection{Configurational Errors}
-Having examined the MTP's performance in prediction tasks, we consider it's 
+Having examined the MTP's performance in prediction tasks, we consider it's performance in vadiation datasets. We first compare the MTP's perfomance relative to validation data which is very similar to it's training schemes. To this end, we compare the predicted force magnitude of atoms from configurations in active learning runs against the coresponding reference data. 100 of these comparisons can be seen in 
+In a perfect fit, such comparison would yield  
+
+
+\section{Conclusions}
 
 
 % \section{Corresponding author}

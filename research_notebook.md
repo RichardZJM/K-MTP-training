@@ -1,15 +1,92 @@
 # MECH 461 Research Notebook
 https://github.com/RichardZJM/K-MTP-training
 
+## Terminology
+| Term | Description                            |
+| :---------: | -------------------------------------- |
+|QM| Quantum mechanical|
+| DFT   | Density Functional Theory: quantum mechanical approach to calculating the energies and forces of an atomic configuration|
+| MD  | Molecular Dynamics: uses a classical representation of atoms to solve the equations of motion. Needs a description of the forces exerted on atoms|
+|ML | Machine Learning|
+|MTP| Moment Tensor Potential: a ML model of interatomic forces and energies|
+|MLIP| Machine Learning Interatomic Potential: a software package that implmenets the MTP|
+|CAC|Centre for advanced computing: the Queen's computational cluster|
+|DRAC| Digital Reserach Alliance of Canada: authority which grants acces to canadian research clusters|
+|QE| Quantum Espresso: a software which performs plane-wave DFT calculations|
+|LAMMPS| Large-scale Atomic/Molecular Massively Parallel Simulator: a popular MD software|
+|SSH| Secure Shell, a network protocol to connect to remote computers securely|
+
 ## Introduction
 This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
 
 ## Week 1
-On the first week, consisted primarily of setup and understanding the MTP techniques used in the machine learning model. I started by meeting, Hao Sun, a post-doctorate student who is part of the Nuclear Materials group. His prior work involved the training of an MTP potential and thus his experience would be invaluable.
+#### Monday, January 9th
+Having made arrangements for a meeting the next day with my supervisor, I started by applying for cluster access with the DRACAccount and the Queen's CAC Frontenac platform. This involved following the tutorials available below.
 
-The first bit of setup focused on Compute Canada HPC cluster access. Compute Canada is a resource of the Digital Research Alliance of Canada. Registering with my supervisor Laurent Béland as the Principal Investigator (PI), gave me access to the more computational model which would be important for the training and active learning of the MTP. In particular, SSH access to Calcul Quebec's Narval supercomputer will be used for most of the simulation.
+[DRAC](https://alliancecan.ca/en/services/advanced-research-computing/account-management/apply-account)
+[CAC](https://cac.queensu.ca/wiki/index.php/Access:Frontenac)
 
-With access to Narval, I then took a closer examination of the mathematics and theory behind the MTP approach before I started work on developing training sets and running training the system.  This took much of the remainder of week 1 and a brief overview of my understanding is outlined below. A more in-depth description will be provided for the final report.
+The clusters are essentially large computers that can handle multiple or single tasks in parallel, which allows me to proceed with the computations at greater speed and stability.
+
+#### Tuesday, January 10th
+Today, I met with my supervisor, Laurent Béland. He also introduced me to Hao Sun, a post-doctorate researcher who is part of the Nuclear Materials group. His prior work involved the training of an MTP potential for sodium and thus his experience would be invaluable in helping guide much of my work and avoid some of the common pitfalls that I might encounter.
+
+We outlined a general plan for the progression of the project as a whole:
+1. Read the literature and understand the model
+2. Setup up the software packages on the cluster and understand job scheduling
+3. Make some initial DFT calculations and prepare baselines for mass DFT calculations
+4. Passive train some MTP on simple DFT
+5. Run some MTP molecular dynamics
+6. Run and automate the active learning process
+
+#### Thursday, January 11th - Saturday, January 14th
+During this time, I spend most of my time reading through the theory of the moment tensor potential architecture and the documentation of the MLIP package which implements the potential in C++, and would need to be set up on the Cluster. There is an additional interface that is required to run the MTP in LAMMPS. The links are below.
+
+[MLIP](https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe#mlstabc9fes2)
+[MTP](https://epubs.siam.org/doi/abs/10.1137/15M1054183?casa_token=RzGStb-dQuEAAAAA:doul_FY1J2XILDG6YjSQCC-WirCG1ZalUc48Z8jSozpAam_pww8D2E55JWZuNY_BsqLfGFjC)
+[Interface](https://gitlab.com/ashapeev/interface-lammps-mlip-2)
+
+
+My extended notes on the MTP architecture can be found in the General Notes section.
+
+
+## Week 2
+#### Monday, January 9th
+This week was mostly focused on getting the software environment set up on the Narval, on the cluster operated through the DRAC. Today, I started by setting up a meeting with Hao for 11:30 AM the following day, This would be a recurring meeting to check up on my progress each week.
+
+#### Tuesday, January 10th
+During the meeting with Hao, we started by connecting to Narval for the first time through SSH. This was done through the below command.
+
+```bash
+ssh -Y zjm@narval.computecanada.ca
+```
+
+Alternatively, it was also possible to connect more easily through a program called MobaXterm which would also allow easier file transfer between a local environment and the cluster. However, it was Windows-based, and since I was running Linux natively, I ended up switching to SSH through the Linux terminal and used Git for version control and file transfer.
+
+For the rest of the session, we focused on the installation of the MLIP package which I have detailed in the General Notes section. At the end of this session, Hao left me with some of the example scripts which I could digest later throughout the week.
+
+#### Wednesday, January 11th
+Today, I completed the installation of the MLIP package and LAMMPS interface on the cluster. The last command (detailed in General Notes) had taken too long for our session, and I had to close and run it at home. Not much else happened today.
+
+#### Thursday, January 12th 
+I started digesting some of the scripts that Hao had given me today. There were mostly bash scripts:
+
+| Script | Description                            |
+| :---------: | -------------------------------------- |
+|K_e0bcc.txt| Reference file containing important constants for a QE input|
+|create_expansion_files_scf.sh|Shell script which automates the creation of 1 atom BCC primitive cells under triaxial strain|
+|create_shear_files_scf.sh  |Shell script which automates the creation of 1 atom BCC primitive cells under triaxial strain|
+|kp | Reference file containing important parameters for a QE input|
+|pseudo| Moment Tensor Potential: a ML model of interatomic forces and energies|
+
+
+
+The validity of the MTP (and other machine learning potentials ) is predicated on the availability of high-fidelity training data. For the MTP, these calculations consist of DFT calculations using Quantum Espresso (QE). Most of Week 2 focused on familiarizing myself with the Narval HPC enviroment. 
+
+
+
+
+# General Notes
 
 ### The MTP interatomic model
 <p style ="font-size:smaller">
@@ -107,7 +184,7 @@ The mathematical optimization of this loss function doesn't use any special appr
  $\textrm{RSME} (E)^2 = \frac{1}{K} \sum ^{K}_{k=1} (\frac{E^\text{mtp}(\text{cfg}_g,x)}{N^{(k)}}-\frac{E^\text{qm}(\text{cfg}_g,x)}{N^{(k)}})$
 
 ## Week 2
-The validity of the MTP (and other machine learning potentials ) is predicated on the availability of high-fidelity training data. For the MTP, these calculations consist of DFT calculations using Quantum Espresso (QE). Most of Week 2 focused on familiarizing myself with the Narval HPC enviroment. 
+
 
 ### HPC Narval cluster
 
@@ -416,7 +493,7 @@ Afterwards, the training of the MTP can be initiated using the mlp binary file w
 
 Since this is a long and highly specific command which I will often use for the rest of the project, I decided to create an MTP command reference for easy access. The above command and MTP future will be stored and explained there instead. It should be attached to this package or is available here: https://github.com/RichardZJM/K-MTP-training/blob/master/mtpCommands.md.
 
-When running this command on actual data, 
+This week, I focused on training 
 
 # References
 https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe
@@ -469,3 +546,10 @@ Run the passive training on the new set of union of the current set and the new 
 
 aim for average energy per atom of 0.01-0.02
 aim for average force of  0.1-0.2
+
+
+Week 1:
+My project surrounds the training of machine learning interatomic potentials using the Moment Tensor Potential (MTP) model for potassium metal. I started the week by meeting Hao Sun, a postdoctoral researcher who had done previous work with MTP training and setting up weekly meetings for his guidance. I spent this first week understanding the model which uses linear regression on basis sets consisting of moment tensor descriptors. 
+
+Week 2:
+This week, I mostly worked on setting the groundwork on 
