@@ -241,7 +241,7 @@ To validate the results of the ensembles of trained MTP for elastic properties, 
   \label{fig:elastic}
 \end{figure}
 
-We generally find fairly poor performance when trying to predict the elastic curve using the general-purpose MTPs of all levels. Interestingly, it appears that the predictions are not necessarily better for MTPs of higher levels, with MTP 8 performing the best out of all the levels. One possibility is overfitting, as suggested by the less symmetrical and irregular elastic curves produced by the MTPs of higher levels although we suspect that the issue may lie with the training sets for the available levels of MTPs. Since the initial training sets are closely representative of the elastic curve and are consistent between all the MTPs, the MTPs with a smaller number would have a higher proportion of their training data related to the elastic curve, giving a better representation. To further illustrate this we utilize active learning on MTP08, the best performer, with a training scheme specialized for solid data, yielding a near-perfect agreement with the DFT reference. Using, a $2^{nd}$ order Birch fit, \ref{tab:elastic} shows the predicted values 
+We generally find fairly poor accuracy when trying to predict the elastic curve using the general-purpose MTPs of all levels. Interestingly, it appears that the predictions are not necessarily better for MTPs of higher levels, with MTP 8 performing the best out of all the levels. One possibility is overfitting, as suggested by the less symmetrical and irregular elastic curves produced by the MTPs of higher levels although we suspect that the issue may lie with the training sets for the available levels of MTPs. Since the initial training sets are closely representative of the elastic curve and are consistent between all the MTPs, the MTPs with a smaller number would have a higher proportion of their training data related to the elastic curve, giving a better representation. However, the levels of MTPs being examined are not particularly high, and higher MTP levels around 20 may provide better predictions. To further illustrate this we utilize active learning on MTP08, the best performer, with a training scheme specialized for solid data, yielding a near-perfect agreement with the DFT reference. Using, a $2^{nd}$ order Birch fit, Table \ref{tab:elastic} shows the predicted values of the general MTP of level 8 and one trained on specialized data. 
 
 \begin{table}[htbp]
   \centering
@@ -258,8 +258,22 @@ We generally find fairly poor performance when trying to predict the elastic cur
   \label{tab:elastic}
 \end{table}
 
+We find that the MTP gives overall good performance for most cases although its predictions of very specific properties that rely on precise prediction in a narrow range of conditions may be lacking for the MTP level examined. This limitation is especially true for MTPs which span diverse representations like different phases, and we find that lower-level MTPs can still provide good predictions when specifically trained. However, the MTP levels being examined are still relatively low, and higher levels may lead to a richer representation. In cases where specific conditions are of interest, we would strongly recommend performing active learning on training scenarios adapted to the conditions or experiencing with significantly higher MTP levels.
+
+\subsection{Liquid Potassium Predictions}
+To assess the validity of the MTP for property prediction in the liquid phase, we rely on radial distribution function (RDF) prediction. Due to the lack of quantum mechanical reference liquid potassium data in the literature, we perform our own \textit{ab initio} (DFT-based) MD runs. To generate this reference benchmark, we took an arbitrary 54-atom iteration from one of the previously discarded active learning runs as an initial frame to an \textit{ab initio} run at 600K. Due to the computational expense and limited time scope of the project, only 0.01 ps of the simulation were available for RDF calculation. Combined with the relatively small simulation cell, the reference data is noisy and certain peaks are exaggerated. Next for each MTP ensemble, the MTP with the lowest training error from each ensemble was subject to an NVT starting from a BCC simulation cell of 16000 atoms at 600K. Figure \ref{fig:rdf} shows the resultant RDFs.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/rdf.png}
+  \caption{Elastic curve predictions. General purpose MTPs, DFT reference, and specialized MTP (08s). 95\% confidence interval.}
+  \label{fig:rdf}
+\end{figure}
+
+Overall, the MTPs examined are all within excellent agreement with each other except for MTP6 which was not stable in the larger simulations, losing atoms. Within the limited quality of the \textit{ab initio} data, we would also agree that there appears to be a good agreement between the predictions and the reference. The spikes, especially those at a radius of approximately 4.5 Å, have softened as the simulation has progressed and the liquid potassium atoms shift further from their initial positions. We expect an excellent match given sufficient computation.
+
 \subsection{Configurational Errors}
-We begin by validating the MTP against very similar runs to the training set. From a previous unrelated active learning runs, we 
+Having examined the MTP's performance in prediction tasks, we consider it's 
 
 
 % \section{Corresponding author}
