@@ -51,10 +51,10 @@ My extended notes on the MTP architecture can be found in the General Notes sect
 
 
 ## Week 2
-#### Monday, January 9th
+#### Monday, January 16th
 This week was mostly focused on getting the software environment set up on the Narval, on the cluster operated through the DRAC. Today, I started by setting up a meeting with Hao for 11:30 AM the following day, This would be a recurring meeting to check up on my progress each week.
 
-#### Tuesday, January 10th
+#### Tuesday, January 17th
 During the meeting with Hao, we started by connecting to Narval for the first time through SSH. This was done through the below command.
 
 ```bash
@@ -65,11 +65,11 @@ Alternatively, it was also possible to connect more easily through a program cal
 
 For the rest of the session, we focused on the installation of the MLIP package which I have detailed in the General Notes section. At the end of this session, Hao left me with some of the example scripts which I could digest later throughout the week.
 
-#### Wednesday, January 11th
+#### Wednesday, January 18th
 Today, I completed the installation of the MLIP package and LAMMPS interface on the cluster. The last command (detailed in General Notes) had taken too long for our session, and I had to close and run it at home. Not much else happened today.
 
-#### Thursday, January 12th 
-I started digesting some of the scripts that Hao had given me today. There were mostly bash scripts:
+#### Thursday, January 19th 
+I started digesting some of the scripts that Hao had given me the other day. There were mostly bash scripts:
 
 | Script | Description                            |
 | :---------: | -------------------------------------- |
@@ -79,12 +79,103 @@ I started digesting some of the scripts that Hao had given me today. There were 
 |kp | Reference file containing important parameters for a QE input|
 |pseudo| Moment Tensor Potential: a ML model of interatomic forces and energies|
 
+These form an automation framework which serves to provide a range of initial parameters to generate different variations on an initial training set of primitive cells in triaxial strain and in shear.  
 
+The main idea revolves around the create scripts. The scripts reference the auxiliary files, copy-pasting the constants and modifying the value to generate a set of QE inputs. I have outlined the general process of these create scripts below.
 
-The validity of the MTP (and other machine learning potentials ) is predicated on the availability of high-fidelity training data. For the MTP, these calculations consist of DFT calculations using Quantum Espresso (QE). Most of Week 2 focused on familiarizing myself with the Narval HPC enviroment. 
+```sh
+basefile = "K_e0bcc.txt";           # File name of the baseline lattice vectors
+matl="K";etype="expansion_bcc";nat=1;   # Values for naming conventions
 
+mkdir ../${matl}_${etype}_runs          # Generate an uncle directory to hold runs 
 
+for e in `seq 0 26`; do         # Create runs with the specified offsets
 
+a=$(echo "1+0.05*$e" | bc -l);          # For Expansion vary the length of 
+b=$(echo "1+0.05*$e" | bc -l);          # the lattice vectors by 5% per degree of offset
+c=$(echo "1+0.05*$e" | bc -l);
+
+cat > top << EOF            # Generate a QE file
+&control
+    disk_io = 'none',
+    prefix = '${matl}_expansion$e',        
+    calculation ='scf',             # Self-consistet field calculation
+    outdir = './out',
+    pseudo_dir = '/home/zjm'            # Directory of pseudopotential
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,            # Type of lattice = lattice vector specified
+    nat=$nat,           # Number of atom in cell
+    ntyp=1,             # Number of Species
+    ecutwfc=60,         # Plane wave cutoff energy (Ry)
+    occupations='smearing',     # Next three are smearing parameters
+    smearing = 'gaussian',
+    degauss = 0.01,
+
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &cell
+ /
+CELL_PARAMETERS
+EOF
+
+# Appends the contents of the baseline file and scales the lattice vectors
+sed -n '3,5p' $basefile > cell
+awk -v a=$a -v b=$b -v c=$c '{print a*$1,b*$2,c*$3}' cell > newcell
+
+# Similar but with the pseudo and kp files (these are constants)
+cat top newcell  pseudo kp > ${matl}_${etype}${e}.relax.in
+
+# Makes a new directory to hold the new files and perfoms clean up 
+mkdir ../${matl}_${etype}_runs/${matl}_${etype}${e}
+mv ${matl}_${etype}${e}.relax.in ../${matl}_${etype}_runs/${matl}_${etype}${e}/
+rm top cell newcell #clean-up
+```
+The auxiliary files are kp, pseudo, and the baseline file.
+
+The baseline file (K_e0bcc.txt), contains the lattice vector as determined by the previous energy minimization calculations. A slight offset is introduced to prevent symmetry although it may not be strictly necessary.  It also includes the atom positions, but for shear and expansion/contraction in 1 atom BCC, any position is valid, so the origin is chosen.
+
+```txt
+1     
+CELL_PARAMETERS {bohr} 
+   4.83583   4.83589   4.835813             # Vector 1
+  -4.83582   4.83585   4.8358231            # Vector 2
+  -4.83581  -4.83586   4.83583111           # Vector 3
+Atom Positions {Angstrom}
+K       0.000000000   0.000000000   0.000000000
+```
+The kp file simply specifics the number of automatic k-points.
+
+```txt
+K_POINTS automatic
+8 8 8 0 0 0
+```
+
+The pseudo file is used to define the specific information including the atomic weight and the pseudopotential to use. 
+
+```txt
+ATOMIC_SPECIES
+K  39.0983 K.pbe-mt_fhi.UPF         # Potassium, atomic weight = 39.0983
+ATOMIC_POSITIONS angstrom
+K  0   0   0
+```
+Hao also recommended me a source for the pseudopotential to use which is a necessary part of QE plane-wave DFT calculations. It is the UPF file included in the table.
+
+At this time, I was looking to start performing some QE runs on the cluster although I needed to get some more baseline measurements and familiarize myself with the job submission process on the cluster. 
+
+#### Friday, January 20th - Saturday, January 22nd
+Final year ski trip with friends ⛷️. No real progression.
+
+## Week 3
+#### 
 
 # General Notes
 
