@@ -1,6 +1,10 @@
 # MECH 461 Research Notebook
 https://github.com/RichardZJM/K-MTP-training
 
+## Introduction
+This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
+
+
 ## Terminology
 | Term | Description                            |
 | :---------: | -------------------------------------- |
@@ -16,8 +20,6 @@ https://github.com/RichardZJM/K-MTP-training
 |LAMMPS| Large-scale Atomic/Molecular Massively Parallel Simulator: a popular MD software|
 |SSH| Secure Shell, a network protocol to connect to remote computers securely|
 
-## Introduction
-This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
 
 ## Week 1
 #### Monday, January 9th
@@ -66,7 +68,10 @@ Alternatively, it was also possible to connect more easily through a program cal
 For the rest of the session, we focused on the installation of the MLIP package which I have detailed in the General Notes section. At the end of this session, Hao left me with some of the example scripts which I could digest later throughout the week.
 
 #### Wednesday, January 18th
-Today, I completed the installation of the MLIP package and LAMMPS interface on the cluster. The last command (detailed in General Notes) had taken too long for our session, and I had to close and run it at home. Not much else happened today.
+Today, I completed the installation of the MLIP package and LAMMPS interface on the cluster. The last command (detailed in General Notes) had taken too long for our session, and I had to close and run it at home. Not much else happened today. The full installation instructions which I followed are available below: 
+
+[MLIP Instalation](https://gitlab.com/ashapeev/interface-lammps-mlip-2)
+
 
 #### Thursday, January 19th 
 I started digesting some of the scripts that Hao had given me the other day. There were mostly bash scripts:
@@ -169,13 +174,26 @@ K  0   0   0
 ```
 Hao also recommended me a source for the pseudopotential to use which is a necessary part of QE plane-wave DFT calculations. It is the UPF file included in the table.
 
-At this time, I was looking to start performing some QE runs on the cluster although I needed to get some more baseline measurements and familiarize myself with the job submission process on the cluster. 
+At this time, I was looking to start performing some QE runs on the cluster although I needed to get some more baseline measurements and familiarize myself with the job submission process on the cluster. However, the bash scripts and generation framework Hao provided me will be useful for the development of further automation scripts.
 
 #### Friday, January 20th - Saturday, January 22nd
 Final year ski trip with friends ⛷️. No real progression.
 
 ## Week 3
-#### 
+####  Monday, January 24th
+Today, I started making further preparations for the later DFT calculations. On my local machine, I started by performing convergence testing on the parameters for the DFT calculations. This essentially involves testing different ranges of k-points and plane-wave cutoff energies and finding the lowest possible resolution that provides a reliable prediction. For a representative cell size, I used a Python script to generate these calculations, The general framework for this was developed by myself in a previous term and involves a generation script and a template. The automation idea is to write a QE input file with the highest possible level of completion that serves as the template. We leave a marker in the template and use regular expressions to replace the marker in copies of the template that we generate with the Python script. The OS package can then be used to initiate QE runs on the generated input files. Further detail is available in the General Notes.
+
+Using the process, I used a reference cell size of BCC potassium metal at a lattice parameter of 10 Ry. I performed convergence testing with respect to k-points in a uniform distribution from 1-12, and found that 8 yielded strong convergence. The same was performed for the plane-wave cutoff energy, finding that 60 Ry worked well.  I performed the calculations for the k-points again to confirm there was no significant dependency, and upon finding the same result, settled on the below parameters for the rest of the DFT calculations.
+
+| Parameter                | Value |
+| :----------------------- | ----- |
+| Plane Wave Cutoff Energy | 60 Ry |
+| K-Point Count            | 8     |
+| Basis Set | QE PWF Basis Sets|
+| Pseudopotential          | K.pbe-mt-fhi.UPF (Packaged with QE)|
+
+####  Tuesday, January 25th
+This, week the meeting with Hao got pushed to the 
 
 # General Notes
 
