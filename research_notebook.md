@@ -1,9 +1,8 @@
 # MECH 461 Research Notebook
-https://github.com/RichardZJM/K-MTP-training
-
 ## Introduction
 This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
 
+https://github.com/RichardZJM/K-MTP-training
 
 ## Terminology
 | Term | Description                            |
@@ -19,6 +18,48 @@ This is the research notebook for the dataset generation of moment tensor potent
 |QE| Quantum Espresso: a software which performs plane-wave DFT calculations|
 |LAMMPS| Large-scale Atomic/Molecular Massively Parallel Simulator: a popular MD software|
 |SSH| Secure Shell, a network protocol to connect to remote computers securely|
+
+
+
+## Table of Contents
+- [MECH 461 Research Notebook](#mech-461-research-notebook)
+  - [Introduction](#introduction)
+  - [Terminology](#terminology)
+  - [Table of Contents](#table-of-contents)
+  - [Week 1](#week-1)
+      - [Monday, January 9th](#monday-january-9th)
+      - [Tuesday, January 10th](#tuesday-january-10th)
+      - [Thursday, January 11th - Saturday, January 14th](#thursday-january-11th---saturday-january-14th)
+  - [Week 2](#week-2)
+      - [Monday, January 16th](#monday-january-16th)
+      - [Tuesday, January 17th](#tuesday-january-17th)
+      - [Wednesday, January 18th](#wednesday-january-18th)
+      - [Thursday, January 19th](#thursday-january-19th)
+      - [Friday, January 20th - Saturday, January 22nd](#friday-january-20th---saturday-january-22nd)
+  - [Week 3](#week-3)
+      - [Monday, January 24th](#monday-january-24th)
+      - [Tuesday, January 25th](#tuesday-january-25th)
+      - [Wednesday, January 26th](#wednesday-january-26th)
+      - [Friday, January 28th - Saturday, January 29th](#friday-january-28th---saturday-january-29th)
+- [General Notes](#general-notes)
+    - [The MTP interatomic model](#the-mtp-interatomic-model)
+      - [Radial Component of the Moment Tensor Descriptor](#radial-component-of-the-moment-tensor-descriptor)
+      - [Angular Component of the Moment Tensor Descriptors](#angular-component-of-the-moment-tensor-descriptors)
+      - [MTP Model Overview](#mtp-model-overview)
+    - [Training](#training)
+    - [Narval Cluster](#narval-cluster)
+    - [Slurm Job Manager](#slurm-job-manager)
+    - [Quantum Espresso](#quantum-espresso)
+      - [Plane Wave Function](#plane-wave-function)
+      - [AI MD](#ai-md)
+    - [LAMMPS](#lammps)
+    - [MLIP](#mlip)
+      - [MLIP commands](#mlip-commands)
+    - [Preparing the first DFT calculations](#preparing-the-first-dft-calculations)
+  - [Week 3](#week-3-1)
+    - [Format of the MTP File](#format-of-the-mtp-file)
+    - [Format of Atomic Configurations](#format-of-atomic-configurations)
+- [References](#references)
 
 
 ## Week 1
@@ -193,7 +234,15 @@ Using the process, I used a reference cell size of BCC potassium metal at a latt
 | Pseudopotential          | K.pbe-mt-fhi.UPF (Packaged with QE)|
 
 ####  Tuesday, January 25th
-This, week the meeting with Hao got pushed to the 
+This week the meeting with Hao got pushed to Wednesday at 10:30 AM,. This is a recurring change that we will continue for future weeks.
+
+#### Wednesday, January 26th
+For today's meeting with Hao, we started running some of the DFT scripts that he had sent me the previous week except on the cluster. This was partly to prepare the first set of training data that I had and to gain some additional experience with the cluster. We discussed what exact approach we would use for the initial training and what training scheme he had been experimenting with previously.
+
+For the initial training set, we would use the previous bash scripts to generate a range of different 1-atom primitive cells under triaxial strain and shear. Afterwards, we would add 2-atom configurations under triaxial strain. For today, we focused on getting some jobs submitted to Slurm to get familiarized with the system. The was performed using the submit scripts although we spent much of the session getting familiarized with Slurm operation. I have my finding in the General Notes section.
+
+#### Friday, January 28th - Saturday, January 29th
+On these two days, I performed the baseline calculations to for finind
 
 # General Notes
 
@@ -292,11 +341,7 @@ The mathematical optimization of this loss function doesn't use any special appr
 
  $\textrm{RSME} (E)^2 = \frac{1}{K} \sum ^{K}_{k=1} (\frac{E^\text{mtp}(\text{cfg}_g,x)}{N^{(k)}}-\frac{E^\text{qm}(\text{cfg}_g,x)}{N^{(k)}})$
 
-## Week 2
-
-
-### HPC Narval cluster
-
+### Narval Cluster
 This all starts by connecting to Narval through my newly-minted Compute Canada account and SSH. Then, I follow the prompts, entering my password to gain access.
 
 ```
@@ -359,6 +404,257 @@ The installation of MTP and its interface with LAMMPS was accomplished with the 
 https://gitlab.com/ashapeev/interface-lammps-mlip-2
 
 This mostly included cloning from the repository, running a few installation scripts, and verifying the installation.
+
+
+
+
+### Slurm Job Manager
+When working with high-performance computing (HPC) clusters, I often use Slurm, an open-source job scheduler and resource manager. Slurm allows me to allocate resources on the cluster, submit and schedule jobs, and monitor their progress. 
+
+To submit a job to Slurm, I create a job script, which is a text file that specifies the resources requireand any other relevant information. and any other relevant information. Here is an example of a job script. the `#SBATCH` tags allow a user to specify the properties the job should be run with. This includes things like 
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=myjob
+#SBATCH --output=myjob.out
+#SBATCH --time=10:00
+#SBATCH --ntasks=1
+
+echo "Hello, world!"
+```
+
+In this script, I specify the job name, the output and error files, the maximum run time of the job, and the number of tasks to be run. I then run a simple command to print "Hello, world!" to the console.
+
+To submit this job to Slurm, I use the `sbatch` command:
+
+```bash
+sbatch jobscript.sh
+```
+
+This command will submit the job to the Slurm scheduler and assign it resources based on the requirements specified in the job script.
+
+Here are some of the most common Slurm flags I use in my job scripts:
+
+- `--job-name`: specifies the name of the job
+- `--output`: specifies the output file for the job
+- `--partition`: specifies the partition to use
+- `--wait`: specifies whether to resume terminal execution until job completion
+- `--qos`: specifies the QOS of the job
+- `--mail-user`: specifies the email address to send notifications to
+- `--mail-type`: specifies the types of notifications to send. Multiple types can be specified with a comma-separated list. The available types are `BEGIN`, `END`, `FAIL`, `REQUEUE`, and `ALL`
+- `--time`: specifies the maximum run time of the job (in minutes or hours:minutes)
+- `--ntasks`: specifies the number of tasks to be run
+- `--nodes`: specifies the number of nodes to be used
+- `--cpus-per-task`: specifies the number of CPUs to be used per task
+- `--mem`: specifies the amount of memory to be used per node (in megabytes or gigabytes)
+
+
+Once a job has been submitted to Slurm, I can monitor its status using the `squeue` command for the user `username`.
+
+```bash
+squeue -u myusername
+sq       #equivalent shorthand
+watch -n 1 sq     #Runs the sq command every second for a constant monitoring
+```
+
+This command will display a list of all jobs currently running or waiting in the queue for the user `username`. I can use the `jobid` or my `username` to cancel. 
+
+```bash
+scancel jobid
+scancel -u username
+```
+
+Slurm provides many other features and options that can be customized for specific job requirements. But by using these basic commands and flags, I have most of the functionality needed to run the calculations I need.
+
+### Quantum Espresso
+For DFT calculations I'm using Quantum Espresso, a powerful software suite that's widely used in electronic structure calculations and materials modeling. One of its most important modules is the PWF (Plane-Wave Basis Functions), which uses Density Functional Theory to perform highly accurate calculations of electronic structures, interatomic forces and energies. Using periodic boundary conditons, QE PWF can be used to model bulk materials and liquids.
+
+#### Plane Wave Function
+Here is an example of one of the PWF (Plane-Wave Function) input file that I use in many of my DFT runs for training set:
+
+```txt
+&control
+    disk_io = 'none',
+    prefix = 'K_expansion-3',
+    calculation ='scf',
+    outdir = './out',
+    pseudo_dir = '/home/zjm'
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,
+    nat=1,
+    ntyp=1,
+    ecutwfc=60,
+    occupations='smearing',
+    smearing = 'gaussian',
+    degauss = 0.01,
+
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+ &cell
+ /
+CELL_PARAMETERS
+4.11046 4.11051 4.11044
+-4.11045 4.11047 4.11045
+-4.11044 -4.11048 4.11046
+ATOMIC_SPECIES
+K  39.0983 K.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS angstrom
+K  0   0   0
+K_POINTS automatic
+8 8 8 0 0 0
+
+```
+
+Let's break down each section of the PWF input file:
+
+| Section           | Description                                                                                                                                                                                                                                                                                 |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `&control`        | This section sets various control parameters for the calculation, such as the type of calculation to perform (`calculation`), the directory for pseudopotentials (`pseudo_dir`), and the output directory (`outdir`). The `prefix` parameter sets a prefix to use for all file names related to this calculation. `disk_io` is set to `none`, which means no data will be written to disk during the calculation. `tstress` and `tprnfor` are both set to `.true.`, which means the stress tensor and forces will be printed to the output file. |
+| `&system`         | This section describes the physical system being studied, including the crystal structure (`ibrav`), number of atoms (`nat`), number of atom types (`ntyp`), energy cutoff for the plane-wave basis set (`ecutwfc`), and how the electronic occupations are treated (`occupations`, `smearing`, `degauss`). In this example, there is only one atom type (`ntyp=1`) and one atom (`nat=1`) of the element potassium (`K`). |
+| `&electrons`      | This section sets parameters for the electronic self-consistent field calculation, such as the mixing mode (`mixing_mode`) and diagonalization method (`diagonalization`). In this example, the `mixing_mode` is set to `'plain'` and the `diagonalization` method is set to `'david'`. |
+| `&ions`           | This section sets parameters for the ionic relaxation calculation, such as the type of dynamics (`ion_dynamics`). In this example, the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method is used for ionic relaxation. |
+| `&cell`           | This section sets parameters for the cell optimization calculation, such as the type of dynamics (`cell_dynamics`) and the optimization method (`press`). In this example, the cell dynamics are not explicitly set, which means the cell will not be optimized. |
+| `CELL_PARAMETERS` | This section sets the cell parameters of the crystal structure in Angstroms. The three rows represent the cell vectors, with each row containing three numbers that correspond to the x, y, and z components of the vector. |
+| `ATOMIC_SPECIES`  | This section lists the atomic species present in the system, along with their mass and pseudopotential file. In this example, there is only one atomic species, potassium (`K`), and the corresponding pseudopotential file is `/home/zjm/K.pbe-mt_fhi.UPF`. |
+| `ATOMIC_POSITIONS` | This section lists the positions of the atoms in the crystal, in Angstroms. In this example, there is only one potassium atom located at the origin (`0 0 0`). |
+| `K_POINTS`        | This section sets the k-point sampling of the Brillouin zone. In this example, an automatic mesh of 8x8x8 k-points is used (`{automatic}`). The last three numbers represent shifts in the k-point grid (in this case, no shift is applied). |
+
+Generally, a large part of my work revolved around the automatic parameteriazation of the values within the QE input file and coordiating QE runs with the active learning loop.
+
+#### AI MD
+Later, I perform an *ab initio* MD of liquid potassium to generate a benchmark for my MTP calculations. Here is that input file which is provided by Hao. Most of it is similar, although notably there is are considerations for the number of bands and the calculation mode is set to perform a molecular dyanmics run. Additonally, Van der Waals correction is used with teh Grimme-d2 method.
+
+```txt
+&control
+    restart_mode = 'restart'
+    prefix = 'p1',
+    calculation ='vc-md',
+    outdir = './out',
+    Pseudo_dir = '/global/home/hpc5146/',
+    tstress = .true.
+    tprnfor = .true.
+    nstep=3500,
+    etot_conv_thr = 1.D-5, 
+    forc_conv_thr = 0.02 
+
+ /
+&system
+   ibrav=0,
+   nat=54,
+   ntyp=1,
+   nbnd=616,
+   ecutwfc=50,
+   degauss=0.01,
+smearing = 'gaussian',
+   vdw_corr='grimme-d2',
+/
+&electrons
+mixing_mode='plain',
+diagonalization='david',
+electron_maxstep=5000,
+/
+ &ions
+ion_temperature= 'andersen'
+tempw = 600.0
+pot_extrapolation='second-order'
+wfc_extrapolation='second-order'
+ /
+ &cell
+    cell_factor=6.0,
+ /
+
+CELL_PARAMETERS {angstrom}
+
+15.4837740544,  0,  0
+0,     15.4837740544, 0
+0,  0,  15.4837740544
+
+ATOMIC_SPECIES
+K 39.098  K.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS {angstrom}
+K 2.6406 3.19658 3.07742
+...
+K 12.2449 13.7772 12.8085
+K_POINTS gamma
+```
+
+### LAMMPS
+After configuring the necessary MLIP interface, I could start using LAMMPS which is a powerful MD simulation software. LAMMPS uses interatomic to compute the interactions between particles and can simulate systems with millions of particles over long timescales. It also supports various parallel computing on the cluster and can be easily customized with additional features and plugins. 
+
+For most of my active learning, I perform MD parallel calculations in the NVT ensemble to aid the MTP in training under target stresses, temperatures, and phases.
+
+```txt
+units            metal
+dimension        3
+boundary         p p p
+
+
+atom_style       atomic
+lattice          bcc 5.263461147208
+region           whole block 0 3 0 3 0 3 units lattice
+create_box       1  whole
+create_atoms     1 region whole
+mass             1 39.0983
+
+pair_style mlip /global/home/hpc5146/Projects/K-MTP-training/phase3/mtpProperties/mlip.ini
+pair_coeff * *
+
+neighbor	0.5 bin
+neigh_modify    every 1 delay 5 check yes
+
+timestep	0.001
+
+fix		1 all nve
+fix		2 all langevin 300 300 0.1 826234 zero yes
+
+thermo_style    custom step temp 
+thermo 1000
+
+
+run             100000
+reset_timestep  0
+```
+Here is the coresponding breakdown of each of the important commands used inside the LAMMPS input. 
+
+| Section | Explanation |
+| --- | --- |
+| `units` | Sets the units of measurement for the simulation to "metal" |
+| `dimension` | Sets the number of dimensions to 3 |
+| `boundary` | Sets the boundary conditions for the simulation to periodic in all directions (`p p p`) |
+| `atom_style` | Specifies that the atoms in the simulation are treated as point particles (`atomic`) |
+| `lattice` | Defines the type of lattice structure to be used in the simulation (`bcc`) and sets the lattice constant (`5.263461147208`) in units specified by `units`. |
+| `region` | Defines a rectangular region (`block`) within the simulation cell, with lower and upper bounds specified in lattice units (`0 3 0 3 0 3`), and assigns it a name (`whole`) |
+| `create_box` | Creates a simulation box with one type of atom (`1`) and includes the `whole` region defined previously |
+| `create_atoms` | Places atoms of the type defined in `create_box` within the `whole` region |
+| `mass` | Sets the mass of the atoms of type `1` to `39.0983` in units specified by `units` |
+| `pair_style` | Specifies the interatomic potential to be used in the simulation (`mlip`) and the path to the `.ini` file containing parameters for the potential |
+| `pair_coeff` | Sets the parameters for the interatomic potential for all pairs of atom types in the simulation (`* *`) |
+| `neighbor` | Sets the skin radius for the neighbor list generation to `0.5` in units specified by `units` and uses a binning algorithm |
+| `neigh_modify` | Consider modifying neighbor list every `1` timestep and with `5` timesteps minimum spacingS|
+| `timestep` | Sets the timestep size to `0.001` in units specified by `units` |
+| `fix` | Applies a computational "fix" to all atoms (`all`) of the simulation with ID `1` and specifies the integration algorithm (`nve`) and thermostat (`langevin`) parameters |
+| `thermo_style` | Specifies the format for output of thermodynamic data (`custom`) and the variables to output (`step` and `temp`) |
+| `thermo` | Sets the frequency of thermodynamic output to every `1000` timesteps |
+| `run` | Runs the simulation for `100000` timesteps |
+| `reset_timestep` | Resets the timestep counter to `0` |
+
+Much for QE inputs, much of my work revolved around scripting the generation of the input files based on the phase of the training scheme.
+
+### MLIP
+The MLIP package is the practical implementation of the MTP that I used for this project. Here, I note the most important points of the MLIP's practical usage.
+
+#### MLIP commands
+
+
 
 ### Preparing the first DFT calculations
 
@@ -662,3 +958,26 @@ My project surrounds the training of machine learning interatomic potentials usi
 
 Week 2:
 This week, I mostly worked on setting the groundwork on 
+
+
+Certainly! Here are some common Slurm flags for email notifications:
+
+
+
+To use these flags, simply add them to your job script or include them in your `sbatch` command. Here's an example:
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=myjob
+#SBATCH --output=myjob.out
+#SBATCH --error=myjob.err
+#SBATCH --time=10:00
+#SBATCH --ntasks=1
+#SBATCH --mail-user=myemail@example.com
+#SBATCH --mail-type=ALL
+#SBATCH --mail-subject="Job Results"
+
+echo "Hello, world!"
+```
+
+With these flags, Slurm will send an email notification to `myemail@example.com` for all job events (`BEGIN`, `END`, `FAIL`, and `REQUEUE`) with the subject line "Job Results". You can customize the email notification settings to fit your specific needs.
