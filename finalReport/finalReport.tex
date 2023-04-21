@@ -29,7 +29,7 @@
 \affil[3]{17zjm1@queensu.ca}
 
 \begin{abstract}
-This template can be used to approximate final page count for submission to Optica Publishing Group’s journals \emph{Applied Optics}, \emph{Journal of Optical Communications and Networking}, JOSA A, JOSA B, \emph{Optics Letters}, \emph{Optica}, and \emph{Photonics Research}. Use the shortarticle/true option for \emph{Optics Letters} and short \emph{Optica} articles.  Authors may also \href{https://opticaopen.org}{submit articles} prepared using this template to the Optica Publishing Group preprint server, \href{https://preprints.opticaopen.org}{Optica Open}. However, doing so is optional. Please refer to the submission guidelines found there. Note that copyright and licensing information should no longer be added to your Journal or Optica Open manuscript.
+Machine learning models have been of recent interest in the modelling of interatomic potential for molecular dynamics simulations. One such model is the MTP, a linear regression-based model which employs an active learning framework to train potentials. In exploring the MTPs uses for the Queen's Nuclear Materials group, we utilize a bottom-up training scheme approach to train potassium metals MTPs which we then validate. We find that the scheme produces effective MTP with less cost than more direct approaches. We also note that the MTP has generally strong accuracy that increases with the MTP's level of representation, yielding strong performance in both artificial validation datasets and comparisons against \textit{ab inito} molecular dynamics run for MTP levels above 6. This translates into excellent liquid radial distribution function predictions although more specific training regimes are likely needed for properties that involve the precise prediction of a small number of configurations. Overall for a solid-lquid potassium model we would recommend an MTP level of no less than 10.
 \end{abstract}
 
 \setboolean{displaycopyright}{false}
@@ -245,10 +245,10 @@ We generally find fairly poor accuracy when trying to predict the elastic curve 
 
 \begin{table}[htbp]
   \centering
-  \caption{\bf Elastic }
+  \caption{\bf Elastic Property Predictions the MTP}
   \begin{tabular}{cccc}
   \hline
-  Property & DFT &  MTP08 & MTP08\\ 
+  Property & DFT &  MTP08 & MTP08s\\ 
   \hline
   Lattice Parameter [Å] & 5.11 & 5.04 & 5.12\\
   Bulk Modulus [GPa]& 3.9 & 3.3 & 3.8\\
@@ -273,11 +273,68 @@ To assess the validity of the MTP for property prediction in the liquid phase, w
 Overall, the MTPs examined are all within excellent agreement with each other except for MTP6 which was not stable in the larger simulations, losing atoms. Within the limited quality of the \textit{ab initio} data, we would also agree that there appears to be a good agreement between the predictions and the reference. The spikes, especially those at a radius of approximately 4.5 Å, have softened as the simulation has progressed and the liquid potassium atoms shift further from their initial positions. We expect an even better match given sufficient computation.
 
 \subsection{Configurational Errors}
-Having examined the MTP's performance in prediction tasks, we consider it's performance in vadiation datasets. We first compare the MTP's perfomance relative to validation data which is very similar to it's training schemes. To this end, we compare the predicted force magnitude of atoms from configurations in active learning runs against the coresponding reference data. 100 of these comparisons can be seen in 
-In a perfect fit, such comparison would yield  
+Having examined the MTP's performance in prediction tasks, we consider its performance in validation datasets. We first compare the MTP's performance relative to validation configurations which are very similar to its training schemes. To this end, we compare the predicted force magnitude of atoms from configurations in active learning runs against the corresponding reference data. In a perfect prediction model, we would expect a linear relationship. We select the MTP with the lowest per-atom energy error out of each MTP ensemble and perform it on 400 test configurations, with the comparison for 200 random atoms shown in \ref{fig:configs}.
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/configurations.png}
+  \caption{Elastic curve predictions. General purpose MTPs, DFT reference, and specialized MTP (08s). 95\% confidence interval.}
+  \label{fig:configs}
+\end{figure}
+
+We also perform a linear regression on the validation data and note the results in Table \ref{tab:configs}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Regression constants of near-training predictions, 95\% confidence interval }
+  \begin{tabular}{ccc}
+  \hline
+  MTP Level & Slope Fit &  R$^2$\\ 
+  \hline
+  06 & $1.006 \pm 0.01$ & 0.974 \\
+  08 & $1.026 \pm 0.01$ & 0.981  \\
+  10 & $0.969 \pm 0.007$ & 0.990 \\
+  12 & $1.032 \pm 0.01$ & 0.985 \\
+  14 & $0.977 \pm 0.009$ & 0.985 \\
+  \hline
+  \end{tabular}
+  \label{tab:configs}
+\end{table}
+
+All MTPs exhibited a strongly linear behaviour with few significant outliers. While the predicted slopes do not always represent a perfect prediction within the error although there is no bias towards overprediction or underprediction of the force magnitude and the deviation is very minor. Visually, we find a tighter clustering for lower force magnitude, with more outliers near the higher forces which may suggest that there is greater difficulty in representing more extreme configurations. Examining the graph we find that MTP06 has the widest spread from a perfect model, while MTP08 has a tighter clustering with some outliers. All MTPs of higher level performed without major issues, and this result is reflected in the R$^2$ where the correlation increases with MTP level, somewhat plateauing after MTP 10.
+
+To gauge the configurational performance of MTPs in more practical tasks, we repeat the force comparison with all configurations obtained from the \textit{ab inito} liquid potassium run of 54 atoms. Visualizing the atoms from one timestep of these configurations, we obtain Figure \ref{fig:aimdconfigs}. The corresponding linear regression on the full set of configurations and atoms is shown in Table \ref{tab:aimdconfigs}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/aimdconfigurations.png}
+  \caption{Elastic curve predictions. General purpose MTPs, DFT reference, and specialized MTP (08s). 95\% confidence interval.}
+  \label{fig:aimdconfigs}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Regression constants of practical predictions, 95\% confidence interval }
+  \begin{tabular}{ccc}
+  \hline
+  MTP Level & Slope Fit &  R$^2$\\ 
+  \hline
+  06 & $0.804 \pm 0.005$ & 0.845 \\
+  08 & $0.967 \pm 0.003$ & 0.942  \\
+  10 & $1.008 \pm 0.0006$ & 0.959 \\
+  12 & $0.997 \pm 0.0005$ & 0.966 \\
+  14 & $1.01 \pm 0.003$ & 0.963 \\
+  \hline
+  \end{tabular}
+  \label{tab:aimdconfigs}
+\end{table}
+
+We note that examining the single configuration plot, all of the MTP tend to over-predict the force magnitude although this is not the case for all of the configurations from the \textit{ab inito} run. Indeed, looking at the slopes of the higher-level MTPs in Table \ref{tab:aimdconfigs}, we see a close-to-linear relationship, just barely outside of the error.  MTP06, however, overpredicts the forces of the atoms to a far greater extent, evidenced in both the deviation from the other levels in both the linear fit slope and the configurational prediction plot. This observation aligns with the instability of MTP06 is liquid LAMMPS runs, as the chronic overprediction of force may have led to the atom loss. Furthermore, MTP06 exhibits a wider spread than all the other potentials. The R$^2$ values agree with this, and much like the previous validation set, the R$^2$ values tend to plateau after reaching MTP10.
 
 \section{Conclusions}
+Overall, we successfully trained several MTPs and validated them in practical simulations and predictions. The MTP is a strong-performing model for the relatively low number of trainable parameters and computational expense. Utilizing the active learning approach, we found that a bottom-up approach was effective, and reduced the training cost of creating useful MTPs. For the range of MTP levels examined, increasing the level of the MTP tended to decrease training errors, and increase the number of training configurations generated and the prediction accuracy of the MTP. The variance of MTP training for a fixed training set did not appear to be very significant and also decreased with the MTP level. However, due to instability on the cluster, we were limited in the number of active learning runs we could perform and it would be helpful to further examine the effect of initial parameters and other hyperparameters on the active learning runs. In terms of accuracy, the MTP performed well in most of the validation training sets although we find that the MTP levels below 6 tended to overpredict interatomic forces in liquids which made it unstable for MD calculations. Additionally, using general-purpose MTPs, it is challenging to obtain accurate predictions of properties that require precise evaluations of specific configurations like the elastic curve. In cases like these, we would recommend specifically tailoring a training scheme to the target regime or experimenting with MTP of a considerably higher level. We would recommend using an MTP level of at least 10 or more in general-purpose simulations like those targeted here and recommend experimenting with much higher levels of MTP as needed. 
+
+
 
 
 % \section{Corresponding author}
