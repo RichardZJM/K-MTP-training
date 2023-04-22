@@ -1,10 +1,16 @@
 # MECH 461 Research Notebook
 ## Introduction
-This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, and the subsequent application in molecular dynamics simulations. Included is a week-by-week breakdown of the progress and findings of each session.
+This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, training of different potential, and the subsequent validation of those potentials in molecular dynamics simulations. As I developed this notebook, I there was a clear distinction between some of the notes I was taking. One category is the day-by-day breakdown of my activities which may be useful in keeping records and tracing my steps although the contents aren't generally worth references. The other category are general notes which I may find myself using throughout the project. These include this such as code references and framework outlines. In the interest of brevity, while the general notes are developed on a day-by-day basis, the updates in the weekly breakdown merely make reference to the general notes instead of making redundant or in-depth explanations. 
+
+Additionally, I do not work on this project everyday and the weekly breakdown reflects this although I try to make mention of extended absences from progress.
+
+Please refer to my personal website and the project GitHub for the source code and further information.
 
 https://github.com/RichardZJM/K-MTP-training
+https://richardzjm.com/projects
 
 ## Terminology
+A brief overview of some commonly used acronyms in the notebook. 
 | Term | Description                            |
 | :---------: | -------------------------------------- |
 |QM| Quantum mechanical|
@@ -19,48 +25,31 @@ https://github.com/RichardZJM/K-MTP-training
 |LAMMPS| Large-scale Atomic/Molecular Massively Parallel Simulator: a popular MD software|
 |SSH| Secure Shell, a network protocol to connect to remote computers securely|
 
-
-
 ## Table of Contents
 - [MECH 461 Research Notebook](#mech-461-research-notebook)
   - [Introduction](#introduction)
   - [Terminology](#terminology)
   - [Table of Contents](#table-of-contents)
+- [Weekly Breakdown](#weekly-breakdown)
   - [Week 1](#week-1)
-      - [Monday, January 9th](#monday-january-9th)
-      - [Tuesday, January 10th](#tuesday-january-10th)
-      - [Thursday, January 11th - Saturday, January 14th](#thursday-january-11th---saturday-january-14th)
   - [Week 2](#week-2)
-      - [Monday, January 16th](#monday-january-16th)
-      - [Tuesday, January 17th](#tuesday-january-17th)
-      - [Wednesday, January 18th](#wednesday-january-18th)
-      - [Thursday, January 19th](#thursday-january-19th)
-      - [Friday, January 20th - Saturday, January 22nd](#friday-january-20th---saturday-january-22nd)
   - [Week 3](#week-3)
-      - [Monday, January 24th](#monday-january-24th)
-      - [Tuesday, January 25th](#tuesday-january-25th)
-      - [Wednesday, January 26th](#wednesday-january-26th)
-      - [Friday, January 28th - Saturday, January 29th](#friday-january-28th---saturday-january-29th)
+  - [Week 4](#week-4)
 - [General Notes](#general-notes)
     - [The MTP interatomic model](#the-mtp-interatomic-model)
-      - [Radial Component of the Moment Tensor Descriptor](#radial-component-of-the-moment-tensor-descriptor)
-      - [Angular Component of the Moment Tensor Descriptors](#angular-component-of-the-moment-tensor-descriptors)
-      - [MTP Model Overview](#mtp-model-overview)
-    - [Training](#training)
-    - [Narval Cluster](#narval-cluster)
+    - [HPC Clusters](#hpc-clusters)
     - [Slurm Job Manager](#slurm-job-manager)
     - [Quantum Espresso](#quantum-espresso)
-      - [Plane Wave Function](#plane-wave-function)
-      - [AI MD](#ai-md)
     - [LAMMPS](#lammps)
     - [MLIP](#mlip)
-      - [MLIP commands](#mlip-commands)
     - [Preparing the first DFT calculations](#preparing-the-first-dft-calculations)
   - [Week 3](#week-3-1)
     - [Format of the MTP File](#format-of-the-mtp-file)
     - [Format of Atomic Configurations](#format-of-atomic-configurations)
 - [References](#references)
 
+
+# Weekly Breakdown
 
 ## Week 1
 #### Monday, January 9th
@@ -90,8 +79,7 @@ During this time, I spend most of my time reading through the theory of the mome
 [Interface](https://gitlab.com/ashapeev/interface-lammps-mlip-2)
 
 
-My extended notes on the MTP architecture can be found in the General Notes section.
-
+My extended notes on the MTP architecture can be found in the [General Notes](#the-mtp-interatomic-model) section.
 
 ## Week 2
 #### Monday, January 16th
@@ -104,7 +92,9 @@ During the meeting with Hao, we started by connecting to Narval for the first ti
 ssh -Y zjm@narval.computecanada.ca
 ```
 
-Alternatively, it was also possible to connect more easily through a program called MobaXterm which would also allow easier file transfer between a local environment and the cluster. However, it was Windows-based, and since I was running Linux natively, I ended up switching to SSH through the Linux terminal and used Git for version control and file transfer.
+Additional notes on the usage of the Narval cluster is available in the [General Notes](#hpc-clusters)
+
+Alternatively, it was also possible to connect more easily through a program called MobaXterm which would also allow easier file transfer between a local environment and the cluster. However, it was Windows-based, and since I was running Linux natively, I ended up switching to SSH through the Linux terminal and used Git for version control and file transfer. 
 
 For the rest of the session, we focused on the installation of the MLIP package which I have detailed in the General Notes section. At the end of this session, Hao left me with some of the example scripts which I could digest later throughout the week.
 
@@ -221,7 +211,7 @@ At this time, I was looking to start performing some QE runs on the cluster alth
 Final year ski trip with friends ⛷️. No real progression.
 
 ## Week 3
-####  Monday, January 24th
+####  Monday, January 23th
 Today, I started making further preparations for the later DFT calculations. On my local machine, I started by performing convergence testing on the parameters for the DFT calculations. This essentially involves testing different ranges of k-points and plane-wave cutoff energies and finding the lowest possible resolution that provides a reliable prediction. For a representative cell size, I used a Python script to generate these calculations, The general framework for this was developed by myself in a previous term and involves a generation script and a template. The automation idea is to write a QE input file with the highest possible level of completion that serves as the template. We leave a marker in the template and use regular expressions to replace the marker in copies of the template that we generate with the Python script. The OS package can then be used to initiate QE runs on the generated input files. Further detail is available in the General Notes.
 
 Using the process, I used a reference cell size of BCC potassium metal at a lattice parameter of 10 Ry. I performed convergence testing with respect to k-points in a uniform distribution from 1-12, and found that 8 yielded strong convergence. The same was performed for the plane-wave cutoff energy, finding that 60 Ry worked well.  I performed the calculations for the k-points again to confirm there was no significant dependency, and upon finding the same result, settled on the below parameters for the rest of the DFT calculations.
@@ -233,16 +223,64 @@ Using the process, I used a reference cell size of BCC potassium metal at a latt
 | Basis Set | QE PWF Basis Sets|
 | Pseudopotential          | K.pbe-mt-fhi.UPF (Packaged with QE)|
 
-####  Tuesday, January 25th
-This week the meeting with Hao got pushed to Wednesday at 10:30 AM,. This is a recurring change that we will continue for future weeks.
+####  Tuesday, January 24th
+This week the meeting with Hao got pushed to Wednesday at 10:30 AM. This is a recurring change that we will continue for future weeks.
 
-#### Wednesday, January 26th
+#### Wednesday, January 25th
 For today's meeting with Hao, we started running some of the DFT scripts that he had sent me the previous week except on the cluster. This was partly to prepare the first set of training data that I had and to gain some additional experience with the cluster. We discussed what exact approach we would use for the initial training and what training scheme he had been experimenting with previously.
 
-For the initial training set, we would use the previous bash scripts to generate a range of different 1-atom primitive cells under triaxial strain and shear. Afterwards, we would add 2-atom configurations under triaxial strain. For today, we focused on getting some jobs submitted to Slurm to get familiarized with the system. The was performed using the submit scripts although we spent much of the session getting familiarized with Slurm operation. I have my finding in the General Notes section.
+For the initial training set, we would use the previous bash scripts to generate a range of different 1-atom primitive cells under triaxial strain and shear. Later, we would add 2-atom configurations under triaxial strain. For today, we focused on getting some jobs submitted to Slurm to get familiarized with the system. The was performed using the submit scripts although we spent much of the session getting familiarized with Slurm operation. I have my notes regarding Slurm in the [General Notes](#slurm-job-manager) section.
 
-#### Friday, January 28th - Saturday, January 29th
-On these two days, I performed the baseline calculations to for finind
+#### Friday, January 27th - Saturday, January 28th
+Over these past two days, I performed the calculations for finding the base lattice parameter of the solid BCC potassium. For the aim of creating general-purpose MTPs which spanned both the liquid and solid phases, I wanted to target cases that would be close to realistic potassium conditions in terms of strain and temperature. Minor deviations from the base lattice parameter would serve this purpose. As we are not fitting to empirical data, but rather DFT, we need a DFT base line. Thus, I selected a range of lattice parameters around the emperical base lattice parameters: 8.8-10.5 Bohr, and performed BCC calculations in increments of 0.1 Bohr. This yielded the following data for the elastic curve of BCC potassium.
+
+| Lattice Parameter [Bohr] | Potential Energy [Ry]|
+|-------|--------|
+| 8.8   | -1.02310361 |
+| 8.9   | -1.02445713 |
+| 9.0   | -1.02558806 |
+| 9.1   | -1.02651523 |
+| 9.2   | -1.02725474 |
+| 9.3   | -1.02782213 |
+| 9.4   | -1.02823133 |
+| 9.5   | -1.02849605 |
+| 9.6   | -1.02862670 |
+| 9.7   | -1.02863538 |
+| 9.8   | -1.02853133 |
+| 9.9   | -1.02832395 |
+| 10.0  | -1.02802176 |
+| 10.1  | -1.02763309 |
+| 10.2  | -1.02716451 |
+| 10.3  | -1.02662317 |
+| 10.4  | -1.02601536 |
+| 10.5  | -1.02534666 |
+
+Then, using QE's 2nd order Birch fit to the elastic curve, we achieve the following results.
+
+| Property | Value |
+|-------|--------|
+| Base Lattice Parameter   | 5.11 Å|
+| Bulk Modulus  | 3.9 |
+| Equilibrium Volume  | 66.72  Å$^3$|
+
+## Week 4
+#### Monday, January 30th
+Having prepared all the parameters needed for the lattice parameters the last week, I started experimenting with the passive training of the MTP relative to the collections of training data that I could generate. For this, I needed to convert the information that I had store in a bunch of output QE files into a form usable by the MTP, namely into a the configuration file format which is detailed further in the [General Notes](#configuration-files) section.
+
+To convert, a Python script, `QE_OUTPUT.py`, provided by Hao is used to parse through the QE outputs. It searches through each one, accounting for configuration with more than 1 atom automatically. One point of modification from Hao's original script involved the Atom Data id tag.  However, I had issues running the training command and I decided to put it aside until the next meeting with Hao on Wednesday.
+
+#### Wednesday, February 1st
+Today, we tried to train some MTPs although we were limited by the installation. In the previous weeks, the MLIP interface had been installed improperly although it hadn't been detected due to the verification script mostly focused on confirming that LAMMPS itself had been installed correctly. As a personal note, in the future when I may need to reinstall the MTP interface package, the package must be cloned from the repository in its directory (ie. not in the same directory as the MLIP package). The library packages are created in the lib folder of the MLIP package and must be copied into the interface package manually. Additionally, the install script for the interface takes several minutes to run and produces detailed logs. This is important to verify as failure to install the interface may pass the validation script for LAMMPS. 
+
+After, that we manage to train some different initial training sets with the`train` command. More notes on the MLIP commands is available in the [General Notes](#mlip-commands) section. There was initially an issue where the type tag was enumerated from 1 instead of 0, which caused issues with the MTP training which was expecting a single species with type 0. This ended up being a problem with the `QE_OUTPUT.py` script that Hao has provided me. His script was designed for his NaCl MTP that he was working on which had two types, which caused issues in the generation of the configuration files.
+
+The `train` command also produces training errors when it finished training. Hao mentioned to me that there are two training errors which he pays closer attention to and offered reference values which are generally good targets.
+
+|Training Error|Target|
+|-|-|
+|Average Energy Error Per Atom|0.01 eV/Atom or less|
+|Average Force Error Per Atom|0.1 eV/Å Atom or less|
+####
 
 # General Notes
 
@@ -321,7 +359,7 @@ The trainable parameters of the model are weightings with respect to the moment 
 
 
 
-### Training
+#### Training
 To prepare an MTP for usage in MD simulations like LAMMPS, training is generally performed on quantum-mechanical databases. The initial training is performed using the quantum-mechanical energies $E^{qm}$, forces $f_i^{qm}$, and $\sigma^{qm}$ stress tensors. This is performed using a loss function which considers the sum of the square errors of the energies of a configuration, the sum of the squared magnitude of the force errors for each atom in a configuration, and the error of the Frobenius norm of the stress tensors of a configuration, for all configurations in the training data set.
 
 The loss function is mathematically expressed for the number of configurations in the dataset, $K$
@@ -341,7 +379,7 @@ The mathematical optimization of this loss function doesn't use any special appr
 
  $\textrm{RSME} (E)^2 = \frac{1}{K} \sum ^{K}_{k=1} (\frac{E^\text{mtp}(\text{cfg}_g,x)}{N^{(k)}}-\frac{E^\text{qm}(\text{cfg}_g,x)}{N^{(k)}})$
 
-### Narval Cluster
+### HPC Clusters
 This all starts by connecting to Narval through my newly-minted Compute Canada account and SSH. Then, I follow the prompts, entering my password to gain access.
 
 ```
@@ -653,7 +691,98 @@ Much for QE inputs, much of my work revolved around scripting the generation of 
 The MLIP package is the practical implementation of the MTP that I used for this project. Here, I note the most important points of the MLIP's practical usage.
 
 #### MLIP commands
+These are the most common commands used for the MLIP along with a quick blurb. For ease of use I created and alias by adding the following alias command to the user `.bashrc`.
+```sh
+alias mlp="\path\to\mlp\binary"
+```
+If this is not done, commands can still be run by directly referring to the binary instead of the alias.
 
+##### Train
+Use for the passive training of a potential, `pot.mtp` relative to a set of training configurations `train.cfg`. Results are stored in `out.mtp`. Weighting and optimization parameters are generally fine.
+
+```sh
+mlp train pot.mtp train.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=out.mtp
+```
+
+##### Calculate Energy Forces and Stresses
+Use, `pot.mtp` to obtain predictions of the configurations in `configs.cfg`. Results are stored in `out.cfg`.
+```sh
+mlp calc-efs pot.mtp configs.cfg out.cfg
+```
+
+##### Calculate Minimum Distances
+Appends the minimum distance between atoms in all configurations of a `config.cfg` file. Print the global mindist.
+```sh
+mlp mindist configs.cfg
+```
+
+##### Selected Configurations for Further Training
+Selects configurations from a set of preselected configurations,`preselected.cfg`, for an `pot.mtp` and existing training set, `train.cfg`, and returns them in `diff.cfg`. Uses an active learning state `als.als` and returns a sparsified subset of in `selected.cfg`
+```sh
+mlp select-add pot.mtp train.cfg preselected.cfg diff.cfg --als-filename=als.als --selected-filename=selected.cfg
+```
+
+#### Configuration Files
+Use to define the information of training configurations for the MLIP model to process. Alot of the work revolves around converting to and from this format to perform DFT calculations. Specifically, the configruations data needs to be assembled with the cell parameters and atomic positions,  The resultant energy, force, and stress are needed for some command like the `train` command although it isn't need when forming predictions. The form is as follows, where a list of these configurations is assembled in the text file. 
+
+```sh
+BEGIN_CFG
+ Size          # Number of atoms
+    1
+ Supercell        # Parameters of the lattice vector (for periodic boundaries)
+         2.226339      2.226339      2.226339
+        -2.226339      2.226339      2.226339
+        -2.226339     -2.226339      2.226339
+# List of atom information
+ AtomData:  id type       cartes_x      cartes_y      cartes_z           fx          fy          fz
+             1    0       0.000000      0.000000      0.000000     0.000000    0.000000    0.000000         
+ Energy
+        -13.805967180600         # Energy DFT values
+ PlusStress:  xx          yy          zz          yz          xz          xy
+         0.99491     0.99491     0.99491    0.00000     0.00000    0.00000        #Stress DFT values
+ Feature   EFS_by       Qe
+ Feature   mindist      3.856132       
+END_CFG
+```
+
+#### MTP Potential Files
+These files store the actual the hyperparameters of a given MTP as well as the trainable paraemeters. Most of the modification of these files are performed by the system during training although I do edit the cutoff radius sometimes. The level is define by the arrangement of the alpha lists and for a given MTP level, there are pregenerated files that ship with the MLIP package
+
+```sh
+MTP
+version = 1.1.0
+potential_name = MTP1m
+species_count = 1       #Number of species (just K for me)
+potential_tag =
+radial_basis_type = RBChebyshev
+        min_dist = 2       # Minimum cutoff distance (angstroms)
+        max_dist = 5       # Maximal cutoff distance (angstronms)
+        radial_basis_size = 8       #Number of Chebyshev Polynomials in basis set
+        radial_funcs_count = 2
+alpha_moments_count = 18        
+alpha_index_basic_count = 11
+
+# The rest are just the definition of the potential for a given level and  trainable parameters
+alpha_index_basic = {{0, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}, {0, 2, 0, 0}, {0, 1, 1, 0}, {0, 1, 0, 1}, {0, 0, 2, 0}, {0, 0, 1, 1}, {0, 0, 0, 2}, {1, 0, 0, 0}}
+alpha_index_times_count = 14
+alpha_index_times = {{0, 0, 1, 11}, {1, 1, 1, 12}, {2, 2, 1, 12}, {3, 3, 1, 12}, {4, 4, 1, 13}, {5, 5, 2, 13}, {6, 6, 2, 13}, {7, 7, 1, 13}, {8, 8, 2, 13}, {9, 9, 1, 13}, {0, 10, 1, 14}, {0, 11, 1, 15}, {0, 12, 1, 16}, {0, 15, 1, 17}}
+alpha_scalar_moments = 9
+alpha_moment_mapping = {0, 10, 11, 12, 13, 14, 15, 16, 17}
+```
+
+#### MLIP INI Files
+These are essentially config files which are pointed to by LAMMPS runs to determine which MTP to use and what course of action to take during a MTP MD run.
+
+```ini
+mlip-type mtp
+mtp-filename pot.mtp
+calculate-efs TRUE
+select TRUE    #selection mode is activated
+select:threshold  2.1      #Grade> 2.1 are preselected
+select:threshold-break 10.0      #Grade > 10 terminate the rum 
+select:save-selected  preselected.cfg     #Where to store preselected configurations
+select:load-state  state.als     #active learning state is loaded from this file
+```
 
 
 ### Preparing the first DFT calculations
