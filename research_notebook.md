@@ -35,6 +35,8 @@ A brief overview of some commonly used acronyms in the notebook.
   - [Week 2](#week-2)
   - [Week 3](#week-3)
   - [Week 4](#week-4)
+  - [Week 5](#week-5)
+  - [Week 6](#week-6)
 - [General Notes](#general-notes)
     - [The MTP interatomic model](#the-mtp-interatomic-model)
     - [HPC Clusters](#hpc-clusters)
@@ -42,6 +44,7 @@ A brief overview of some commonly used acronyms in the notebook.
     - [Quantum Espresso](#quantum-espresso)
     - [LAMMPS](#lammps)
     - [MLIP](#mlip)
+    - [Practical Active Learning Procedure](#practical-active-learning-procedure)
     - [Preparing the first DFT calculations](#preparing-the-first-dft-calculations)
   - [Week 3](#week-3-1)
     - [Format of the MTP File](#format-of-the-mtp-file)
@@ -276,11 +279,63 @@ After, that we manage to train some different initial training sets with the`tra
 
 The `train` command also produces training errors when it finished training. Hao mentioned to me that there are two training errors which he pays closer attention to and offered reference values which are generally good targets.
 
-|Training Error|Target|
+|Training  Error|Target|
 |-|-|
 |Average Energy Error Per Atom|0.01 eV/Atom or less|
 |Average Force Error Per Atom|0.1 eV/Å Atom or less|
-####
+
+#### Thursday, February 2nd - Friday, February 3rd
+I was more occupied with the proposal report for my capstone project and didn't focus much on the research project as much except for review some of the literature.
+
+#### Sunday, February 5rd - Monday, February 6th
+I experimented with some different training sets for the different initial datasets. As Hao recommended, I started with a MTP level 08. Using the scripts, I played around with different initial training dataset. The script offers options that affect the range of the triaxial strains and shears that could be represented. 
+
+I started by playing with strains, generating a training set with values from 0.85 to 1.15 in increments of 0.02. Which gave training errors well below the targeted ranges. Playing with the number of the training configurations in a given range of strains tended to have a minimal impact on the error targets. I find this quite reasonable since in cases of a small number of configurations, there are sufficient trainable parameters to have strong representation although the error doesn't quite reach zero. The MTP also seems to make good representations in cases where there are a lot of training sets. Playing with the strain range, I found that the prediction was also good in cases until the range reached around 0.65-1.35, which is also much larger than a reasonable range in any case.
+
+The 1-atom shear configurations weren't strongly impacted by the number of training set either, although the errors increased quite a bit when the length-to-width ratio of the cell surpassed 3 which isn't very representative of a realistic bulk material either. 
+
+## Week 5
+#### Wednesday, February 8th
+Today Hao, and I had a bit of a shorter session due to other commitments and we started focusing on the requirements need for rest of the project. A big part of the project would focus on performing active learning runs with the MLIP package, so it would an important part of it. I breakdown the majority of the LAMMPS input file for the run in the [General Notes](#lammps). 
+
+After that, Hao gave me some more scripts that he had used for 2-atom configurations under triaxial strain which I could use to start expanding my dataset. We ran out of time shortly after although we agreed to meet a bit earlier the next week since it would be the last session before the reading week.
+
+#### Friday, February 10th
+Today, I started unpacking and working with the scripts that Hao had provided me with the previous session. It was pretty much like the previous scripts, and it would be simple enough to run although I was having issues maintaining a connection to the Narval login node. I would frequently lose connection which would prevent me from accessing my work for extended periods of time throughout the day. This had actually happened occasionally from some of the previous days as well although the frequency was increasing. 
+
+Although we had started with Narval since the beginning of the project, Hao had previously mentioned that he was using CAC instead, especially since the job queue time tended to be lower too.  I searched around for a fix to the Narval issue, and ended up migrating to the CAC cluster. Most of the work today consisted of updating my Git setup and performing the migration.
+
+#### Saturday, February 11th
+Previously, my coding workflow and script modification process consisted of working on files locally and pushing with GIt onto the cluster. After that point, I SSH onto the cluster using the Linux Terminal and run the scripts and calculations using the Slurm job scheduler. The editor that I use locally is Visual Studio (VS) Code, an extensible editor developed by Microsoft. While working on the migration yesterday, I stumbled across the VS code SSH extension which is allows client to remote into a cluster with all of the VS Code functionality such as graphical file exploration, extensions, and Intellisense. It essentially, offers a near-local development environment on the cluster and saves a ton of development time.  The tutorial is available below. 
+
+[VS Code SSH extension](https://code.visualstudio.com/docs/remote/ssh)
+
+I spent an hour today setting it up and working out the kinks, especially setting up the SSH keys to enable automatic authorization from my local machine. The main part involved setting up the remote SSH key, this involves generating a SSH on the local machine using
+
+```bash
+ssh-keygen
+```
+
+After following the prompt, a public and private key is generated in the specified file location. In the VS code SSH config, file the preferred authentication type is specified and the location of the private key is given. 
+```bash
+Host login.cac.queensu.ca
+  HostName login.cac.queensu.ca
+  ForwardX11 yes
+  User hpc5146
+  PreferredAuthentications publickey
+  IdentityFile /home/richa/.ssh/id_rsa
+```
+On the user's home directory in the cluster, the public key is added to the `known_hosts` file inside the `.ssh` folder. This allows the VS Code connection to establish without using a password. Additionally, I set the Remote SSH timeout to 60 seconds since I was having issues with receiving a response with the default 15 seconds. 
+
+I also made a small post on the Nuclear Materials Group team channel to share my findings which could be quite useful for others.
+
+## Week 6
+#### Monday, February 13th
+Having agreed to meet earlier this week due to the forthcoming reading week, Hao and I met at 11:30 AM today. Having gotten me familiarized with the last of the important individual steps the prior week, we worked on finalizing the final framework of the project. I was already familiar with the concepts behind the MTP architecture, the active learning loop although it was important to get a practical level overview of each of the steps so that I could have a concrete guide and knowledge of the techniques to digest over the reading week.
+
+Hao outlined each of the steps that he followed and I asked questions on points that I found to be unclear. My current understanding of the process to create trained MTPs is available in the [General Notes](#practical-active-learning-procedure). This includes some modifications to the process that I think would lead to a cleaner implementation and more efficient process.
+
+
 
 # General Notes
 
@@ -783,6 +838,65 @@ select:threshold-break 10.0      #Grade > 10 terminate the rum
 select:save-selected  preselected.cfg     #Where to store preselected configurations
 select:load-state  state.als     #active learning state is loaded from this file
 ```
+
+### Practical Active Learning Procedure
+This the general procedure that I follow to perform the active learning of an MTP to target an MTP that performs with in general solid-liquid prediction tasks. This includes a high-level overview although I also include practical-level notes which detail important steps and commands.
+
+1. Generate the initial datasets
+2. Run parallel MD simulations that are representative of the target representation regime
+3. Compile the preselected configurations 
+4. Filter out the new configurations
+5. Create coresponding QE inputs and perform the DFT calculations 
+6. Retrain the MTP with the expanded training dataset
+7. Repeat steps 2-6, until there are no more preselected configurations
+8. Expand the scale of the MD simulations, repeat step 2-7 until there is a sufficiently rich representation
+
+#### 1. Generate the initial datasets
+Using bash or an alternative scripting framework, first generate a range of 1-atom primitive cell configurations under a range of shears and triaxial strains. The ranges should be representative of the target configurations and the number of configurations shouldn't be to large for fear that the initial dataset makes up to large a proportion of the final training set. Around two dozen is probably okay.
+
+#### 2. 
+
+The important steps are
+1st generate two-atom configurations (hydrostatic expansion or compression, within ~5% strain, temperatures (100K)). later we add data for high temperatures (400K, 200K)
+
+Using python scripts
+
+2nd run MD simulations with active learning mode. (check each configuration to see whether it is risky) Nothing we can do
+
+Setup a new state.als file using a  new command:
+/global/home/hpc5146/mlip-2/bin/mlp calc-grade pot.mtp train.cfg train.cfg out.cfg --als-filename=state.als
+This file path us tbe specified in the MTP MD config ini file
+
+Create multiple MD files.
+Change the input data to different strains (hydrostatic compression and expansion aro 5%) at two different temps above melt and two below
+This introduces different interactions t differnt ranges but its not too unrealistic
+Run these simulations the active learning enabled
+The risky configurations will be save in a preselected.cfg file (autogenerated for each run)
+
+
+
+3rd From step 2, we have a preselected.cfg file, in which every risky configuration is included.Nothing we can do
+
+Don't do anything (just intermeidate  step)
+
+4th, run a command to check whether all the configurations in preselected.cfg are necessary. Nothing we can do
+
+/global/home/hpc5146/mlip-2/bin/mlp select-add /global/home/hpc5146/Projects/K-MTP-training/phase2/mdLearning/pot.mtp train.cfg ../activeLearningDFT/preselected.cfg diff.cfg --als-filename=state.als
+
+We run a check.sh on the folder.
+This visits all the sister directory which hold the MD runs
+It generates a diff.cfg file which has the representative configs for each preselected run.
+
+(Try combined the preselected instead of creating seperate diff.cfgs ???)
+
+
+5th create DFT input files and run DFT. 
+Run DFT on each of the configurations generated by the diff.cfg
+
+6th add DFT result into our training data set and retrain the potential.
+Run the passive training on the new set of union of the current set and the new results from the diff.cfg dft results/
+
+
 
 
 ### Preparing the first DFT calculations
