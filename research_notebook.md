@@ -429,7 +429,7 @@ Reading week has started. No progress for these last two days.
 These two weeks are a complete write-off. I went back to Ottawa for the reading week. My family had arrange plans for the start of the reading week, and on the Thursday, I got my wisdom tooth surgery. I had hoped to recover for a few days and return to school and the research project although there were complications and I didn't make progress.
 
 ## Week 8
-#### Monday, March 27th - Tuesday, March 28th
+#### Monday, March 6th - Tuesday, March 7th
 Getting back into the work on the project, I did additional research into the Slurm job scheduler and the interaction with Python. In doing, so I found the following post on Stack Overflow on how to pause Python until a Slurm job is finished.
 
 [Await Slurm Run Completion](https://stackoverflow.com/questions/46427148/how-to-hold-up-a-script-until-a-slurm-job-start-with-srun-is-completely-finish)
@@ -442,7 +442,209 @@ A further explanation and code sample is available in the [General Notes](#runni
 
 Having solved the last piece of the automation puzzle, I knew that I could theoretical build a fully automated script that would coordinate the complete active learning of MTPs according to a bottom-up training approach. However, I am concerned about getting the setup working on the cluster as it would rely on a large amount of small jobs. I am also not sure if there might be issues with the amount of computation is would take to fully an MTP and I was hesitant to spend to many of the school resources. 
 
-Either way, I shift the GitHub naming to phase 3. I will not be including the full script here due to the probable length although, I will list all the techniques I use in [General Notes](#python-scripting-key-techniques). I will make sure to comment it and have it available on the GitHub.
+Either way, I'm shifting the GitHub naming to phase 3. I will not be including the full script here due to the probable length although, I will list all the techniques I use in [General Notes](#python-scripting-key-techniques). I will make sure to comment it and have it available on the GitHub.
+
+#### Wednesday, March 8th
+Today's meeting with Hao was a brief one. I mostly showed him the ideas that I had for the Python process to automate the whole active learning process. He agreed that it would be a good approach although he did mention that he hadn't personally mentioned developed anything that was that automated on the cluster. 
+
+One important point that we had to decide on was how to increment the training cell size. Up until now, we had be going of the idea that we would incrementally increase the number of atoms in the system and the size of the simulation cell. What he had been using was something like the following sequence of stages.
+
+- 2 atoms 
+- 3 atoms
+- 5 atoms
+- 7 atoms
+- 9 atoms (Maybe)
+- Practical simulation 
+
+After the meeting, I was considering the exact method by which I wanted to set up each of the atoms. One big issue I was having with the MTP model in this regard is the lack of considerations for very close atoms. The radial component of the architecture is based on a minim cutoff radius which means that if any too atoms are too close, issues might arise in the quality of the prediction and fit. In any realistic scenario, there wouldn't be an issue since the potential would exert an repulsive force when to atoms approach although the initial positions that I would set might cause atoms to start to close.
+
+I tentatively decided on using random positions for the atoms within a simulation cell whose's volume is scaled by the number of atoms relative to the number of atoms in the base lattice parameter cell (2).
+
+#### Thursday, March 9th 
+Today, I worked on porting what I had written in phase 2 for the automated generation of the DFT calculations into the new framework which would be one large script. The format is generally the same and I have included a snippet of the code for 1-atom triaxial shear below. 
+
+```python
+subprocesses = []
+# Generate and submit the 1Atom Strain runs
+for strain in DFT1AtomStrains:
+    folderName = DFT1AtomStrainFolder + "/1AtomDFTstrain" + str(round(strain,2))
+    inputName = folderName + "/1AtomDFTstrain" + str(round(strain,2)) + ".in"
+    jobName = folderName + "/1AtomDFTstrain" + str(round(strain,2)) + ".qsub"
+    outputName = DFToutputFolder + "/1AtomDFTstrain" + str(round(strain,2)) + ".out"   
+    
+    if not os.path.exists(folderName): os.mkdir(folderName)
+    
+    shutil.copyfile(template1AtomStrainDFT, inputName)
+    shutil.copyfile(templateDFTJob, jobName)
+    
+        # Make modifications to the QE input using regex substitutions
+    with open (inputName, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$aaa", str(round(strain * params["baseLatticeParameter"] /2,5)), content)      #substitute lattice vector marker with the lattice vector
+        contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
+        contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+        contentNew = re.sub("\$out", folderName, contentNew)  
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+    
+    with open (jobName, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$job", "Strain" + str(strain), content) 
+        contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+        contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+        contentNew = re.sub("\$cpus", params["dftJobParam"]["cpus"], contentNew) 
+        contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
+        contentNew = re.sub("\$in", inputName, contentNew)      
+        contentNew = re.sub("\$out", outputName, contentNew)
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+        
+    if (not dryRun): subprocesses.append(subprocess.Popen(["sbatch",  jobName]))        #User define run argument
+```
+
+Overall, it's very similar to the previous implementation although I focused on tightening up the code reliability. This includes a shift from relative folder and file paths to absolute paths which make thing less finicky. With the addition of the wait flag in the corresponding job submission templates and the utilization of subprocesses, I could put all these calculation in the same script and make the execution order a lot easier to manage.
+
+Having written a new implementation of phase 2 today, I spent the rest of the day experimenting with the subprocesses and making sure the framework was entirely functional. Generally I found that everything work pretty consistently although one notable downside is that when the Python script is cancelled prematurely, the corresponding Slurm job are maintained which can be a bit of a pain when debugging and developing although it's not a significant issue.
+
+#### Friday, March 10th
+As I was automating the generation of the initial datasets, I noticed that the user (either myself or a peer) would have a lot of different parameters that they might want to use for different initial conditions and training schemes. While I could feasible use a ton of system arguments, that would be fairly infeasible for usability. Taking a page out of my web dev experience, I decided to use a JSON file which is basically a human-readable format that is easily imported into Python. More information is available in the [General Notes](#loading-json-configuration-file). The configuration file looks like this.
+
+```json
+{
+  "1AtomDFTStrainRange": [0.75, 1.26],
+  "1AtomDFTStrainStep": 0.05,
+  "1AtomDFTShearRange": [1, 2.01],
+  "1AtomDFTShearStep": 0.2,
+  "2AtomDFTStrainRange": [0.9, 1.11],
+  "2AtomDFTStrainStep": 0.04,
+  "MDNumAtoms": [2, 3, 5],
+  "maxIters": 15, 
+  "MDTemperatures": [100, 300, 400, 800],
+  "MDStrainRange": [0.95, 1.06],
+  "MDStrainStep": 0.02,
+  "selectThreshold": 2.1,
+  "breakThreshold": 10.0,
+  "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
+  "pseudopotentialDirectory": "/global/home/hpc5146",
+  "pseudopotential": "K.pbe-mt_fhi.UPF",
+  "lmpMPIFile": "/global/home/hpc5146/interface-lammps-mlip-2/lmp_mpi",
+  "baseLatticeParameter": 9.6568,
+  "slurmParam": {
+    "account": "def-hpcg1725",
+    "partition": "reserved",
+    "qos": "privileged"
+  },
+  "dftJobParam": {
+    "cpus": "1",
+    "time": "0-06:00"
+  },
+  "mdJobParam": {
+    "cpus": "1",
+    "time": "0-02:00"
+  }
+}
+```
+
+The script is designed to read through the files and adapt the initial training set based on the parameters defined, and for some of today, went back and adapted the automated initial generation to account for the parameters. This involved modifying the templates too. In addition to the development, I spent some time testing the new functionality and making sure everything worked as planned.
+
+I also considered some of the other parameters that would be required and wrote the preliminary values into the JSON file. There will probably be more later, although it's easy enough to add more and adapt the parameters for different test runs. 
+
+#### Saturday, March 11th - Sunday, March 12th
+Before I can begin the active learning loop, I need to first setup the MLIP files. I discuss these files further in the [General Notes](#mlip-ini-files) section. These are used to control the MTP during the active learning runs. I created a template for these files and used the below scripting to copy it to an `mtpProperties` folder which will be used to hold files related to the MTP's properties.
+
+```python
+# Prepare mlip.ini
+iniTemplate = templatesFolder + "/mlip.ini"
+shutil.copyfile(iniTemplate, iniFile)
+with open (iniFile, 'r+' ) as f:
+            content = f.read()
+            contentNew = re.sub("\$mtp", mtpFile, content) 
+            contentNew = re.sub("\$select", str(params["selectThreshold"]), contentNew)
+            contentNew = re.sub("\$break", str(params["breakThreshold"]), contentNew)
+            contentNew = re.sub("\$als", alsFile, contentNew)
+            f.seek(0)
+            f.write(contentNew)
+            f.truncate()
+```
+
+The other important file is the `pot.mtp` files which holds the learnable parameters of the MTP itself. Since the user also has the option to adjust the hyperparameters of the MTP model in the MTP file, I do not automate this part and leave it to the user to place their `pot.mtp` of choice into the `mtpProperties` folder.
+
+
+With the foundations established earlier I moved on to the next phase of the scripting. With reference to the practical active learning procedure in the [General Notes](#practical-active-learning-procedure), I now need to train the potential based on the existing dataset by first translating the QE output files into the MLIP configuration format. For this, I plan to directs use Hao's script. 
+
+The previous QE outputs from the initial generation are all route into a single folder. Since Hao's script operates relative to the calling directory, I first switch directories into the QE output directory before running Hao's script through a subprocess which I immediately pause execution for.
+
+```python
+os.chdir(DFToutputFolder)
+exitCode = subprocess.Popen(["python", extractionScript]).wait()
+shutil.copyfile(minddistJobTemplate, minddistJob)
+```
+
+Next, we need to train the potential relative to the newly generated training configuration. However, specifically for the first training, there is a possibility that there is not `state.als` file which is need to store the state of the MTP. Thus, we conditionally generate the `state.als` using the `calc-grade` MLIP command if there is not preexisting ALS file. 
+
+It is here that we run into another problem. I attempted to directly run the MLIP commands from the python script using the subprocess but do to some issue on the cluster, it doesn't run directly. Additionally, in the future, I might aim to run the entire Python script in a Slurm job which would have might have a different environment that the login node that I was currently using. Thus, I decided for the sake of consistency and for some of the MLIP commands that might need a lot of compute, I would need to run all the MLIP commands through a Slurm job. This would need a bunch more code to support this...
+
+```python
+if not os.path.exists(alsFile):             # Only generate a new ALS file if it doesn't exist
+    calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
+    calcGradeJob = mtpFolder + "/calcGrade.qsub"
+    shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
+    with open (calcGradeJob, 'r+' ) as f:
+            content = f.read()
+            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+            contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
+            contentNew = re.sub("\$mtp", mtpFile, contentNew)
+            contentNew = re.sub("\$als", alsFile, contentNew)
+            contentNew = re.sub("\$train", trainingConfigs, contentNew)
+            contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
+            f.seek(0)
+            f.write(contentNew)
+            f.truncate()
+    exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
+    if(exitCode):               #Prompt user on non-zero exit code
+        printAndLog("The calc grade call has failed. Exiting...")
+        exit(1)
+    printAndLog("Generated new ALS file")
+    os.remove(calcGradeJob)
+```
+Either way, I set all this up and found that it worked decently enough. It does slow down the whole system a little bit although for the `calc-grade` command it is at least a one-time cost. The `train` MLIP command can then be called to initiate the passive training of the MTP.
+
+```python
+# Generate and run train job file (job file must be used to avoid clogging login nodes)
+        trainJobTemplate = templatesFolder + "/trainMTP.qsub"
+        trainJob = mtpFolder + "/trainMTP.qsub"
+        trainOutput = slurmRunFolder + "/train.out"
+        shutil.copyfile(trainJobTemplate, trainJob)
+        with open (trainJob, 'r+' ) as f:
+                    content = f.read()
+                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                    contentNew = re.sub("\$mtp", mtpFile, contentNew)
+                    contentNew = re.sub("\$train", trainingConfigs, contentNew)
+                    contentNew = re.sub("\$outfile", slurmRunFolder  + "/train.out", contentNew)
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
+
+        exitCode = subprocess.Popen(["sbatch", trainJob]).wait()
+        if(exitCode):
+            print("The train call has failed. Potential may be unstable. Exiting...")
+            exit(1)
+        os.remove(trainJob)
+```
+
+After the training is completed, it is simple enough to store copy the training configurations in another folder for future reference. Generally, this process worked although it is slower to have to wait for the cluster to allocate new resources for each training run. The benefit is that for larger datasets and MTP of higher level, the user can adapt the number of cores request to increase the overall speed.
+
+While testing the Python script up to this point, I did notice a small issue with the MLIP command. In some very rare cases, it was possible the the BFGS optimization algorithm would detect an ascending step and immediately terminate. However, a simple fix was to replace the potential with a fresh one and run the training again.
 
 # General Notes
 
@@ -959,7 +1161,7 @@ This the general procedure that I follow to perform the active learning of an MT
 8. Expand the scale of the MD simulations, repeat step 2-7 until there is a sufficiently rich representation
 
 #### 1. Generate the Initial Datasets
-Using bash or an alternative scripting framework, first generate a range of 1-atom primitive cell configurations under a range of shears and triaxial strains. The ranges should be representative of the target configurations and the number of configurations shouldn't be to large for fear that the initial dataset makes up to large a proportion of the final training set. Around two dozen is probably okay. When training from the initial training set, a new active learning state needs to be generated using the calc-grade MLIP command. I then run Hao's script to convert all the datasets into the MLIP configuration format. Then, I train a fresh potential with the latest training configurations. 
+Using bash or an alternative scripting framework, first generate a range of 1-atom primitive cell configurations under a range of shears and triaxial strains. The ranges should be representative of the target configurations and the number of configurations shouldn't be to large for fear that the initial dataset makes up to large a proportion of the final training set. Around two dozen is probably okay. Then run Hao's script to convert all the datasets into the MLIP configuration format. Then, I train a fresh potential with the latest training configurations. When training from the initial training set, a new active learning state needs to be generated using the calc-grade MLIP command. I
 
 #### 2. Run Parallel MD Runs
 We then perform LAMMPS MD runs with active learning. I do many of these runs in parallel with the aim to increase the number of selected configurations in a single iteration and reduce the amount of time for full training. Additionally, I design the initial conditions to explore more of the relevant interactions of potassium. Looking to target both liquid and solid configurations I've selected four temperatures relative to the empirical melting point of potassium. This includes 2 solid temperatures and two liquid temperatures with two temperatures close to the melting point and two well within the phase. For each of these temperatures six strains between 0.95 and 1.05 are generated, yielding 24 configurations in parallel. Practically, this involves using a scripting language to generate a folder, a job submission, and an input file for each of the MD jobs. 
