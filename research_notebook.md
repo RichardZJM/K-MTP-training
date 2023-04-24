@@ -2,7 +2,7 @@
 ## Introduction
 This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, training of different potential, and the subsequent validation of those potentials in molecular dynamics simulations. As I developed this notebook, I there was a clear distinction between some of the notes I was taking. One category is the day-by-day breakdown of my activities which may be useful in keeping records and tracing my steps although the contents aren't generally worth references. The other category are general notes which I may find myself using throughout the project. These include this such as code references and framework outlines. In the interest of brevity, while the general notes are developed on a day-by-day basis, the updates in the weekly breakdown merely make reference to the general notes instead of making redundant or in-depth explanations. 
 
-Additionally, I do not work on this project everyday and the weekly breakdown reflects this although I try to make mention of extended absences from progress.
+Additionally, I do not work on this project everyday and the weekly breakdown reflects this although I try to make mention of extended absences from progress. My project is purely computational and thus, a lot of my work is sparse and is well distributed throughout the semester.
 
 Please refer to my personal website and the project GitHub for the source code and further information.
 
@@ -37,6 +37,8 @@ A brief overview of some commonly used acronyms in the notebook.
   - [Week 4](#week-4)
   - [Week 5](#week-5)
   - [Week 6](#week-6)
+  - [Reading Week and Week 7](#reading-week-and-week-7)
+  - [Week 8](#week-8)
 - [General Notes](#general-notes)
     - [The MTP interatomic model](#the-mtp-interatomic-model)
     - [HPC Clusters](#hpc-clusters)
@@ -45,6 +47,7 @@ A brief overview of some commonly used acronyms in the notebook.
     - [LAMMPS](#lammps)
     - [MLIP](#mlip)
     - [Practical Active Learning Procedure](#practical-active-learning-procedure)
+    - [Python Scripting Key Techniques](#python-scripting-key-techniques)
     - [Preparing the first DFT calculations](#preparing-the-first-dft-calculations)
   - [Week 3](#week-3-1)
     - [Format of the MTP File](#format-of-the-mtp-file)
@@ -335,7 +338,111 @@ Having agreed to meet earlier this week due to the forthcoming reading week, Hao
 
 Hao outlined each of the steps that he followed and I asked questions on points that I found to be unclear. My current understanding of the process to create trained MTPs is available in the [General Notes](#practical-active-learning-procedure). This includes some modifications to the process that I think would lead to a cleaner implementation and more efficient process.
 
+#### Tuesday, February 14th
+Midterm Week. 😔 Today, it was Computer Architecture.
 
+#### Thursday, February 16th - Friday, February 17th
+Today, I was making plans for the reading week. Most I was considering how to automate the active learning process which Hao had introduced to me and that I had modified. The key problem was how I would integrate the sequential execution of bash scripts. I had one idea which would work which was to simply call a bash script with a bash script. This second script could also call another bash script...
+
+```bash
+sh script.sh
+```
+
+However, I had a few qualms with such an approach.
+- Persistent data is not preserved
+- Nested bash script calls are a code maintenance nightmare
+- Conditional logic is painful
+- The execution of the `sbatch` command terminate when the job is submitted, not when the job is completed.
+
+I did have some workaround to some of the problems. For instance, the persistent data could perhaps be stored in a text file which each script could reference upon startup. The job scheduling issue could perhaps be worked around by having each file make a modification to a directory (ie. add a file), and when each job is finishing, I could have it count the number of files to determine whether to run a subsequent script. However, overall it's a bit of a pain to implement and use.
+
+Here, I made the decision to switch all of my project frameworks over to Python, and language I am far more familiar with and a language which is far more powerful. Here, I made a shift from learning and experimenting towards development and automation and accordingly made a new folder on Git, titling future development under Phase 2.
+
+I started by automating the initial generation scripts that had originally been provided to me by Hao. I show the script for 1-atom triaxial strain below and omit the rest since the framework is very similar. 
+
+``` python
+performRun = False           # First system argument, generates and performs run if specified
+try:
+     if sys.argv[1] == "run": performRun = True  
+except:
+    pass
+
+dftRunTemplateLocation = "../../../1AtomDFTExpansion/templateExpansionDFTRun.in"          #location of dft run, data input, and job templates 
+jobTemplateLocation = "../../../1AtomDFTExpansion/templateExpansionDFTRunSubmit.qsub"
+
+baseline = 4.83583;                 # lattice parameter /2 of K  (DFT) calculated (bohr)
+strains = np.arange(0.65, 1.36, 0.05)               #strains we wish to consider
+
+#Make and prepare a new directory to hold all runs if needed 
+os.chdir("../")
+os.system("mkdir runs")
+os.chdir("./runs")
+os.system(" mkdir dftExpansion")
+os.chdir("./dftExpansion")
+
+# os.system("pwd")
+
+for strain in strains:
+    # Generate the necessary folder and file names
+    folderName = "expSt" + str(round(strain,2))
+    inputName = "expSt" + str(round(strain,2)) + ".in"
+    jobName = "expSt" + str(round(strain,2)) + ".qsub"
+    outputName = "expSt" + str(round(strain,2)) + ".out"
+    
+    # Generate a new directory for each dft run and navigate to it
+    os.system("mkdir "+folderName)
+    os.chdir(folderName)
+    
+    # Copy the templates for the LAMMPS input and data files
+    shutil.copyfile(dftRunTemplateLocation, inputName)
+    shutil.copyfile(jobTemplateLocation, jobName)
+    
+    # Make modifications to the QE input using regex substitutions
+    with open (inputName, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$aaa", str(strain * baseline), content)      #substitute lattice vector marker with the lattice vector
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+        
+    # Make modifications to the job file using regex substitutions
+    with open (jobName, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$jjj", jobName, content)      #substitute job name marker with job name
+        contentNew = re.sub("\$in", inputName, contentNew)      #substitute input name marker with input name
+        contentNew = re.sub("\$out", outputName, contentNew)      #substitute output name marker with output name
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+    
+    if performRun: os.system("sbatch " + jobName)
+    
+    os.chdir("../")
+```
+
+Overall, the main idea is very simple. Much like the previous bash scripts, I utilize a template for both the job submission file and the QE input files. One minor difference is that instead of having the bulk of the files written as literals in the code as was the case with Hao's code, I opt to transfer everything to the template file to create a clear distinction between the text files and the logic. Using a for loop, I iterate through each of the required strains, copy the templates into a fresh directory, and modify the required fields using RegEx substitutions. One ease of use function that I added was a system argument for troubleshooting that didn't submit the runs. Overall, this new framework clears up a lot of the issues that I was having with the bash implementation although I still don't have a perfect solution to the issue of job scheduling. However, later in the reading week, I'll hopefully have more time to find a good solution to the problem.
+
+#### Saturday, February 18th - Saturday February 19th
+Reading week has started. No progress for these last two days.
+
+## Reading Week and Week 7
+These two weeks are a complete write-off. I went back to Ottawa for the reading week. My family had arrange plans for the start of the reading week, and on the Thursday, I got my wisdom tooth surgery. I had hoped to recover for a few days and return to school and the research project although there were complications and I didn't make progress.
+
+## Week 8
+#### Monday, March 27th - Tuesday, March 28th
+Getting back into the work on the project, I did additional research into the Slurm job scheduler and the interaction with Python. In doing, so I found the following post on Stack Overflow on how to pause Python until a Slurm job is finished.
+
+[Await Slurm Run Completion](https://stackoverflow.com/questions/46427148/how-to-hold-up-a-script-until-a-slurm-job-start-with-srun-is-completely-finish)
+
+This by itself is not that useful, but when we pair it with the Python subprocesses library, we can run Slurm Jobs in parallel and pause execution until the subprocesses have completed. 
+
+[Awaiting Python Subprocess Completion](https://stackoverflow.com/questions/15107714/wait-process-until-all-subprocess-finish)
+
+A further explanation and code sample is available in the [General Notes](#running-parallel-slurm-jobs-and-pausing-execution-until-all-runs-are-complete)
+
+Having solved the last piece of the automation puzzle, I knew that I could theoretical build a fully automated script that would coordinate the complete active learning of MTPs according to a bottom-up training approach. However, I am concerned about getting the setup working on the cluster as it would rely on a large amount of small jobs. I am also not sure if there might be issues with the amount of computation is would take to fully an MTP and I was hesitant to spend to many of the school resources. 
+
+Either way, I shift the GitHub naming to phase 3. I will not be including the full script here due to the probable length although, I will list all the techniques I use in [General Notes](#python-scripting-key-techniques). I will make sure to comment it and have it available on the GitHub.
 
 # General Notes
 
@@ -846,57 +953,166 @@ This the general procedure that I follow to perform the active learning of an MT
 2. Run parallel MD simulations that are representative of the target representation regime
 3. Compile the preselected configurations 
 4. Filter out the new configurations
-5. Create coresponding QE inputs and perform the DFT calculations 
+5. Create corresponding QE inputs and perform the DFT calculations 
 6. Retrain the MTP with the expanded training dataset
 7. Repeat steps 2-6, until there are no more preselected configurations
 8. Expand the scale of the MD simulations, repeat step 2-7 until there is a sufficiently rich representation
 
-#### 1. Generate the initial datasets
-Using bash or an alternative scripting framework, first generate a range of 1-atom primitive cell configurations under a range of shears and triaxial strains. The ranges should be representative of the target configurations and the number of configurations shouldn't be to large for fear that the initial dataset makes up to large a proportion of the final training set. Around two dozen is probably okay.
+#### 1. Generate the Initial Datasets
+Using bash or an alternative scripting framework, first generate a range of 1-atom primitive cell configurations under a range of shears and triaxial strains. The ranges should be representative of the target configurations and the number of configurations shouldn't be to large for fear that the initial dataset makes up to large a proportion of the final training set. Around two dozen is probably okay. When training from the initial training set, a new active learning state needs to be generated using the calc-grade MLIP command. I then run Hao's script to convert all the datasets into the MLIP configuration format. Then, I train a fresh potential with the latest training configurations. 
 
-#### 2. 
+#### 2. Run Parallel MD Runs
+We then perform LAMMPS MD runs with active learning. I do many of these runs in parallel with the aim to increase the number of selected configurations in a single iteration and reduce the amount of time for full training. Additionally, I design the initial conditions to explore more of the relevant interactions of potassium. Looking to target both liquid and solid configurations I've selected four temperatures relative to the empirical melting point of potassium. This includes 2 solid temperatures and two liquid temperatures with two temperatures close to the melting point and two well within the phase. For each of these temperatures six strains between 0.95 and 1.05 are generated, yielding 24 configurations in parallel. Practically, this involves using a scripting language to generate a folder, a job submission, and an input file for each of the MD jobs. 
 
-The important steps are
-1st generate two-atom configurations (hydrostatic expansion or compression, within ~5% strain, temperatures (100K)). later we add data for high temperatures (400K, 200K)
+#### 3. Compile the Preselected Configurations
+The MLIP packages generates a list of preselected configurations it encounters. While it is possible to specify which file location to store these preselected configurations, it is finicky to have multiple MD runs write to the same preselected file each time. Thus, I specify each MD run to store it's preselected configuration in the simulation. However, scripting is need afterwards to parse through the directories of the MD simulations and append each of the preselected files into the master preselected file. In the case there are no preselected files, we end the current stage of the active learning and generate new MD runs with a larger scale.
 
-Using python scripts
+#### 3. Trim Unnecessary Configurations 
+Using the master preselected file, I need to parse through the file and eliminate the configurations which are to similar which reduces the overall computational burden when compared to evaluating all the preselected configurations. This generates the new selected configurations which are available in the in `diff.cfg` file. Practically I can simply run the MLIP command select-add.
 
-2nd run MD simulations with active learning mode. (check each configuration to see whether it is risky) Nothing we can do
+#### 5. Perform DFT calculations
+In this step, I generate the needed QE inputs which correspond to the queried configurations in the `diff.cfg` files. I perform this using scripting which must parse the `diff.cfg`, extract the files and modify the templates files with the new cell size, atom count, and atom positions. Additionally, since the k-point convergence is performed is with respect to the base lattice-parameter, I must scale the k-point count based on the size of the cell to reduce the computational burden and maintain a consistent resolution. 
 
-Setup a new state.als file using a  new command:
-/global/home/hpc5146/mlip-2/bin/mlp calc-grade pot.mtp train.cfg train.cfg out.cfg --als-filename=state.als
-This file path us tbe specified in the MTP MD config ini file
+#### 6. Retrain
+With the updated DFT outputs, I need to rerun Hao's Python script to conglomerate the QE outputs in the configuration file format. I retrain the potential based on the output.
 
-Create multiple MD files.
-Change the input data to different strains (hydrostatic compression and expansion aro 5%) at two different temps above melt and two below
-This introduces different interactions t differnt ranges but its not too unrealistic
-Run these simulations the active learning enabled
-The risky configurations will be save in a preselected.cfg file (autogenerated for each run)
+#### 7. Repeat steps 2-6, until there are no more preselected configurations
+#### 8. Expand the scale of the MD simulations, repeat step 2-7 until there is a sufficiently rich representation
 
+### Python Scripting Key Techniques
+This section contains an overview of the important techniques that I are used to construct the final automation protocol. For the sake of brevity, I do not provide a step-by-step breakdown of the final Python script (600 lines of code). The most important point for future script development are noted here, and the final Python script is fully commented and is available in the GitHub. Moreover, the automation is really just an implementation of the practical active learning procedure explained earlier using the below techniques. 
 
+#### Retrieving User Arguments
+This is useful to have the script perform different arguments based on the bash call
+```python
+configFile = "config.json"           # Variable to store results
+try:              #Error handling in the case no user arguments are made
+     if sys.argv[1] != None: configFile = sys.argv[1];            #index 0 is not used. String is returned
+except:
+    pass
+```
 
-3rd From step 2, we have a preselected.cfg file, in which every risky configuration is included.Nothing we can do
+#### Loading JSON Configuration file
+This is useful to have more script customizability. Allows easy import of characteristics into a Python dict without requiring a significant amount of data parsing. 
+```python
+params = {}       # Empty dict to store results
+try:
+    f = open(configFile)
+    params = json.load(f)        # Open and load JSIN
+except:
+    raise Exception(configFile + " not found or not in JSON format.")      # Error handling to prompt user of error
+```
 
-Don't do anything (just intermeidate  step)
+#### Absolute Folder Paths
+To ensure the system works regardless of where the folder is stored and regardless of where the script is called from in the command line, we use absolute file path.
+```python
+rootFolder = os.path.dirname(os.path.realpath(__file__))              # Get the root folder of the Python script
+DFToutputFolder = rootFolder + "/outputDFT"     # Absolute file path to the DFT output folder
+```
 
-4th, run a command to check whether all the configurations in preselected.cfg are necessary. Nothing we can do
+#### Logging
+I use a custom logging file to report to the user live and have useful progress report to text file.
+```python
+def printAndLog(message):
+    now = datetime.now()         # Include the date and time in the log message
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    datedMessage = dt_string + "   " + message        # Dated string
+    print(datedMessage)       # Print to console
+    with open(logFile, "a") as myfile:  myfile.write(datedMessage + "\n")        # log to file
 
-/global/home/hpc5146/mlip-2/bin/mlp select-add /global/home/hpc5146/Projects/K-MTP-training/phase2/mdLearning/pot.mtp train.cfg ../activeLearningDFT/preselected.cfg diff.cfg --als-filename=state.als
+```
 
-We run a check.sh on the folder.
-This visits all the sister directory which hold the MD runs
-It generates a diff.cfg file which has the representative configs for each preselected run.
+#### Creating Directories As Needed
+Some times folders are deleted from existing runs. this creates a directory if needed and prevent errors from being thrown.
+```python
+if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)      
+```
 
-(Try combined the preselected instead of creating seperate diff.cfgs ???)
+#### Example of Job Folder, Input, and Submission Creation
+This is the bread and butter of the setup. This is how the generation of input files is handled. It used a template approach when a template of the relevant input type (eg. QE input, LAMMPS input) are complete to the fullest extent possible, omitting the parameters which need to be controlled by the script.
 
+```python
+for strain in DFT1AtomStrains:
+   # Important absolute path names
+    folderName = DFT1AtomStrainFolder + "/1AtomDFTstrain" + str(round(strain,2))
+    inputName = folderName + "/1AtomDFTstrain" + str(round(strain,2)) + ".in"
+    jobName = folderName + "/1AtomDFTstrain" + str(round(strain,2)) + ".qsub"
+    outputName = DFToutputFolder + "/1AtomDFTstrain" + str(round(strain,2)) + ".out"   
+    
+    if not os.path.exists(folderName): os.mkdir(folderName)    # Create a folder to contain the run
+    
+    shutil.copyfile(template1AtomStrainDFT, inputName)         # Copy the QE input template to the run folder
+    shutil.copyfile(templateDFTJob, jobName)          # Copy the job submission file to the run folder 
+    
+       
+    with open (inputName, 'r+' ) as f:     # Open the copied QE template. Make modifications to the QE input using regex substitutions
+        content = f.read()
+        contentNew = re.sub("\$aaa", str(round(strain * params["baseLatticeParameter"] /2,5)), content)      #substitute lattice vector marker with the lattice vector
+        contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
+        contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+        contentNew = re.sub("\$out", folderName, contentNew)  
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+    
+    with open (jobName, 'r+' ) as f: # Open the copied job submission template. Make modifications using regex substitutions
+        content = f.read()
+        contentNew = re.sub("\$job", "Strain" + str(strain), content) 
+        contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+        contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+        contentNew = re.sub("\$cpus", params["dftJobParam"]["cpus"], contentNew) 
+        contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
+        contentNew = re.sub("\$in", inputName, contentNew)      
+        contentNew = re.sub("\$out", outputName, contentNew)
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+```
 
-5th create DFT input files and run DFT. 
-Run DFT on each of the configurations generated by the diff.cfg
+#### Running Parallel Slurm Jobs and Pausing Execution Until All Runs Are Complete
+The principal is fairly simple but really effective. In each of the job submission files that I want to await completion, I set a wait flag. This causes the `sbatch` command to freeze bash execution until the job is complete. In a normal loop, this would cause the system to revert to a serial execution. However, with the Python `subprocess` library, we can invoke a subroutine and monitor its progress. Thus, all we need to do is run subroutines of `sbatch` commands that queue a job with a wait flag. We pause execution until the Python scripts detects that all subprocesses have completed.
 
-6th add DFT result into our training data set and retrain the potential.
-Run the passive training on the new set of union of the current set and the new results from the diff.cfg dft results/
+```python
+subprocesses = []     # Empty list to hold subprocesses
+# Append a new subprocess which run a bash command. 
+subprocesses.append(subprocess.Popen(["sbatch",  jobName]))       #Bash command is a list of string that compose the command
+# We can append multiple subprocesses
+exitCodes = [p.wait() for p in subprocesses]        # Wait for all the initial generation to finish
+# We can also read through the exit codes to see whether are unexpected results
+```
 
+#### Reading Specific Lines From a Text File
+This is used everywhere to read the outputs from certain software and reformat them into formats usable by other software.
 
+```python
+with open(trainOutput, "r") as txtfile:      #Reads in a file
+         lines = txtfile.readlines()      #Converts the lines of the file into a list of string
+         for i,line in enumerate(lines):        #Enumerate through the list of string 
+               if(line == "Energy per atom:\n"):            #Search for the line of interest
+                  avgEnergyError = lines[i+3][31:-1]           # Perform operations such as store it into a variable
+```
+
+#### Walking Through All Files In A Directory
+This is useful for looking through a directory for all the outputs of a bunch of DFT or MD Runs. The example below is for the compiling preselected runs.
+
+```python
+with open(preselectedConfigs,'wb') as master:
+        #Walk through the tree of directories in MD Runs
+        #All child directories are run files which have no further children
+            for directory, subdir, files in os.walk(mdFolder):        
+                if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
+                
+                childPreselectedConfigName = directory + "/preselected.cfg"   
+                try: 
+                         #Copy the preselected files to the master preselected 
+                    with open(childPreselectedConfigName,'rb') as child:
+                        shutil.copyfileobj(child, master)
+                    os.remove(childPreselectedConfigName)
+                except:
+                    completedRuns += 1
+```
 
 
 ### Preparing the first DFT calculations
@@ -1069,6 +1285,8 @@ The submission script for shears is the same script with variations on the for l
 Overall, this gives a framework through which we can easily create a training dataset of DFT data. While this iteration is limited to 1 atom, it should be fairly trivial to modify it for more atoms. I have prior experience doing so although it was done with Python, a language I'm a bit more familiar with.
 
 The rest of the week was mostly spent running simulations and Narval to better familiarize with the system and prepare various samples for the initial training of the MTP.
+
+
 
 ## Week 3
 
