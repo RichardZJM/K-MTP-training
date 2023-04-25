@@ -7,6 +7,7 @@ Additionally, I do not work on this project everyday and the weekly breakdown re
 Please refer to my personal website and the project GitHub for the source code and further information.
 
 https://github.com/RichardZJM/K-MTP-training
+
 https://richardzjm.com/projects
 
 ## Terminology
