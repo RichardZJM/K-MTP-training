@@ -1,14 +1,16 @@
 # MECH 461 Research Notebook
 ## Introduction
-This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, training of different potential, and the subsequent validation of those potentials in molecular dynamics simulations. As I developed this notebook, I there was a clear distinction between some of the notes I was taking. One category is the day-by-day breakdown of my activities which may be useful in keeping records and tracing my steps although the contents aren't generally worth references. The other category are general notes which I may find myself using throughout the project. These include this such as code references and framework outlines. In the interest of brevity, while the general notes are developed on a day-by-day basis, the updates in the weekly breakdown merely make reference to the general notes instead of making redundant or in-depth explanations. 
+This is the research notebook for the dataset generation of moment tensor potentials (MTP) for potassium, training of several potentials, and the subsequent validation of those potentials in molecular dynamics simulations. As I developed this notebook, I noticed there was a clear distinction between some of the notes I was taking. One category is the day-by-day breakdown of my activities which may be useful in keeping records and tracing my steps although the contents aren't generally worth referencing too often. The other category are general notes which I often find myself using throughout the project. These include code references and framework outlines. In the interest of brevity, while the general notes are developed on a day-by-day basis, the updates in the weekly breakdown merely make reference to the general notes instead of making redundant or in-depth explanations. Also, this is a *notebook* so there are probably some small grammar mistakes since I took these notes periodically and sometimes while working on the project.
 
-Additionally, I do not work on this project everyday and the weekly breakdown reflects this although I try to make mention of extended absences from progress. My project is purely computational and thus, a lot of my work is sparse and is well distributed throughout the semester.
+Additionally, I do not work on this project everyday and the weekly breakdown reflects this although I try to make mention of extended absences from progress. My project is purely computational and thus, a lot of my work is sparse and is distributed throughout the semester.
 
 Please refer to my personal website and the project GitHub for the source code and further information.
 
 https://github.com/RichardZJM/K-MTP-training
 
 https://richardzjm.com/projects
+
+Please note that the original file is written in Markdown for compatibility on the clusters.
 
 ## Terminology
 A brief overview of some commonly used acronyms in the notebook. 
@@ -19,48 +21,116 @@ A brief overview of some commonly used acronyms in the notebook.
 | MD  | Molecular Dynamics: uses a classical representation of atoms to solve the equations of motion. Needs a description of the forces exerted on atoms|
 |ML | Machine Learning|
 |MTP| Moment Tensor Potential: a ML model of interatomic forces and energies|
-|MLIP| Machine Learning Interatomic Potential: a software package that implmenets the MTP|
+|MLIP| Machine Learning Interatomic Potential: a software package that implements the MTP|
 |CAC|Centre for advanced computing: the Queen's computational cluster|
-|DRAC| Digital Reserach Alliance of Canada: authority which grants acces to canadian research clusters|
+|DRAC| Digital Research Alliance of Canada: authority which grants access to canadian research clusters|
 |QE| Quantum Espresso: a software which performs plane-wave DFT calculations|
 |LAMMPS| Large-scale Atomic/Molecular Massively Parallel Simulator: a popular MD software|
 |SSH| Secure Shell, a network protocol to connect to remote computers securely|
 
 ## Table of Contents
+The rubric requests "Has detailed table of contents with headings and proper page numbers." In the case that this means that the table of contents should have "proper page numbers", I must ask for leniency. Markdown is not designed with pages and thus does not have support for tables of contents with page numbers when rendered as a PDF. Please use the links instead.
+
 - [MECH 461 Research Notebook](#mech-461-research-notebook)
   - [Introduction](#introduction)
   - [Terminology](#terminology)
   - [Table of Contents](#table-of-contents)
 - [Weekly Breakdown](#weekly-breakdown)
   - [Week 1](#week-1)
+      - [Monday, January 9th](#monday-january-9th)
+      - [Tuesday, January 10th](#tuesday-january-10th)
+      - [Thursday, January 11th - Saturday, January 14th](#thursday-january-11th---saturday-january-14th)
   - [Week 2](#week-2)
+      - [Monday, January 16th](#monday-january-16th)
+      - [Tuesday, January 17th](#tuesday-january-17th)
+      - [Wednesday, January 18th](#wednesday-january-18th)
+      - [Thursday, January 19th](#thursday-january-19th)
+      - [Friday, January 20th - Saturday, January 22nd](#friday-january-20th---saturday-january-22nd)
   - [Week 3](#week-3)
+      - [Monday, January 23th](#monday-january-23th)
+      - [Tuesday, January 24th](#tuesday-january-24th)
+      - [Wednesday, January 25th](#wednesday-january-25th)
+      - [Friday, January 27th - Saturday, January 28th](#friday-january-27th---saturday-january-28th)
   - [Week 4](#week-4)
+      - [Monday, January 30th](#monday-january-30th)
+      - [Wednesday, February 1st](#wednesday-february-1st)
+      - [Thursday, February 2nd - Friday, February 3rd](#thursday-february-2nd---friday-february-3rd)
+      - [Sunday, February 5rd - Monday, February 6th](#sunday-february-5rd---monday-february-6th)
   - [Week 5](#week-5)
+      - [Wednesday, February 8th](#wednesday-february-8th)
+      - [Friday, February 10th](#friday-february-10th)
+      - [Saturday, February 11th](#saturday-february-11th)
   - [Week 6](#week-6)
+      - [Monday, February 13th](#monday-february-13th)
+      - [Tuesday, February 14th](#tuesday-february-14th)
+      - [Thursday, February 16th - Friday, February 17th](#thursday-february-16th---friday-february-17th)
+      - [Saturday, February 18th - Saturday February 19th](#saturday-february-18th---saturday-february-19th)
   - [Reading Week and Week 7](#reading-week-and-week-7)
   - [Week 8](#week-8)
+      - [Monday, March 6th - Tuesday, March 7th](#monday-march-6th---tuesday-march-7th)
+      - [Wednesday, March 8th](#wednesday-march-8th)
+      - [Thursday, March 9th](#thursday-march-9th)
+      - [Friday, March 10th](#friday-march-10th)
+      - [Saturday, March 11th - Sunday, March 12th](#saturday-march-11th---sunday-march-12th)
+  - [Week 9](#week-9)
+      - [Monday, March 13th - Tuesday, March 14th](#monday-march-13th---tuesday-march-14th)
+      - [Wednesday, March 15th](#wednesday-march-15th)
+      - [Friday, March 16th](#friday-march-16th)
+      - [Saturday, March 18th - Sunday March 19th](#saturday-march-18th---sunday-march-19th)
+  - [Week 10](#week-10)
+      - [Monday, March 20th - Tuesday, March 21th](#monday-march-20th---tuesday-march-21th)
+      - [Wednesday, March 22nd](#wednesday-march-22nd)
+      - [Thursday, March 23rd](#thursday-march-23rd)
+      - [Friday, March 24th - Monday, March 27th](#friday-march-24th---monday-march-27th)
+  - [Week 11](#week-11)
+      - [Tuesday, March 28th](#tuesday-march-28th)
+      - [Wednesday, March 29th](#wednesday-march-29th)
+      - [Thursday, March 30th](#thursday-march-30th)
+      - [Friday, March 31st](#friday-march-31st)
+      - [Saturday, April 1st](#saturday-april-1st)
+  - [Week 12](#week-12)
 - [General Notes](#general-notes)
     - [The MTP interatomic model](#the-mtp-interatomic-model)
+      - [Radial Component of the Moment Tensor Descriptor](#radial-component-of-the-moment-tensor-descriptor)
+      - [Angular Component of the Moment Tensor Descriptors](#angular-component-of-the-moment-tensor-descriptors)
+      - [MTP Model Overview](#mtp-model-overview)
+      - [Training](#training)
     - [HPC Clusters](#hpc-clusters)
     - [Slurm Job Manager](#slurm-job-manager)
     - [Quantum Espresso](#quantum-espresso)
+      - [Plane Wave Function](#plane-wave-function)
+      - [AI MD](#ai-md)
     - [LAMMPS](#lammps)
     - [MLIP](#mlip)
+      - [MLIP commands](#mlip-commands)
+      - [Configuration Files](#configuration-files)
+      - [MTP Potential Files](#mtp-potential-files)
+      - [MLIP INI Files](#mlip-ini-files)
     - [Practical Active Learning Procedure](#practical-active-learning-procedure)
+      - [1. Generate the Initial Datasets](#1-generate-the-initial-datasets)
+      - [2. Run Parallel MD Runs](#2-run-parallel-md-runs)
+      - [3. Compile the Preselected Configurations](#3-compile-the-preselected-configurations)
+      - [3. Trim Unnecessary Configurations](#3-trim-unnecessary-configurations)
+      - [5. Perform DFT calculations](#5-perform-dft-calculations)
+      - [6. Retrain](#6-retrain)
+      - [7. Repeat steps 2-6, until there are no more preselected configurations](#7-repeat-steps-2-6-until-there-are-no-more-preselected-configurations)
+      - [8. Expand the scale of the MD simulations, repeat step 2-7 until there is a sufficiently rich representation](#8-expand-the-scale-of-the-md-simulations-repeat-step-2-7-until-there-is-a-sufficiently-rich-representation)
     - [Python Scripting Key Techniques](#python-scripting-key-techniques)
-    - [Preparing the first DFT calculations](#preparing-the-first-dft-calculations)
-  - [Week 3](#week-3-1)
-    - [Format of the MTP File](#format-of-the-mtp-file)
-    - [Format of Atomic Configurations](#format-of-atomic-configurations)
-- [References](#references)
+      - [Retrieving User Arguments](#retrieving-user-arguments)
+      - [Loading JSON Configuration file](#loading-json-configuration-file)
+      - [Absolute Folder Paths](#absolute-folder-paths)
+      - [Logging](#logging)
+      - [Creating Directories As Needed](#creating-directories-as-needed)
+      - [Example of Job Folder, Input, and Submission Creation](#example-of-job-folder-input-and-submission-creation)
+      - [Running Parallel Slurm Jobs and Pausing Execution Until All Runs Are Complete](#running-parallel-slurm-jobs-and-pausing-execution-until-all-runs-are-complete)
+      - [Reading Specific Lines From a Text File](#reading-specific-lines-from-a-text-file)
+      - [Walking Through All Files In A Directory](#walking-through-all-files-in-a-directory)
 
 
 # Weekly Breakdown
-
 ## Week 1
 #### Monday, January 9th
-Having made arrangements for a meeting the next day with my supervisor, I started by applying for cluster access with the DRACAccount and the Queen's CAC Frontenac platform. This involved following the tutorials available below.
+Having made arrangements for a meeting the next day with my supervisor, I started by applying for cluster access with the DRAC Account and the Queen's CAC Frontenac platform. This involved following the tutorials available below.
 
 [DRAC](https://alliancecan.ca/en/services/advanced-research-computing/account-management/apply-account)
 [CAC](https://cac.queensu.ca/wiki/index.php/Access:Frontenac)
@@ -647,6 +717,575 @@ After the training is completed, it is simple enough to store copy the training 
 
 While testing the Python script up to this point, I did notice a small issue with the MLIP command. In some very rare cases, it was possible the the BFGS optimization algorithm would detect an ascending step and immediately terminate. However, a simple fix was to replace the potential with a fresh one and run the training again.
 
+## Week 9
+#### Monday, March 13th - Tuesday, March 14th
+These past two days, I continued with the development of the automation script. This time I needed to generate the active learning runs themselves in the folder.  This was mostly the same as the previous files with the added challenge of defining the the postions of the atoms procedurally. 
+
+Here was the algorithm that I developed the past two days:
+
+1. Start by calculating the corrected dimensions of the cell based on the volume. This is needed to ensure the density of the new cells is correct.
+2. Mark out a buffer on the outer edge of the cell. This is need to prevent atoms from being placed to close to the edge of a simulation where periodic boundary conditions need to be account for (which is difficult).
+3. Place atoms randomly in the cell. If the placed atom is too close to any of the existing atoms (within 2 Angstrom) try again.
+
+It took some trial and error with the implementation but this is what I was getting for the code.
+
+```python
+# For the mutli atom configurations (random generation)
+# Calculate a random configuration witht the specified number of atoms. 
+atomPositions = [] 
+latticeParameter = strains[0] * params["baseLatticeParameter"] * (numAtom/2)**(1/3) * 0.529177      #Correct cell dimensions
+for i in range (numAtom):
+    for _ in range(params["maxAtomPlacementTries"]):         #Add a limit to the number of tries to place an atom
+        x = random.uniform(0.5, latticeParameter-0.5)           # Limit random generation away from the edges
+        y = random.uniform(0.5, latticeParameter-0.5)
+        z = random.uniform(0.5, latticeParameter-0.5)
+        validPosition = True
+        for atomPosition in atomPositions:
+            distance = (x-atomPosition[0])**2 + (y-atomPosition[1])**2 + (z-atomPosition[2])**2
+            print(distance)
+            if(distance < 4): 
+                validPosition = False
+                break
+        if(validPosition): 
+            atomPositions.append([x,y,z])
+            break
+```
+I did some preliminary testing and it seemed to work alright for generating cases which were valid. However, I would need to do some actual active learning and training to see how valid the scheme was from a representative and MTP learning perspective.
+
+#### Wednesday, March 15th
+Today, I talked with Hao and he seem pretty happy with progress that I had made with the project thus far. This is especially true since he had focused on the automation of an MTP's active learning and he thought that the techniques might be helpful for other members of the group trying to train MTPs. Confident I understood the tasks, he switched focus to how I would validate the MTPs I trained.  The main idea is to compare out results with DFT reference data rather than empirical data since even DFT results don't always align with empirical measurements. We discussed some of the below metrics that can be predicted with the MTP and DFT.
+
+1. Bulk Modulus
+2. Baseline Lattice Parameter
+3. Equilibrium Volume 
+4. Cohesion Energy
+5. Shear Modulus
+6. Radial Distribution Function
+
+The last of these is difficult to calculate with DFT since it require the dynamics of a system. We search the literature for reference values, and upon not finding anything, Hao shared with me a QE input to perform a DFT MD run. More notes on this is available in the [General Notes](#ai-md). Hao and I started the run immediately on 48 cores since Hao cautioned that it would take a very long time. 
+
+#### Friday, March 16th
+Today, I focused on completing as much of the Python script as possible since this weekend would be Saint Patrick's Day and the Iron Ring Ceremony and I knew that I would not be able to do much.
+
+WIth the parallel molecular dynamics runs working, I first focused on collecting the preselected files from each of the MD run folders into a master run. This could be done with the Python shutil package. I simply needed to perform a walk through the directory of MD run folders.
+
+```python
+completedRuns = 0
+        with open(preselectedConfigs,'wb') as master:
+        #Walk through the tree of directories in MD Runs
+        #All child directories are run files which have no further children
+            for directory, subdir, files in os.walk(mdFolder):        
+                if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
+                
+                childPreselectedConfigName = directory + "/preselected.cfg"   
+                try: 
+                         #Copy the preselected files to the master preselected 
+                    with open(childPreselectedConfigName,'rb') as child:
+                        shutil.copyfileobj(child, master)       #append the preselected files to the master file
+                    os.remove(childPreselectedConfigName)
+                except:
+                    completedRuns += 1
+                
+        printAndLog("Runs with no preselected configurations: " + str(completedRuns) + " / " + str(len(temperatures)*len(strains)))
+```
+As the automation script was growing more and more complicated, I started to recognize that were going to be a lot of points of potential failure. I had already set up a basic logging function that would print to the console and write to a file but I decided to be more expansive with what I chose to log. I modified the logging function to include the data.
+
+```python
+def printAndLog(message):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    datedMessage = dt_string + "   " + message
+    print(datedMessage)
+    with open(logFile, "a") as myfile:  myfile.write(datedMessage + "\n")
+```
+I also went back to the MD run generation that I had developed earlier this week and worked on improving the logging. The MD runs would terminate with a non-zero exit code whenever it encounter a risky configuration, and so, I could thus determine how many risky configurations the system encounter. This might help the me monitor the progress of the later and so I started logging it. Likewise, it was possible to monitor the number of runs didn't have any preselected configurations. This is a one of the termination conditions of the active learning loop, so it was important to log it to monitor progress and record the time spent during each iteration of the active learning.
+
+Next, I moved on to script the activation of the `select-add` command which is needed to select the non-redundant configurations from the master preselected file. It is quite similar to the other MLIP calls that must be performed with the job scheduler.
+
+```python 
+# Generate the diff cfg
+selectAddJobTemplate = templatesFolder + "/selectAdd.qsub"
+selectAddJob = mtpFolder + "/selectAdd.qsub"
+shutil.copyfile(selectAddJobTemplate, selectAddJob)
+with open (selectAddJob, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+        contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+        contentNew = re.sub("\$outfile", slurmRunFolder + "/selectAdd.out", contentNew)
+        contentNew = re.sub("\$mtp", mtpFile, contentNew)
+        contentNew = re.sub("\$als", alsFile, contentNew)
+        contentNew = re.sub("\$train", trainingConfigs, contentNew)
+        contentNew = re.sub("\$preselected", preselectedConfigs, contentNew)
+        contentNew = re.sub("\$selected", selectedConfigs, contentNew)
+        contentNew = re.sub("\$diff", diffConfigs, contentNew)
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+exitCode = subprocess.Popen(["sbatch", selectAddJob]).wait()
+if(exitCode):
+    printAndLog("The select add call has failed. Exiting...")
+    exit(1)
+os.remove(selectAddJob)
+printAndLog("Diff DFT configurations selected.")
+```
+
+Here, I reached the bulk of the remaining work which focused on translating the configurations specified in the `diff.cfg` file and extracting the important information. This then needed to be packaged into a useable QE inputs for evaluation. I ended up using the approach that I specify in the [General Notes](#reading-specific-lines-from-a-text-file) with more detail.
+
+```python
+superCellVectorsList = []       # Empty lists to contain the three important parameters to read 
+numAtomsList = [] 
+posAtomsList = []
+
+with open(diffConfigs, 'r') as txtfile:
+    fileLines = txtfile.readlines()
+    index = np.where(np.array(fileLines) == "BEGIN_CFG\n")[0]   #Search for indices which match the beginning of a configuration
+    for i in index:
+        
+        configNumAtoms = int(fileLines[i+2].split()[0])     #Number of atoms has a fixed offset from the beginning of a configuration
+        numAtomsList.append(configNumAtoms)     #Read numAtoms
+        
+        v1 = np.array(fileLines[i+4].split(),dtype=float)       #Read supercell, also a fixed offset from the beginning of a configuration
+        v2 = np.array(fileLines[i+5].split(),dtype=float)
+        v3 = np.array(fileLines[i+6].split(),dtype=float)
+        superCellVectorsList.append([v1,v2,v3])         
+        
+        configAtomicPositions = np.zeros((configNumAtoms,3))           #Temporary arrary to hold atomic positions
+        for j in range(configNumAtoms):         # Loop through and extract the number of atoms needed
+            configAtomicPositions[j] = np.array(fileLines[i+8+j].split(),dtype=float)[2:5]      
+        posAtomsList.append(configAtomicPositions)
+```
+
+After having all the information in an array form, it's simple enough to use the previously establish template and regular expression technique to create QE input and run them. However, we need to first check whether if the `diff.cfg` didn't yield any configurations which would indicate that we have completed the current stage. 
+
+```python
+# Break if we find no more preselected configurations ahead of the iteration cap 
+if len(superCellVectorsList) == 0:
+    print("No preselected configurations found. Moving to next atom count.")
+    break           # Exits the current stage and starts the next one
+```
+
+Afterwards, we create and run the QE inputs for the new configurations. One important thing to note is that I need to assign a deterministic but unique identifier for each of the new DFT runs, This is because in the case one of the DFT calculations fails and the active learning loop reads through and needs to rerun one of the runs, it should overwrite the existing folder rather than create a new and redundant one. Moreover, the identifier needs to be unique lest there two runs map to the same folder and cause issues. I ended up settling on the sum of the coordinates of the last atom on any given configuration. The likelihood of two random configurations have the last atom have the exact same coordinates should be nigh impossible. 
+
+```python
+for i in range(len(superCellVectorsList)):
+    # Generate the necessary folder and file names (use a fairly unique identifier from the sum of position vectors)
+    identifier = posAtomsList[i][-1][0] + posAtomsList[i][-1][1] + posAtomsList[i][-1][2]
+    folderName = diffDFTFolder + "/" +str(identifier)
+    inputName = folderName + "/diffDFTRun" + str(identifier) + ".in"
+    jobName = folderName + "/diffDFTRun" + str(identifier) + ".qsub"
+    outputName = DFToutputFolder + "/diffDFTRun" + str(identifier) +".out"
+    
+    numAtoms = numAtomsList[i]          # Extract the config info into variables for easier future usage
+    superCell = superCellVectorsList[i]
+    atomPositions = posAtomsList[i]
+    #Use the inverse scaling property of k points to scale the computational burden based on the diff dft cell size
+    kpoints = [int((params["baseLatticeParameter"]*0.529177)*params["baseKPoints"]//max(x)+ 1) for x in superCell]
+    
+    if not os.path.exists(folderName): os.mkdir(folderName)
+    
+    # Copy the templates for the QE input and data files
+    shutil.copyfile(dftRunTemplateLocation, inputName)
+    shutil.copyfile(jobTemplateLocation, jobName)
+    
+    # Make modifications to the QE input using regex substitutions
+    with open (inputName, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$nnn", str(numAtoms), content)      #substitute nat marker with the number of atoms
+        contentNew = re.sub("\$v1", str(superCell[0])[1:-1], contentNew)          #Same with supercell vectors.
+        contentNew = re.sub("\$v2", str(superCell[1])[1:-1], contentNew)
+        contentNew = re.sub("\$v3", str(superCell[2])[1:-1], contentNew)
+        contentNew = re.sub("\$k1", str(kpoints[0]), contentNew)          #Same with supercell vectors.
+        contentNew = re.sub("\$k2", str(kpoints[1]), contentNew)
+        contentNew = re.sub("\$k3", str(kpoints[2]), contentNew)
+        contentNew = re.sub("\$pseudo_dir", params["pseudopotentialDirectory"], contentNew)      
+        contentNew = re.sub("\$pseudo", params["pseudopotential"], contentNew)  
+        contentNew = re.sub("\$out", folderName, contentNew)  
+        
+        # Generate a series of string representing the list of atoms and positions
+        atomPositionsString = []        
+        for a in np.arange(numAtoms):
+            atomPositionsString.append(' K %f %f %f 0 0 0  \n' % (posAtomsList[i][a][0], posAtomsList[i][a][1], posAtomsList[i][a][2]))         
+        atomPositions = ' '.join(atomPositionsString)    
+        contentNew = re.sub("\$aaa", atomPositions, contentNew)         #Subsitiute it in for the marker
+        
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+    # Make modifications to the job file using regex substitutions
+    with open (jobName, 'r+' ) as f:
+        content = f.read()
+        contentNew = re.sub("\$job", "diffDFT" + str(identifier), content) 
+        contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+        contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+        contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+        contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+        contentNew = re.sub("\$cpus", params["dftJobParam"]["cpus"], contentNew) 
+        contentNew = re.sub("\$time", params["dftJobParam"]["time"], contentNew) 
+        contentNew = re.sub("\$in", inputName, contentNew)      
+        contentNew = re.sub("\$out", outputName, contentNew)
+        f.seek(0)
+        f.write(contentNew)
+        f.truncate()
+    subprocesses.append(subprocess.Popen(["sbatch",  jobName]))  
+
+exitCodes = [p.wait() for p in subprocesses]        # Wait for all the diffDFT to finish
+subprocesses = []
+```
+
+#### Saturday, March 18th - Sunday March 19th
+🥴 + Iron Ring
+
+## Week 10
+#### Monday, March 20th - Tuesday, March 21th
+These two days, I focused on integration, This focuses on making sure everything works together, I had been gradually testing with each of the individual pieces by themselves but today, I assembled the active learning loop and integrated it all. I wrapped most of the piece in a double loop. Please note that the below code uses functions as placeholder although the actual implementation just uses hard code. It is mostly to highlight the high-level structure. 
+
+```python
+initialGeneration()
+generateALS()
+for config in configs:          # Loop for the stages of the active learning 
+    generateMDLearningRuns()
+    for i in range(maxIters):               # Loop for active learning iterations (user specifies maximum iterations in JSON config)
+    compileQEOutputs()
+    trainMTP()
+    performMDRuns()
+    compilePreselectedConfigs()
+    generateDiffConfigs()
+    generateAndPerformDFTRuns()
+```
+A lot for these two days was focused on debugging. While most of it was cleaning up stupid mistakes and typos, which I will omit, there are some are some issues which are concerning.
+
+First, there are some inconsistency problems with the training call. I had previously discovered that the BFGS calls would occasionally cause issues in the automation process when it ran in an ascending step. This would shutdown the automation process. Additionally, the calls would occasionally just freeze on one of the BFGS steps for no apparent reason, without exiting the job. 
+
+In addition to this, I found that the MLIP commands would sometimes not just not run at all in the cluster with an error starting that there were not enough resources even though the job had dedicated sufficient cores. It turns out that that fix is simply to add the `--oversubscribe` flag when calling the MLIP command in the Slurm job file. It's a bit of mystery why it happens only sometimes or at all, but it guess it's fine as long as it works.
+
+Another problem was found in the DFT calculations on the cluster. In some random cases, QE would complete it's calculations and split out the final result although it would randomly freeze at the end, not print out the end card in the output and crash the Slurm job. It hadn't been an issue at all before, but on the Tuesday, it just started happening randomly. Since this issue affect the output format, I needed to adjust Hao's script which read the QE output and the exit code reading that I was performing on the DFT runs to make sure the script didn't exit prematurely.
+
+Overall, while I had theoretically known that the script was possible, practically it was very unstable and many of my test runs needed to be redone over and over :(.
+
+The final issue was that the training scheme wasn't performing all that well. While I could get pretty good training errors to the with the initial training sets there was a lot of problems getting the 3-atom and 5-atom configurations to train well. The force and energy errors were always way beyond the targets. I suspect that there is an issue with the physical accuracy and consistency of this method.
+
+#### Wednesday, March 22nd
+I discussed the issues with the training scheme with Hao today. While we were generally happy with how the automation script was working the accuracy issues were quite concerning. We decided to shift to a different technique since there Hao also recognized issues with the approach. We decided to start using BCC lattices as starting positions for all of the runs and increase the size of the simulation cell in terms of the number of BCC cells used. This would have the advantage of starting all runs from a fairly tame spot since the initial training is based on perfect BCC configurations. Additionally it would be easy to implement, simply requiring the modification of a small amount of constants in the MD input.
+
+#### Thursday, March 23rd
+Today, I focused on changing the implementation in the MD run generation. This mostly involved changing a couple of parameters in a templates using script which I was quite proficient in by this time. 
+
+```python
+if (os.path.exists(mdFolder)): shutil.rmtree(mdFolder)
+    os.mkdir(mdFolder)
+        
+    for strain in strains:
+        for temperature in temperatures:
+            # Generate the necessary folder and file names
+            folderName = mdFolder +  "/N" + configName + "T" + str (temperature) + "S" + str(strain)
+            inputName =   folderName +  "/N" + configName + "T" + str (temperature) + "S" + str(strain) + ".in"
+            dataName =  folderName +  "/N" + configName + "T" + str (temperature) + "S" + str(strain) + ".dat"
+            jobName =  folderName +  "/N" + configName + "T" + str (temperature) + "S" + str(strain) + ".qsub"
+            outputName =  folderName +  "/N" + configName + "T" + str (temperature) + "S" + str(strain)+ ".out"
+            
+            # Generate a new directory for each MD Run 
+            if not os.path.exists(folderName): os.mkdir(folderName)
+        
+            # Copy the templates for the LAMMPS input and data files
+            shutil.copyfile(mdRunTemplate, inputName)
+            shutil.copyfile(jobTemplate, jobName)
+            
+            # Make modifications to the LAMMPS input using regex substitutions
+            with open (inputName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$ttt", str(temperature), content)  
+                contentNew = re.sub("\$base", str(params["baseLatticeParameter"]*0.529177*strain), contentNew)
+                contentNew = re.sub("\$111", str(config[0]), contentNew)   
+                contentNew = re.sub("\$222", str(config[1]), contentNew)   
+                contentNew = re.sub("\$333", str(config[2]), contentNew)   
+                contentNew = re.sub("\$ini", iniFile, contentNew)       
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+                
+            # Make modifications to the job file using regex substitutions
+            with open (jobName, 'r+' ) as f:
+                content = f.read()
+                contentNew = re.sub("\$job", "N" + configName + "T" + str(temperature) + "S" +str(strain), content) 
+                contentNew = re.sub("\$outfile", folderName + "/out.run",contentNew) 
+                contentNew = re.sub("\$folder", folderName, contentNew) 
+                contentNew = re.sub("\$account", params["slurmParam"]["account"], contentNew) 
+                contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                contentNew = re.sub("\$cpus", params["mdJobParam"]["cpus"], contentNew) 
+                contentNew = re.sub("\$time", params["mdJobParam"]["time"], contentNew) 
+                contentNew = re.sub("\$lmpmpi", params["lmpMPIFile"], contentNew) 
+                contentNew = re.sub("\$in", inputName, contentNew)      
+                contentNew = re.sub("\$out", outputName, contentNew)
+                f.seek(0)
+                f.write(contentNew)
+                f.truncate()
+    printAndLog("Generated MD runs.")
+```
+#### Friday, March 24th - Monday, March 27th
+These days were a little bit painful and quite boring. I mostly just sat there and performed run and run and run. Due to the instability on the clusters there wasn't much I could do to improve the issue other than just try again and again for a bit. Since I had automated most of the tasks, it was just monitoring the training progress and making sure nothing crashed
+
+This really meant that I had to limit my scope a little bit. I had originally hope to perform a dozen active learning run for each MTP level from 6 to 14 in order to get a good grasp of the statistical performance of the training scheme although with the stability issues that would take me far to long to get it done before the final presentation. Moreover, due to the number of calculations and individual jobs to submit I was occasionally getting send/recv errors which essentially meant that the job scheduler was getting bottleneck. I tried to troubleshoot using the below.
+
+[Send / Recv Error](https://bugs.schedmd.com/show_bug.cgi?id=7946)
+
+However, there was no real solution and all I could really do was resubmit the job. This additionally instability meant that I couldn't get too many runs performed in parallel since a send/recv error would screw up the automation even if a manual user might be able to circumvent it. Overall, I started to find that the cluster is a lot more suited for a single application that only interacts with a compute node rather than repeatedly shifts it's resource requirements on the cluster.
+
+However, over these past few days, I managed to get a few good MTPs and a bunch of semi-completed runs which I think I can get enough to benchmark and draw some conclusions from.
+
+## Week 11
+#### Tuesday, March 28th
+Today, I started preparations for the benchmarking of the MTPs I had trained over the week. To get a better idea of the statistical performance of the MTP relative to a fixed training set. I decided to retrain the MTP several times for each even level between 6-14. This would simply be running the `train` MLIP command on a fresh MTP.
+
+```python
+import os
+import subprocess
+import shutil
+from distutils.dir_util import copy_tree
+import numpy as np
+
+trainCount = 30
+
+energies = []
+subprocesses = []
+energyErrors = []
+forceErrors = []
+
+for i in range(1000):
+    folder = "./" + str(i)
+    if os.path.exists(folder): shutil.rmtree(folder)
+
+for i in range(trainCount):
+    folder = "./" + str(i)
+    copy_tree("./ref", folder)
+    os.chdir(folder)
+    subprocesses.append(subprocess.Popen(["sbatch",  "trainMTP.qsub"]))  
+    os.chdir("../")
+        
+exitCodes = [p.wait() for p in subprocesses]        # Wait for all the diffDFT to finish
+subprocesses = []
+
+for i in range(trainCount):
+    folder = "./" + str(i)
+    os.chdir(folder)
+    
+    with open("train.out", "r") as txtfile:
+        lines = txtfile.readlines()
+        for i,line in enumerate(lines):
+            if(line == "Energy per atom:\n"):
+                energyErrors.append(float(lines[i+3][31:-1]))
+            if(line == "Forces:\n"):
+                forceErrors.append(float(lines[i+3][31:-1]))
+```
+
+By going through and reading each of the output, I could get a sequence of training errors. I recorded the average energy error per atom and the average force error per atom since there were the metric that Hao previously pointed out to me as significant. Additionally, I recorded the single configuration with the lowest average energy error per atom and took it to be the best trained MTP.
+
+#### Wednesday, March 29th
+Today, Hao and I didn't have too much to discuss. The AI MD run was almost done and with trained MTP and a plan for benchmarking, there wasn't too much left to be said. Mostly, I was just talking about my plans for the rest of the project to make sure there were no glaring errors. Hao did show me how to calculate the RDF using Ovito, however.
+
+#### Thursday, March 30th
+Today, I started the benchmarking of the different MTPs that I had made. The first obvious candidate for this was the elastic properties. I had already calculated the elastic curve for DFT data in the previous calculations which simply required obtaining some DFT calculations for BCC cells of lattice parameters near the base lattice parameter. I could do the same by using the `calc-efs` MLIP command to get MTP predictions for each of the same lattice parameters as the DFT. 
+
+It would be simple enough to just evaluate the best MTP of each level, but In order to get a better idea of the statistical information, I also took the chance to modify the training script. Instead of just training each MTP, I would also get it to evaluate the elastic curve and take the average as the final result. 
+
+```python
+for i in range(trainCount):
+    folder = "./" + str(i)
+    os.chdir(folder)
+    
+    with open("train.out", "r") as txtfile:
+        lines = txtfile.readlines()
+        for i,line in enumerate(lines):
+            if(line == "Energy per atom:\n"):
+                energyErrors.append(float(lines[i+3][31:-1]))
+            if(line == "Forces:\n"):
+                forceErrors.append(float(lines[i+3][31:-1]))
+    
+    subprocesses.append(subprocess.Popen(["sbatch",  "calcEFS.qsub"]))  
+    os.chdir("../")
+
+exitCodes = [p.wait() for p in subprocesses]        # Wait for all the diffDFT to finish
+subprocesses = []
+
+for i in range(trainCount):
+    folder = "./" + str(i)
+    os.chdir(folder)
+    
+    pairs = {}
+    with open("out.cfg", 'r') as txtfile:
+        fileLines = txtfile.readlines()
+        index = np.where(np.array(fileLines) == "BEGIN_CFG\n")[0]   #Seach for indiicides which match the beginning of a configuration
+        for i in index:
+            energy = float(fileLines[i+10])   #Read energy
+            v1 = np.array(fileLines[i+4].split(),dtype=float)       #Read supercell
+            latticeParam  = max(v1) * 1.88973 * 2
+            pairs[latticeParam] = float(energy*0.0734985857)
+        engy = []
+        for lat,eng in sorted(pairs.items(), key = lambda x: x[0]):
+            engy.append(eng)
+        energies.append(engy)  
+    os.chdir("../")
+```
+
+ This yielded really poor results, actually, And I had to double check that there wouldn't be and issue. After pondering, for a bit I tried evaluating one of the MTPs that I had trained. This one was an MTP of level 8 that had only been trained on an expanded version of the initial dataset than I had made early in the run. This gave the below results.
+
+| dist  | dft   | 6 | 8 | 10 | 12 | 14 | 8s     |
+|------|-------|-------|-------|--------|--------|--------|--------|
+| 8.80 | -1.023| -1.024| -1.025| -1.025 | -1.024 | -1.025 | -1.023 |
+| 8.90 | -1.024| -1.027| -1.027| -1.028 | -1.027 | -1.028 | -1.025 |
+| 9.00 | -1.026| -1.029| -1.030| -1.031 | -1.029 | -1.031 | -1.026 |
+| 9.10 | -1.027| -1.030| -1.031| -1.032 | -1.031 | -1.033 | -1.027 |
+| 9.20 | -1.027| -1.031| -1.032| -1.033 | -1.032 | -1.033 | -1.027 |
+| 9.30 | -1.028| -1.032| -1.032| -1.033 | -1.033 | -1.034 | -1.028 |
+| 9.40 | -1.028| -1.032| -1.032| -1.034 | -1.033 | -1.034 | -1.029 |
+| 9.50 | -1.028| -1.032| -1.032| -1.033 | -1.032 | -1.033 | -1.029 |
+| 9.60 | -1.029| -1.032| -1.032| -1.033 | -1.032 | -1.033 | -1.029 |
+| 9.70 | -1.029| -1.031| -1.031| -1.033 | -1.032 | -1.033 | -1.029 |
+| 9.80 | -1.029| -1.031| -1.031| -1.032 | -1.032 | -1.032 | -1.028 |
+| 9.90 | -1.028| -1.030| -1.030| -1.032 | -1.031 | -1.032 | -1.028 |
+| 10.00| -1.028| -1.030| -1.030| -1.031 | -1.031 | -1.031 | -1.028 |
+| 10.10| -1.028| -1.029| -1.029| -1.030 | -1.030 | -1.031 | -1.027 |
+| 10.20| -1.027| -1.028| -1.028| -1.029 | -1.029 | -1.030 | -1.027 |
+| 10.30| -1.027| -1.027| -1.027| -1.029 | -1.028 | -1.029 | -1.026 |
+| 10.40| -1.026| -1.026| -1.027| -1.028 | -1.027 | -1.028 | -1.026 |
+
+![Elastic Curve](finalReport/assets/curve.png)
+
+This was a pretty interesting find for me, since I could show that the MTP was able to learn well relative to it's training set although there it had considerable difficultly representing the elastic curve when I used an MTP trained on more general data. Additionally the number general MTPs of lower level tended to predict the elastic curve better which is probably a result of the number of configurations in the lower levels. A higher proportion is composed on the initial dataset which is closer to the solid configurations of the elastic curve. 
+
+I then used the QE `ev.x` 2nd order Birch fit to calculate a prediction for elastic properties.
+
+| Property                 | DFT   | MTP08 | MTP08s |
+|--------------------------|--------|--------|--------|
+| Lattice Parameter [Å]   | 5.11 | 5.04   | 5.12   |
+| Bulk Modulus [GPa]      | 3.9  | 3.3    | 3.8    |
+| Equilibirum Volume [Å$^3$] | 66.72 | 64.02  | 67.33  |
+
+#### Friday, March 31st
+Today, I focus on selecting performing the last few benchmarks that I would need for the Conference Abstract next week. Most of these final calculations would be sufficient for the Final Report too meaning I was almost done. 
+
+I started with the DFT MD results which had just finished baking in the oven. All I had to do was pull the results and get the off the cluster. Ovito has a function that calculate RDF, and I just needed to place the results in it which gave me a file out which I could plot. I could so something similar by performing a large-scale MD run of the MTPs that I'd trained. I've included the LAMMPS input below, although it's essentially just a large scale simulation at 600K, the temperature that I'd performed the DFT MD run on. Thankfully, the MTP is significantly faster and with 24 cores, it only took an hours for around a million timesteps.
+
+```txt
+units            metal
+dimension        3
+boundary         p p p
+
+# read data
+atom_style       atomic
+lattice          bcc 5.11           # Same lattice parameter
+region           whole block 0 20 0 20 0 20 units lattice       # Large scale simulation
+create_box       1  whole
+create_atoms     1 region whole
+mass             1 39.0983
+# potential
+
+#pair_style hybrid/overlay zbl 0.8 1 mlip mlip.ini
+#pair_coeff * * zbl 11 11
+#pair_coeff  * * mlip
+
+pair_style mlip mlip.ini
+pair_coeff * *
+
+#------------------Parameters
+thermo                  1000
+timestep         0.001
+neighbor 2.0 bin
+neigh_modify every 1 delay 5 check yes
+
+#outputs
+thermo           10
+thermo_style     custom step temp pe press vol lx ly lz density
+
+dump            2 all custom 10000 dump.txt id type x y z
+
+velocity all create 1.0 4928459 rot yes dist gaussian
+fix             1 all npt temp 1 1 0.1 aniso 0 0 1              
+run             500
+unfix           1
+
+fix             1 all nvt temp 600 600 0.1
+run             900000
+unfix           1
+
+```
+
+I tried multiple times although I could not get the simulation to run for MT06. It kept giving me the following error:
+```txt
+ERROR: Lost atoms: original 16000 current 15998 (../thermo.cpp:481)
+Last command: run             900000
+```
+This suggests that there is some instability in the system which I couldn't fix even when I modified the scale of the simulation slightly. It's quite possible that this is the result of issues with the level of the MTP that can't be fixed.
+
+So, I fed the other potential that had been calculated into Ovito to get the RDFs...
+
+![RDF](finalReport/assets/highres/aimd.svg)
+
+Wow, that's pretty nice.
+
+However, despite the amount of time that the calculations had been running, the amount of timesteps of the DFT MD run wasn't enough to have very clean results. Although, there its pretty good, and the first spike, the largest discrepancy tends to be the noisiest which requires the most time to smooth out time that I didn't have before the presentation.
+
+#### Saturday, April 1st
+I had one last benchmark that I want to use for the conference abstract which was due tonight. It was a pretty simple one too. The idea is that we can graphically visualize the prediction quality of a model relative to it's ground truth by making a scatter plot of the prediction and the reference. In this benchmark, a perfect model would yield a perfectly linear relationship. I decided to do this with the force magnitude of the atoms, and I had a lot of data in the form of the AIMD run and the previous active learning runs that had failed midway whose training configurations I could use. 
+
+It's simple enough to use the `calc-efs` MLIP command to make predictions for each of the configurations. Afterwards, I wrote a quick script to process the predictions and the reference into a txt file that I could graph.
+
+```python
+def extractVectors(input):
+    # print(input)
+    return [float(x) for x in  re.findall("\d+\.?\d*", input)][5:]
+
+with open("validation.cfg", 'r') as txtfile:
+    fileLines = np.array(txtfile.readlines())
+    index = np.where(fileLines == "Size\n")[0] 
+    for i in index:
+        sizes.append(int(fileLines[i+1]))
+    print(sizes)
+    index = np.where(fileLines == "AtomData:  id type       cartes_x      cartes_y      cartes_z           fx          fy          fz\n")[0] 
+    print(index)
+    for i in index:
+        for j in range(sizes[-1]):
+            groundTruth.append(extractVectors(fileLines[i + 1 + j]))
+
+
+with open("out.cfg", 'r') as txtfile:
+    fileLines = np.array(txtfile.readlines())
+    index = np.where(fileLines == " Size\n")[0] 
+    for i in index:
+        sizes.append(int(fileLines[i+1]))
+    index = np.where(fileLines == " AtomData:  id type       cartes_x      cartes_y      cartes_z           fx          fy          fz\n")[0] 
+    for i in index:
+        for j in range(sizes[-1]):
+            trained.append(extractVectors(fileLines[i + 1 + j]))
+# print(trained)
+groundTruth = [np.linalg.norm(x) for x in groundTruth] 
+trained = [np.linalg.norm(x) for x in trained] 
+
+error  = np.mean(np.abs(np.subtract(groundTruth,trained)))
+
+try: os.remove("comparison.out")
+except: pass 
+
+with open("comparison.out", "a") as txtfile:
+    for i in range(len(groundTruth)):
+        txtfile.write(str(groundTruth[i]) + "\t" + str(trained[i]) + "\n")
+
+print(error)
+```
+
+Then. I graph it yielding the following two plots.
+
+![validation](finalReport/assets/highres/validationError.svg)
+
+Overall, it's pretty decent although there are quite a few outliers in some of the data especially in MTP 6, 12, and 14. I'm not exactly sure what the cause of this might be. It's really odd since the expected best performers performed very well in the general case although have such poor prediction. Additionally, a lot of these outliers appear in groups which is really strange and suggests that there are some configurations that these higher level are weak at modelling. Really strange, but I guess it's more to talk about in the conference abstract which I should really go write now!
+
+## Week 12
+Honestly, there's not much to say about this week. I was already more or less done what I had set out to achieve and most of the work I've been spending was preparing the information I had gathered into a nice presentation. This Wednesday, I'll be talking to my supervisors to cap off the project, but that's about it. 
+
+I'm pretty set for the final report too. I just need to clean some things up and write it in a nice way. That's all from me, I guess!
+
 # General Notes
 
 ### The MTP interatomic model
@@ -750,7 +1389,7 @@ This all starts by connecting to Narval through my newly-minted Compute Canada a
 ```
 ssh -Y zjm@narval.computecanada.ca
 ```
-Hao initially recommend me the MobaXterm terminal for automatic reconnection and SFTP (file transfer). However, I am currently running a Linux-based personal machine, and am using Tabby Terminal to perform the same.
+Hao initially recommend me the MobaXterm terminal for automatic reconnection and SFTP (file transfer). However, I am currently running a Linux-based personal machine, and later ended up using VS code for most of the project.
 
 Upon SSH'ing into Narval, I'm greeted with the home directory in one of the login nodes (narval3 in this case).
 
@@ -760,55 +1399,13 @@ This is a Linux-based terminal environment with no GUI. I have some experience w
 
 https://github.com/RichardZJM/K-MTP-training
 
-Narval utilizes the job scheduler Slurm Workload manager for intensive computations. Only tasks smaller than 10 CPU minutes and 4 RAM are permissible on the login nodes. Slurm is essentially a priority queue for Narval's nodes. Users submit job requests for system resources in job requests. Priority can be allocated based on the relative importance allocated to the project and the principal researcher. A job request resembles the below.
+Narval utilizes the job scheduler Slurm Workload manager for intensive computations. Only tasks smaller than 10 CPU minutes and 4 RAM are permissible on the login nodes. Slurm is essentially a priority queue for Narval's nodes. Users submit job requests for system resources in job requests. Priority can be allocated based on the relative importance allocated to the project and the principal researcher. Please see the the Slurm Job Manager Section below to learn more.
 
-```sh
-#!/bin/bash                                                 
-#SBATCH --account=def-belandl1                  // PI's account
-#SBATCH --ntasks=1                              // Number of CPUs for job
-#SBATCH --time=0-2:00 # time (DD-HH:MM)         // Estimated job duration
-#SBATCH --mem-per-cpu=9G                        // Memory per CPU requirement
+These is one command that is generally useful and allows the user to perform interactive sessions on the compute nodes without bogging down the system.
 
-//Code to run on the Narval compute nodes with allocated resources
-// ...
+```slurm
+srun --account=def-hpcg1725 --cpus-per-task=1 --mem-per-cpu=4G --partition=reserved --time=0-024:00 --qos=privileged --pty bash -l
 ```
-Additional commands for the batch can be found here. https://slurm.schedmd.com/sbatch.html
-
-A job is defined in the format above in a text file with the .qsub extension. They are submitted to the Slurm system using the sbatch command.
-
-```sh
-sbatch <file>
-```
-Listed below are some additional Slurm commands which are generally useful.
-
-```sh
-squeue                  # Shows the current jobs in queue and running
-squeue -u zjm           # Shows the curret jobs associated with user
-scancel <job number>    # Cancels the specified job
-scancel -u zjm          # Cancels all jobs associated with user
-```
-
-With this knowledge, I began by preparing the environment to run DFT, MD, and prepare MTP potentials. Quantum Espresso was already present in the Narval environment and simply needed to be loaded into the active node using the below commands. MPI is needed for parallel processing.
-
-```sh
-module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
-module load    quantumespresso/6.6
-```
-
-Additional information about modules can also be obtained with the below commands.
-
-```sh
-module spider                           # Gives information on all available modules
-module spider quantumespresso           # Same but for a specific module
-module spider quantumespresso/6.6       # Same but for specific version
-```
-The installation of MTP and its interface with LAMMPS was accomplished with the instructions on the project's Gitlab, available below.
-
-https://gitlab.com/ashapeev/interface-lammps-mlip-2
-
-This mostly included cloning from the repository, running a few installation scripts, and verifying the installation.
-
-
 
 
 ### Slurm Job Manager
@@ -1316,332 +1913,3 @@ with open(preselectedConfigs,'wb') as master:
                 except:
                     completedRuns += 1
 ```
-
-
-### Preparing the first DFT calculations
-
-With the environment configured, I began to assemble the initial DFT training dataset. The first step is to utilize Quantum Expresso to determine the lattice parameter of BCC potassium from this value. This represents a realistic baseline from which the initial dataset can be built around. We start by determining DFT parameters which produce well-converged results, including the plane wave cutoff energy and the number of uniform k-points. From previous experience with convergence testing with Potassium in Quantum Espresso, I settled on the following parameters for all future Potassium DFT simulations.
-
-| Parameter                | Value |
-| :----------------------- | ----- |
-| Plane Wave Cutoff Energy | 60 Ry |
-| K-Point Count            | 8     |
-| Pseudopotential          | K.pbe-mt-fhi.UPF 
-
-Pseudopotential Source: https://github.com/buck54321/pyspresso/tree/master/pseudo
-
-Referencing the experimental value of BCC potassium's lattice parameter, I locally performed ten DFT simulations whose lattice parameters surrounded the experimental value. This provided me with corresponding system energies which were then minimized. They were fed into Quantum Espresso ev.x's 2nd order Birch fitting function to predict a lattice parameter of **9.67166 Bohr.** Generally, when working on extending DFT calculations, it is important to use consistent simulation parameters. However, for this case, where the goal is to generate a baseline, the experimental lattice parameter would have probably worked. 
-
-In any case, using the reference lattice parameter, I moved to perform bulk simulation on Narval. I received several scripts from Hao from which I adapted my first set of jobs for periodic potassium cells under shear and hydrostatic expansion/compression. These are all 1-atom simulation cells used to form a simpler initial training set. The following are my notes on the important points of the scripts' function. 
-
-The create script is perhaps the most important one, responsible for the generation of the Quantum Espresso instructions which Slurm will schedule. The full script is available on Github, although here are the important points (some lines are omitted).
-
-```sh
-basefile = "K_e0bcc.txt";           # File name of the baseline lattice vectors
-matl="K";etype="expansion_bcc";nat=1;   # Values for naming conventions
-
-mkdir ../${matl}_${etype}_runs          # Generate an uncle directory to hold runs 
-
-for e in `seq 0 26`; do         # Create runs with the specified offsets
-
-a=$(echo "1+0.05*$e" | bc -l);          # For Expansion vary the length of 
-b=$(echo "1+0.05*$e" | bc -l);          # the lattice vectors by 5% per degree of offset
-c=$(echo "1+0.05*$e" | bc -l);
-
-cat > top << EOF            # Generate a QE file
-&control
-    disk_io = 'none',
-    prefix = '${matl}_expansion$e',        
-    calculation ='scf',             # Self-consistet field calculation
-    outdir = './out',
-    pseudo_dir = '/home/zjm'            # Directory of pseudopotential
-    tstress = .true.
-    tprnfor = .true.
- /
- &system
-    ibrav=0,            # Type of lattice = lattice vector specified
-    nat=$nat,           # Number of atom in cell
-    ntyp=1,             # Number of Species
-    ecutwfc=60,         # Plane wave cutoff energy (Ry)
-    occupations='smearing',     # Next three are smearing parameters
-    smearing = 'gaussian',
-    degauss = 0.01,
-
- /
- &electrons
-    mixing_mode='plain',
-    diagonalization='david',
-/
- &ions
-    ion_dynamics = 'bfgs'
- /
- &cell
- /
-CELL_PARAMETERS
-EOF
-
-# Appends the contents of the baseline file and scales the lattice vectors
-sed -n '3,5p' $basefile > cell
-awk -v a=$a -v b=$b -v c=$c '{print a*$1,b*$2,c*$3}' cell > newcell
-
-# Similar but with the pseudo and kp files (these are constants)
-cat top newcell  pseudo kp > ${matl}_${etype}${e}.relax.in
-
-# Makes a new directory to hold the new files and perfoms clean up 
-mkdir ../${matl}_${etype}_runs/${matl}_${etype}${e}
-mv ${matl}_${etype}${e}.relax.in ../${matl}_${etype}_runs/${matl}_${etype}${e}/
-rm top cell newcell #clean-up
-```
-
-Overall, the scripts act very much like the previous Python scripts (shutil) I had used for automating QE runs in MECH 868. There is essentially a master file that retrieves values from auxiliary files and fuses them together to form members of a bulk run.
-
-Those auxiliary files are kp, pseudo, and the baseline file.
-
-The baseline file (K_e0bcc.txt), contains the lattice vector as determined by the previous energy minimization calculations. A slight offset is introduced to prevent symmetry although it may not be strictly necessary.  It also includes the atom positions, but for shear and expansion/contraction in 1 atom BCC, any position is valid, so the origin is chosen.
-
-```txt
-1     
-CELL_PARAMETERS {bohr} 
-   4.83583   4.83589   4.835813             # Vector 1
-  -4.83582   4.83585   4.8358231            # Vector 2
-  -4.83581  -4.83586   4.83583111           # Vector 3
-Atom Positions {Angstrom}
-K       0.000000000   0.000000000   0.000000000
-```
-The kp file simply specifics the number of automatic k-points.
-
-```txt
-K_POINTS automatic
-8 8 8 0 0 0
-```
-
-The pseudo file is used to define the specific information including the atomic weight and the pseudopotential to use. 
-
-```txt
-ATOMIC_SPECIES
-K  39.0983 K.pbe-mt_fhi.UPF         # Potassium, atomic weight = 39.0983
-ATOMIC_POSITIONS angstrom
-K  0   0   0
-```
-
-Overall, after using all these files, we end up with an uncle directory which contains sub-directories which each contain a QE input file for one of the specified expansion/contraction levels.
-
-A very similar process is used to generate the input files for the shear calculation. The difference is the create files script. Instead of modifying the scale of all of the lattice vectors, only the v1 vector is modified to change the shape of the cell. 
-
-```sh
-
-# ...
-
-for e in `seq 1 50`; do
-
-a=$(echo "0.1*$e" | bc -l);      # Only the a parameter is variable
-b=$(echo "1+0*$e" | bc -l);
-c=$(echo "1+0*$e" | bc -l);
-
-# ...
-# The last two parameters of the v1 lattice vector are modified,
-# Results in the shear deformation of the cell.
-awk -v a=$a -v b=$b -v c=$c '{print $1,a+$2,$3+a}' cell > newcell   
-
-# ...
-```
-Once the QE job files are generated, the submit bulk run scripts are used to pass the jobs to the Slurm manager. For these single-atom simulations, a single core for twenty minutes should be more than sufficient although the resource requirements will increase for more complex configurations.
-
-```sh
-#!/bin/bash
-matl="K";etype="expansion_bcc";     # Constants for job name / type
-
-for e in `seq 0 26`; do      # Which jobs to submit
-
-# Generate a Slurm job file
-cat > runscript << EOF
-
-#!/bin/bash
-#SBATCH --account=def-belandl1
-#SBATCH --ntasks=1                     # 1 core is fine
-#SBATCH --time=0-2:00 # time (DD-HH:MM)            # 2 hours is probably excessive
-#SBATCH --mem-per-cpu=9G            # Probably don't need this much RAM
-
-# Load Quantum Espresso on the Compute Node(s)
-
-module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
-module load    quantumespresso/6.6
-
-# Navigate to the QE input
-cd /home/zjm/scratch/K-MTP-training/initial_dft_dataset_sim_files/${matl}_${etype}_runs/${matl}_${etype}${e}
-
-# Run with parallel processing on 1 CPU
-mpirun -np 1 pw.x < ${matl}_${etype}${e}.relax.in > ../../output/${matl}_${etype}${e}.relax.out
-
-EOF
-
-cp runscript ../${matl}_${etype}_runs/${matl}_${etype}${e}/job_${matl}_${etype}${e}.qsub
-
-# Submit the Slurm job to Slurm
-sbatch ../${matl}_${etype}_runs/${matl}_${etype}${e}/job_${matl}_${etype}${e}.qsub
-done
-rm runscript #clean-up
-```
-
-The submission script for shears is the same script with variations on the for loop and the job name constants.
-
-Overall, this gives a framework through which we can easily create a training dataset of DFT data. While this iteration is limited to 1 atom, it should be fairly trivial to modify it for more atoms. I have prior experience doing so although it was done with Python, a language I'm a bit more familiar with.
-
-The rest of the week was mostly spent running simulations and Narval to better familiarize with the system and prepare various samples for the initial training of the MTP.
-
-
-
-## Week 3
-
-Week 3 started by reconfiguring and troubleshooting the environment on the Narval setup to start running the MTP.  In the previous weeks, the MLIP interface had been installed improperly although it hadn't been detected due to the verification script mostly focused on confirming that LAMMPs itself had been installed correctly. As a personal note, in the future when I may need to reinstall the MTP interface package, the package must be cloned from the repository in its directory (ie. not in the same directory as the MLIP package). The library packages are created in the lib folder of the MLIP package and must be copied into the interface package manually. Additionally, the install script for the interface takes several minutes to run and produces detailed logs. This is important to verify as failure to install the interface may pass the validation script for LAMMPS. 
-
-After, resolving issues with the interface, I began to assemble the first training set. Using the shell script-based process obtained in the previous week, I was able to generate quantum mechanical datasets for specified ranges of strains and shears relative to the unstrained baseline cell. The question then became one of which method would provide the best response in the trained potential. Although later retraining with more complex configurations would be necessary to capture the behaviour of potassium, a strong starting point could potentially accelerate the learning process.
-
-However, I first started with a relatively arbitrary distribution of strains and shears to understand the process a bit better.  The process is documented below.
-
-### Format of the MTP File
-
-First, DFT the results of the DFT calculation are compiled into a single output folder for easier manipulaiton. At this stage, the user needs to select the hyperparameters of the potential that they wish to train ($\text{lev}_{\max}$). As previously explained, the level of the potential and the Chebyshev polynomial in the radial basis sets, are two of the most important hyperparameters. The structure of an MTP and the current values of its trainable parameters are dictated in a text file. In the passive training process, the parameters are updated based on the optimization of the energy, force, and stress errors with respect to the training set. The MLIP package includes several untrained potentials which act as a starting point. 
-
-Using a $\text{lev}_{max}$ of 8 and 8 members in the radial basis, the potential file resembles the following:
-
-```sh
-MTP
-version = 1.1.0
-potential_name = MTP1m
-species_count = 1       #Number of species (just K for me)
-potential_tag =
-radial_basis_type = RBChebyshev
-        min_dist = 2       # Minimum cutoff distance (angstroms)
-        max_dist = 5       # Maximal cutoff distance (angstrongs)
-        radial_basis_size = 8       #Number of Chebyshev Polynomials in basis set
-        radial_funcs_count = 2
-alpha_moments_count = 18         # Number of basis functions (combinations of moment tensor descriptors)
-alpha_index_basic_count = 11
-
-# The rest are just the values of the trainable parameters
-alpha_index_basic = {{0, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}, {0, 2, 0, 0}, {0, 1, 1, 0}, {0, 1, 0, 1}, {0, 0, 2, 0}, {0, 0, 1, 1}, {0, 0, 0, 2}, {1, 0, 0, 0}}
-alpha_index_times_count = 14
-alpha_index_times = {{0, 0, 1, 11}, {1, 1, 1, 12}, {2, 2, 1, 12}, {3, 3, 1, 12}, {4, 4, 1, 13}, {5, 5, 2, 13}, {6, 6, 2, 13}, {7, 7, 1, 13}, {8, 8, 2, 13}, {9, 9, 1, 13}, {0, 10, 1, 14}, {0, 11, 1, 15}, {0, 12, 1, 16}, {0, 15, 1, 17}}
-alpha_scalar_moments = 9
-alpha_moment_mapping = {0, 10, 11, 12, 13, 14, 15, 16, 17}
-```
-
-This setup yields 26 trainable parameters.
-
-### Format of Atomic Configurations
-
-Next, some processing must be applied to the QE outputs to translate the training information into a configuration file which is readable by the MLIP package. This is because, while there is an interface with LAMMPs, the MLIP package makes no assumptions on which quantum chemistry program is used to generate the training sets. Specifically, the training data needs to be assembled with the atomic positions and the resultant energy, force, and stress. The form is as follows, where a list of these configurations is assembled in the text file. 
-
-```sh
-BEGIN_CFG
- Size          # Number of atoms
-    1
- Supercell        # Parameters of the lattice vector (for periodic boundaries)
-         2.226339      2.226339      2.226339
-        -2.226339      2.226339      2.226339
-        -2.226339     -2.226339      2.226339
-# List of atom information
- AtomData:  id type       cartes_x      cartes_y      cartes_z           fx          fy          fz
-             1    0       0.000000      0.000000      0.000000     0.000000    0.000000    0.000000         
- Energy
-        -13.805967180600         # Energy DFT values
- PlusStress:  xx          yy          zz          yz          xz          xy
-         0.99491     0.99491     0.99491    0.00000     0.00000    0.00000        #Stress DFT values
- Feature   EFS_by       Qe
- Feature   mindist      3.856132       
-END_CFG
-```
-To convert from the form of a QE output to the configuration format python script is used to parse through the QE output. It searches through each one, accounting for configuration with more than 1 atom automatically. The current version, QE-OUTPUT.py, was previously developed by Hao as there is little difference between the functionality he needed and what I need for this step. One point of modification involved the Atom Data id tag. There was initially an issue where the type tag was enumerated from 1 instead of 0, which caused issues with the MTP training which was expecting a single species with type 0.
-
-Afterwards, the training of the MTP can be initiated using the mlp binary file within the mlip package. The command is as follows:
-
-```sh
-/home/zjm/mlip-2/bin/mlp train 08.mtp mlip_input.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
-```
-
-Since this is a long and highly specific command which I will often use for the rest of the project, I decided to create an MTP command reference for easy access. The above command and MTP future will be stored and explained there instead. It should be attached to this package or is available here: https://github.com/RichardZJM/K-MTP-training/blob/master/mtpCommands.md.
-
-This week, I focused on training 
-
-# References
-https://iopscience.iop.org/article/10.1088/2632-2153/abc9fe
-
-
-/global/home/hpc5146/mlip-2/bin/mlp train 08.mtp train.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
-
-
-Week4-5
-
-1st generate two-atom configurations (hydrostatic expansion or compression, within ~5% strain, temperatures (100K)). later we add data for high temperatures (400K, 200K)
-
-Using python scripts
-
-2nd run MD simulations with active learning mode. (check each configuration to see whether it is risky) Nothing we can do
-
-Setup a new state.als file using a  new command:
-/global/home/hpc5146/mlip-2/bin/mlp calc-grade pot.mtp train.cfg train.cfg out.cfg --als-filename=state.als
-This file path us tbe specified in the MTP MD config ini file
-
-Create multiple MD files.
-Change the input data to different strains (hydrostatic compression and expansion aro 5%) at two different temps above melt and two below
-This introduces different interactions t differnt ranges but its not too unrealistic
-Run these simulations the active learning enabled
-The risky configurations will be save in a preselected.cfg file (autogenerated for each run)
-
-
-
-3rd From step 2, we have a preselected.cfg file, in which every risky configuration is included.Nothing we can do
-
-Don't do anything (just intermeidate  step)
-
-4th, run a command to check whether all the configurations in preselected.cfg are necessary. Nothing we can do
-
-/global/home/hpc5146/mlip-2/bin/mlp select-add /global/home/hpc5146/Projects/K-MTP-training/phase2/mdLearning/pot.mtp train.cfg ../activeLearningDFT/preselected.cfg diff.cfg --als-filename=state.als
-
-We run a check.sh on the folder.
-This visits all the sister directory which hold the MD runs
-It generates a diff.cfg file which has the representative configs for each preselected run.
-
-(Try combined the preselected instead of creating seperate diff.cfgs ???)
-
-
-5th create DFT input files and run DFT. 
-Run DFT on each of the configurations generated by the diff.cfg
-
-6th add DFT result into our training data set and retrain the potential.
-Run the passive training on the new set of union of the current set and the new results from the diff.cfg dft results/
-
-
-aim for average energy per atom of 0.01-0.02
-aim for average force of  0.1-0.2
-
-
-Week 1:
-My project surrounds the training of machine learning interatomic potentials using the Moment Tensor Potential (MTP) model for potassium metal. I started the week by meeting Hao Sun, a postdoctoral researcher who had done previous work with MTP training and setting up weekly meetings for his guidance. I spent this first week understanding the model which uses linear regression on basis sets consisting of moment tensor descriptors. 
-
-Week 2:
-This week, I mostly worked on setting the groundwork on 
-
-
-Certainly! Here are some common Slurm flags for email notifications:
-
-
-
-To use these flags, simply add them to your job script or include them in your `sbatch` command. Here's an example:
-
-```bash
-#!/bin/bash
-#SBATCH --job-name=myjob
-#SBATCH --output=myjob.out
-#SBATCH --error=myjob.err
-#SBATCH --time=10:00
-#SBATCH --ntasks=1
-#SBATCH --mail-user=myemail@example.com
-#SBATCH --mail-type=ALL
-#SBATCH --mail-subject="Job Results"
-
-echo "Hello, world!"
-```
-
-With these flags, Slurm will send an email notification to `myemail@example.com` for all job events (`BEGIN`, `END`, `FAIL`, and `REQUEUE`) with the subject line "Job Results". You can customize the email notification settings to fit your specific needs.

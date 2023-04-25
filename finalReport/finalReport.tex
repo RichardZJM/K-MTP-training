@@ -29,7 +29,7 @@
 \affil[3]{17zjm1@queensu.ca}
 
 \begin{abstract}
-Machine learning models have been of recent interest in the development of interatomic potentials for molecular dynamics simulations. One such model is the MTP, a linear regression-based model which uses an active learning approach to assist in training. In exploring the MTPs uses for the Queen's Nuclear Materials group, we utilize a bottom-up training scheme to train potassium metal MTPs which we subsequently validate. We find that the scheme produces effective MTPs with less cost than more direct approaches. We also note that the MTP has generally strong accuracy that increases with the MTP's level of representation, yielding strong performance in both artificial validation datasets and comparisons against \textit{ab inito} molecular dynamics runs using MTPs of levels above 6. This translates into excellent liquid radial distribution function predictions although more specific training regimes are likely needed for properties that involve the precise prediction of a small number of configurations. Overall, for a solid-liquid potassium model, we would recommend an MTP level of no less than 10.
+Machine learning models have been of recent interest in the development of interatomic potentials for molecular dynamics simulations. One such model is the MTP, a linear regression-based model which uses an active learning approach to assist in training. In exploring the MTPs uses for the Queen's Nuclear Materials group, we utilize a bottom-up training scheme to train potassium metal MTPs which we subsequently validate. We find that the scheme produces effective MTPs with less cost than more direct approaches. We also note that the MTP has generally strong accuracy that increases with the MTP's level of representation, yielding strong performance in both artificial validation datasets and comparisons against \textit{ab inito} molecular dynamics runs. This translates into excellent liquid radial distribution function predictions although more specific training regimes or very high MTP levels are likely needed for properties that involve the precise prediction of a small number of configurations. Overall, for a solid-liquid potassium model, we would recommend an MTP level of no less than 10.
 \end{abstract}
 
 \setboolean{displaycopyright}{false}
@@ -42,11 +42,11 @@ Machine learning models have been of recent interest in the development of inter
 \section{Introduction}
 Molecular Dynamics (MD) has been an invaluable tool in fields such as computational chemistry, materials science, and pharmaceutical drug discovery, for modelling the motion of atoms and predicting the properties of compounds \cite{karplus2002molecular}. MD models use a classical representation of atoms, representing them as particles and applying interatomic forces to numerically solve the equations of motion.
 
-Quantum chemistry methods provide perhaps the highest fidelity description of interatomic forces. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a system of moderate size. For instance,  a single timestep in a DFT MD run of 56 atoms took several hours on 48 cores. 
+Quantum chemistry methods provide perhaps the highest fidelity description of interatomic forces. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a system of moderate size. For instance,  a single timestep in a DFT MD run of 54 atoms took several hours on 48 cores. 
 
-Instead, interatomic potentials, less expensive descriptors which approximate interatomic force predictions, are typically used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between pairs of atoms as a simple function of pair-wise separation. More sophisticated many-body potentials like EAM potentials for metals and the bond order potentials for covalent solids have seen widespread practical use \cite{MatSci}. Much of recent research in interatomic potential development has been focused on machine learning (ML) potentials. These offer an improvable and adaptable approach to force modelling which is more made accessible by the relative ease of training data acquisition through quantum modelling methods. Some of the common categories of ML potentials include neural networks, Gaussian approximation potentials, and linear regression on basis sets \cite{mlip}.
+Instead, interatomic potentials, less expensive descriptors which approximate interatomic force predictions, are typically used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between pairs of atoms as a simple function of pairwise separation. More sophisticated many-body potentials like EAM potentials for metals and bond order potentials for covalent solids have seen widespread practical use \cite{MatSci}. Much of recent research in interatomic potential development has been focused on machine learning (ML) potentials. These offer an improvable and adaptable approach to force modelling which is more made accessible by the relative ease of training data acquisition through quantum modelling methods. Some of the common categories of ML potentials include neural networks, Gaussian approximation potentials, and regression on basis sets \cite{mlip}.
 
-The Moment Tensor Potential (MTP) falls into this last category, making considerations for the radial and angular interactions in its basis sets \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the value of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on the fly for further training through DFT calculations.
+The Moment Tensor Potential (MTP) falls into this last category, making considerations for radial and angular interactions in its basis sets \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the values of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on the fly for further training through DFT calculations.
 
 \section{MTP Architecture}
 We provide a brief overview of the linearly-parameterized MTP architecture. More rigorous and broad explanations are available from the source paper \cite{mtp}.
@@ -63,7 +63,7 @@ For each atomic neighbourhood, the contribution is a linear combination of a set
   V(n_i) = \sum_{\alpha} \xi_\alpha   B_\alpha (n_i)
 \end{equation}
 
-The elements of this basis set consist of, but not necessarily directly consist of, moment tensor descriptors or simply \textit{moments}. A moment, $M_{\mu,\nu}$,  is characterized by a $\mu$ and a $\nu$ value, and has level, $\textrm{lev}_{max}$, which is given by \ref{eq:levelMTP}.
+The elements of this basis set consist of, but not necessarily directly consist of, moment tensor descriptors or simply \textit{moments}. A moment, $M_{\mu,\nu}$,  is characterized by a $\mu$ and a $\nu$ value, and has level, $\textrm{lev}_{max}$, which is given by Equation \ref{eq:levelMTP}.
 
 \begin{equation} \label{eq:levelMTP}
   \textrm{lev}M_{\mu,\nu} = 2 + 4\mu + \nu
@@ -76,13 +76,13 @@ Each moment, given by Equation \ref{eq:moment}, is a summation between all atoms
 \end{equation}
 
 \subsection{Radial Considerations}
-The radial component, given by Equation \ref{eq:radial}, expands into a linear combination of a set of learnable weights $c = \{c^{(\beta)} _ {\mu,z_i,z_j} \}$, and members of a set of radial functions, $Q^{(\beta)}(|r_{ij}|)$.
+The radial component, given by Equation \ref{eq:radial}, expands into a linear combination of a set of learnable weights $c = \{c^{(\beta)} _ {\mu,z_i,z_j} \}$, and set of radial basis functions, $Q = \{Q^{(\beta)}\}$.
 
 \begin{equation} \label{eq:radial}
   f_\mu (|r_{ij}|,z_i,z_j) = \sum ^ {N_o} _ {\beta = 1} c^{(\beta)} _ {\mu,z_i,z_j}  Q^{(\beta)}(|r_{ij}|)
 \end{equation}
 
-The radial functions, given in Equation \ref{eq:cheby}, are simply members of a polynomial basis set, usually Chebyshev polynomials of the first order, $\phi$, which are quadratically tapered towards the cutoff radius, $R_{\textrm{cut}}$, to preserve a continuous second derivative.
+The radial functions, given in Equation \ref{eq:cheby}, are simply members of a polynomial basis set, usually Chebyshev polynomials of the first order, $\phi$, which are quadratically tapered towards the cutoff radius, $R_{\textrm{cut}}$, to provide a smooth transition as atoms leave the neighbourhood.
 
 \begin{equation} \label{eq:cheby}
   Q^{(\beta)}(|r_{ij}|)=  \begin{cases}
@@ -95,18 +95,18 @@ The radial functions, given in Equation \ref{eq:cheby}, are simply members of a 
 The angular component, $r_{ij} ^{\otimes \nu}$, represents the outer product of $\nu$ copies of the relative position vectors between atoms $i$ and $j$. This yields a tensor of dimension equal to $\nu$. These tensors are not scalars, although they could yield scalars on their contraction.
 
 \subsection{Contraction of Tensors}
-Since the contribution is reliant on a linear combination of learnable weights and the basis functions, moments cannot directly be applied to form the basis functions due to the tensors of potentially differing ranks. Instead, contractions are performed on some number of moments, which can ultimately lead to a scalar value. Much like how moments have levels, contractions of moments have levels too, defined as the sum of the levels of the constituent moments.
+Since the contribution is reliant on a linear combination of learnable weights and the basis functions, moments cannot always be basis functions since they are not always scalars. Instead, contractions are performed on some number of moments, which can ultimately lead to a scalar value. Much like how moments have levels, contractions of moments have levels too, defined as the sum of the levels of the constituent moments.
 
-When choosing the hyperparameters of an MTP, we define a maximum level, $\textrm{lev}_{max}$, and take all contractions of moment tensor descriptors which have a level less than or equal to this maximum level. Two other key hyperparameters in the MTP model are the cutoff radii (lower and upper bound) and the number of elements used in the basis set, $N_o$.
+When choosing the hyperparameters of an MTP, we define a level and take all contractions of moment tensor descriptors which have a level less than or equal to this chosen level. Two other key hyperparameters in the MTP model are the cutoff radii (lower and upper bound) and the number of elements used in the basis set, $N_o$.
 
 \section{Active Learning}
-The MTP is capable of active learning, which allows the MTP to evaluate new configurations it encounters during an MD simulation \cite{mlip}. For the linearly-parameterized MTP, a given set of training configurations produces a set of values for the basis functions for each atom. These per-atom basis function values, $B_\alpha$, can be summed up to generate a per-configuration value of each basis function, $b_\alpha$, as shown in \ref{eq:b}.
+The MTP is capable of active learning, which allows the MTP to evaluate new configurations it encounters during an MD simulation \cite{mlip}. For the linearly-parameterized MTP, a given set of training configurations produces a set of values for the basis functions for each atom. These per-atom basis function values, $B_\alpha$, can be summed up to generate a per-configuration value of each basis function, $b_\alpha$, as shown in Equation \ref{eq:b}.
 
 \begin{equation} \label{eq:b}
   E^{MTP}(\textrm{cfg}) = \sum_i \sum_\alpha^m \xi_\alpha B_\alpha (n_i) = \sum_\alpha^m \xi_\alpha (\sum_i  B_\alpha (n_i)) = \sum_\alpha^m \xi_\alpha b_\alpha
 \end{equation}
 
-Thus, for each training configuration, we can formulate a vector of the per-configuration values of the basis functions, $b(\textrm{cfg})$. Taking these vectors as the rows, we can form a matrix with a height equal to the number of training configurations and a width equal to the number of basis functions in the chosen level of MTP.  For $n$ training configurations with $m$ basis functions we have that,
+Thus, for each training configuration, we can formulate a vector of the per-configuration values of the basis functions, $b(\textrm{cfg})$. Taking these vectors as the rows, we can form a matrix with a height equal to the number of training configurations and a width equal to the number of basis functions in the chosen level of MTP.  For $n$ training configurations with $m$ basis functions we have:
 
 \[
 \begin{bmatrix} 
@@ -120,19 +120,19 @@ Thus, for each training configuration, we can formulate a vector of the per-conf
 
 In cases where there are more training configurations than we have basis functions, $m < n$, this matrix would be tall. Applying the D-optimality criterion, the $m$ rows which compose the $m$ by $m$ square submatrix, $A$, that has the largest determinant magnitude, are taken to be the most linearly independent members of the training set. In the case of the linearly-parameterized MTP, the linear independence of a set conceptually corresponds to an MTP's breadth of representation.
 
-When the MTP is used in an MD simulation, it can assess whether a newly encountered configuration, $\textrm{cfg}_x$, would increase the magnitude of $A$'s determinant. To do this, the MTP calculates $c(\textrm{cfg}_x)$, a vector of the degrees to which the determinant would be changed should the new configuration, $\textrm{cfg}_x$, replace the members of the current submatrix $A$, using Equation \ref{eq:actLearn}. 
+When the MTP is used in an MD simulation, it can assess whether a newly encountered configuration, $\textrm{cfg}_x$, would increase the magnitude of $A$'s determinant. To do this, the MTP calculates $c(\textrm{cfg}_x)$, a vector of the degrees to which the determinant would be changed should the new configuration, $\textrm{cfg}_x$, replace members of the current submatrix $A$, using Equation \ref{eq:actLearn}. 
 
 \begin{equation} \label{eq:actLearn}
   c(\textrm{cfg}_x)  = (c_1(\textrm{cfg}_x) \cdots c_m(\textrm{cfg}_x)) = (b_1(\textrm{cfg}_x) \cdots b_m(\textrm{cfg}_x)) A^{-1}
 \end{equation}
 
-The extrapolation grade is then defined at the maximum possible change in the magnitude of the determinant of $A$. The grade is equivalent to the maximum of the vector $c(\textrm{cfg}_x)$, as shown in Equation \ref{eq:max}.
+The extrapolation grade is then defined as the maximum possible change in the magnitude of the determinant of $A$. The grade is equivalent to the maximum of the vector $c(\textrm{cfg}_x)$, as shown in Equation \ref{eq:max}.
 
 \begin{equation}    \label{eq:max}
   \gamma(\textrm{cfg}_x) = \max c_1(\textrm{cfg}_x)
 \end{equation}
 
-Should the extrapolation grade be below 1, the newly encountered configuration is considered to be interpolating relative to the existing database. Grades above 1 correspond to extrapolation which signifies that adding the new configuration would allow the training set to encompass a broader (more linearly independent) representation. Extrapolation grade thus becomes a quantitative evaluation criterion for determining future training sets on the fly. When a new configuration is added to the training set, it replaces the corresponding member in the submatrix $A$.
+Should the extrapolation grade be below 1, the newly encountered configuration is considered to be interpolating relative to the existing database. Grades above 1 correspond to extrapolation which signifies that adding the new configuration would allow the training set to encompass a broader (more linearly independent) representation. Extrapolation grade thus becomes a quantitative evaluation criterion for determining beneficial training sets on the fly. When a new configuration is added to the training set, it replaces the corresponding member in the submatrix $A$.
 
 \section{Objectives}
 As an interatomic potential of interest to the Queen's Nuclear Materials Group, we look to explore the behaviour and validity of the MTP for Potassium metal. To be precise, we aim to:
@@ -148,19 +148,19 @@ As an interatomic potential of interest to the Queen's Nuclear Materials Group, 
 \section{Methodology}
 
 \subsection{Simulation Software and Hardware}
-To perform DFT calculations, we utilize the Quantum Esperso PWF code \cite{QE}. Molecular dynamics runs are performed using LAMMPS  \cite{LAMMPS}. The MTP implementation is available from the MLIP package which can be complied with a LAMMPS interface \cite{mlip}. We perform the calculations on the Digital Research Alliance of Canada Narval Cluster and the Queen's University Frontenac Cluster. Most simulations are performed on a single core with some of the more intensive calculations performed on 24 or 48 cores. 
+To perform DFT calculations, we utilize the Quantum Espresso PWF code \cite{QE}. Molecular dynamics runs are performed using LAMMPS  \cite{LAMMPS}. The MTP implementation is available from the MLIP package which can be complied with a LAMMPS interface \cite{mlip}. We perform the calculations on the Digital Research Alliance of Canada Narval Cluster and the Queen's University Frontenac Cluster. Most simulations are performed on a single core with some of the more intensive calculations performed on 24 or 48 cores. 
 
 \subsection{DFT Parameters and Base Lattice Parameter}
 To produce generally applicable MTPs, and examine the practical applicability of the MTP, we emphasize the importance of a \textit{representative} training scheme for the target phases and environments. To examine potassium metal in reasonable solid and liquid phases, we target performance within 100-1000K, with minor strains/ pressures.
 
-DFT calculations are performed using the Quantum Espresso pseudopotential \cite{DFT}. We start by performing convergence testing for the k-point count (8 for a single BCC lattice) and the plane-wave cutoff values (60 Ry). Using, a range of BCC cell calculations, we arrive at a predicted lattice parameter of 5.11 Å. Future training and simulations were based on these baseline values. 
+DFT calculations are performed using a pseudopotential packaged with Quantum Espresso\cite{DFT}. We start by performing convergence testing for the k-point count (8 for a single BCC lattice) and the plane-wave cutoff values (60 Ry). Using, a range of BCC cell calculations, we arrive at a predicted lattice parameter of 5.11 Å. Future training and simulations were based on these baseline values. 
 
 \subsection{Training of MTPs}
 Before utilizing MTPs in MD runs to train through active learning, we initially train the MTP on some configurations to provide a base representation of the behaviour. We settled on a range of single-atom configurations of BCC potassium under triaxial strain, $[0.75, 1.25]$; single-atom configurations under shear strain, $[0, 0.785]$; and two-atom configurations under triaxial strain $[0.9, 1.1]$. 23 configurations are selected overall.
 
 After the initial training, we subject the MTPs to a bottom-up training scheme in which we introduce the MTP to parallel MD simulations of BCC lattice cells under a range of pressures and temperatures for a simulation cell size. When an MTP is \textit{sufficiently trained} on a simulation cell size, we expose it to the subsequent simulation size in the training scheme. The rationale behind such an approach is to capture most of the interactions between potassium atoms at lower simulation cell sizes, and thus reduce the amount of overall computation required, especially considering the time complexity of DFT.  Furthermore, we wish to limit the rate at which the MTP learns, for fear that learning from excessively extrapolative configurations may cause the number of training configurations outside the submatrix $A$ to become excessively sparse. 
 
-  We define \textit{}{sufficiently trained} using the criteria proposed by the MLIP package \cite{mlip}. We preselect configurations with extrapolation grades greater than 2 for further training and consider grades larger than 10 as risky configurations, terminating the active MD run and initiating the training of the MTP. Just before training, preselected configurations that are too similar are removed, generating the selected configurations for which DFT calculations are performed and added to the training set. A diagram of this scheme is shown in Figure \ref{fig:extrapolation}.
+  We define \textit{sufficiently trained} using the criteria proposed by the MLIP package \cite{mlip}. We preselect configurations with extrapolation grades greater than 2 for further training and consider grades larger than 10 as risky configurations, terminating the active MD run and initiating the training of the MTP. Just before training, preselected configurations that are too similar are removed, generating the selected configurations for which DFT calculations are performed and added to the training set. A diagram of this scheme is shown in Figure \ref{fig:extrapolation}.
 
   \begin{figure}[ht]
     \centering
@@ -191,7 +191,7 @@ After the initial training, we subject the MTPs to a bottom-up training scheme i
   \label{tab:stages}
 \end{table}
 
-Overall, the complete training of the MTPs can be summarized by the flowchart in \ref{fig:scheme}. For each of the stages, we perform 24 parallel MD runs under six strains in the range of $[0.95, 1.05]$ and four temperatures, 100 K, 330K, 400K, 800 K. This scheme aims to generate training datasets that model solid and liquid configurations, including temperatures near the empirical potassium melting point. These MTP runs are initiated from a perfect BCC lattice structure, before simulating under a Langvin $NVT$, in the hope of easing the number of risky configurations encountered for liquid modelling and sampling configurations near coexistence. Each MTP uses a first-order Chebyshev polynomial basis set with 8 members, and a cutoff radius of 8 Å. Experimentation with these two hyperparameters yielded no substantial benefit with higher values.  
+Overall, the complete training of the MTPs can be summarized by the flowchart in Figure \ref{fig:scheme}. For each of the stages, we perform 24 parallel MD runs under six strains in the range of $[0.95, 1.05]$ and four temperatures, 100 K, 330K, 400K, 800 K. This scheme aims to generate training datasets that model solid and liquid configurations, including temperatures near the empirical potassium melting point. These MTP runs are initiated from a perfect BCC lattice structure, before simulating under a Langevin $NVT$, in the hope of easing the number of risky configurations encountered for liquid modelling and sampling configurations near coexistence. Each MTP uses a first-order Chebyshev polynomial basis set with 8 members, and a cutoff radius of 8 Å. Experimentation with these two hyperparameters yielded no substantial benefit with higher values.  
 
 \begin{figure}[ht]
   \centering
@@ -211,11 +211,11 @@ To gauge the effectiveness of the MTPs of different levels and assess the validi
   \label{fig:iterations}
 \end{figure}
 
-All of the MTPs, except MTP10 which is likely an outlier run, learn the majority of the interactions needed in the first two stages of the training scheme. From the point of view of the active learning representation, the bottom-up approach is valid, as it reaches a representation that generates no preselected configurations by the end of the scheme. This is the same result that occurs when we directly trained an MTP in some of the latter stages. From a practical point of view, MTP directly trained on later levels resulted in a slightly lower count of total iterations, although the computational expense is considerably higher and the validation performance is no different. 
+All of the MTPs, except MTP10 which is likely an outlier run, learn the majority of the interactions needed in the first two stages of the training scheme. From the point of view of the active learning representation, the bottom-up approach is valid, as it reaches a representation that generates no preselected configurations by the end of the scheme. This is the same result that occurs when we directly trained an MTP in some of the latter stages. From a practical point of view, MTPs directly trained on later levels resulted in a slightly lower count of total iterations, although the computational expense is considerably higher and the validation performance is no different. 
 
 In the cases where the MTPs spent a larger percentage of their total iterations in preceding stages, stages 3 and 6 tended to offer limited additional benefits. Comparatively, stages 4 and 5 tended to give some additional learning. This observation is reasonable, given that the longest dimension of stages 3 and 6 is approximately twice the cutoff radius used. However, due to the lack of a larger sample pool of active learning runs, is it difficult to determine the training scheme's effectiveness with more certainty. 
 
-Figure \ref{fig:levels} shows the total number of training configurations obtained through an entire active learning run. Generally, MTPs can be expected to select more configurations with increasing levels, although we note that MTP 6 has more training configurations than MTP 8. The exact relationship is uncertain due to the sample size of active learning runs we managed to perform. This relationship may also vary based on the scenario of the MTP and the training scheme used. 
+Figure \ref{fig:levels} shows the total number of training configurations obtained through an entire active learning run. Generally, MTPs can be expected to select more configurations with increasing levels, although we note that MTP 6 has more training configurations than MTP 8. The exact relationship is uncertain due to the sample size of active learning runs we managed to perform. This relationship may also vary based on the target scenario and the training scheme used. 
 
 \begin{figure}[ht]
   \centering
@@ -233,7 +233,7 @@ To explore the effect of the initial parameters on the MTPs training, we prepare
   \label{fig:errors}
 \end{figure}
 
-As expected, the average training errors for force and energy decrease with the level of the MTP. We also find that for a fixed training dataset for each level of MTP, the variance due to the initial parameters is larger for MTPs or lower levels and larger for forces than energies. This observation is reasonable given that force is the distance derivative of energy. 
+As expected, the average training errors for force and energy decrease with increasing levels of MTP. We also find that for a fixed training dataset for each level of MTP, the variance due to the initial parameters is larger for MTPs of lower levels and larger for forces than energies. This observation is reasonable given that force is the derivative of energy. 
 
 \subsection{Solid Potassium Predictions}
 To validate the results of the ensembles of trained MTP for elastic properties, energy calculations of BCC lattices near the baseline lattice parameter are prepared for each MTP. The resultant plot is available in Figure \ref{fig:elastic}.
@@ -277,12 +277,12 @@ To assess the validity of the MTP for property prediction in the liquid phase, w
 Overall, the MTPs examined are all within excellent agreement with each other except for MTP06 which was not stable in the larger simulations, losing atoms. Within the limited quality of the \textit{ab initio} data, we observe a good agreement between the predictions and the reference too. The spikes, especially those at a separation of approximately 4.5 Å, have softened as the simulation has progressed and the liquid potassium atoms shift further from their initial positions. We expect an even better match given sufficient computation.
 
 \subsection{Configurational Errors}
-Having examined the MTP's performance in prediction tasks, we consider its performance in validation datasets. We first benchmark the MTP's performance relative to validation configurations which are very similar to its training schemes. To this end, we stored configurations from previous, unrelated active learning runs as a ground truth. We select the MTP with the lowest per-atom energy error out of each MTP ensemble and compare the predicted force magnitude with 400 stored configurations. The comparison for 200 arbitrary atoms of the set is shown in Figure \ref{fig:configs} to minimize clutter. In this benchmark, a perfect linear prediction would indicate a perfect model.
+Having examined the MTP's performance in prediction tasks, we consider its performance in validation datasets. We first benchmark the MTP's performance relative to validation configurations which are very similar to its training schemes. To this end, we stored configurations from previous, unrelated active learning runs as a ground truth. We select the MTP with the lowest per-atom energy error out of each MTP ensemble and compare the predicted force magnitude with 400 stored configurations. The comparison for 200 arbitrary atoms of the set is shown in Figure \ref{fig:configs} to minimize clutter. In this benchmark, a perfect linear relationship would indicate a perfect model.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\linewidth]{assets/configurations.png}
-  \caption{Force magnitude validation against a near-training validation set.}
+  \caption{Force magnitude validation against a near-training validation set}
   \label{fig:configs}
 \end{figure}
 
@@ -312,7 +312,7 @@ To gauge the configurational performance of MTPs in more practical tasks, we rep
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\linewidth]{assets/aimdconfigurations.png}
-  \caption{Elastic curve predictions. General purpose MTPs, DFT reference, and specialized MTP (08s). 95\% confidence interval.}
+  \caption{Force magnitude validation against a DFT MD validation set}
   \label{fig:aimdconfigs}
 \end{figure}
 
@@ -333,13 +333,13 @@ To gauge the configurational performance of MTPs in more practical tasks, we rep
   \label{tab:aimdconfigs}
 \end{table}
 
-Inspecting the single configuration plot, all of the MTP tend to over-predict the force magnitude although this is not the case for all of the configurations from the \textit{ab inito} run. Indeed, looking at the slopes of the higher-level MTPs in Table \ref{tab:aimdconfigs}, we see a close-to-linear relationship, just barely outside of the error.  MTP06, however, overpredicts the forces of the atoms to a greater extent, evidenced in the deviation from the other MTPs in both the linear-fit slope and the prediction plot. This observation aligns with the instability of MTP06 in liquid LAMMPS runs, as a chronic overprediction of force may have led to the atom loss. Furthermore, MTP06 exhibits a wider spread than all the other potentials. The R$^2$ values agree with this, and much like the previous validation set, the R$^2$ values tend to plateau after reaching MTP10.
+Inspecting the single configuration plot, all of the MTPs tend to overpredict the force magnitude although this is not the case for all of the configurations from the \textit{ab inito} run. Indeed, looking at the slopes of the higher-level MTPs in Table \ref{tab:aimdconfigs}, we see a close-to-linear relationship, just barely outside of the error.  MTP06, however, overpredicts the forces of the atoms to a greater extent, evidenced in the deviation from the other MTPs in both the linear-fit slope and the prediction plot. This observation aligns with the instability of MTP06 in liquid LAMMPS runs, as a chronic overprediction of force may have led to the atom loss. Furthermore, MTP06 exhibits a wider spread than all the other potentials. The R$^2$ values agree with this, and much like the previous validation set, the R$^2$ values tend to plateau after reaching MTP10.
 
 \section{Conclusions}
-Overall, we successfully trained several MTPs and validated them in practical simulations and predictions. The MTP is a strong-performing model for the relatively low number of trainable parameters and computational expense. Utilizing the active learning approach, we found that a bottom-up approach was effective, and reduced the training cost of creating useful MTPs. For the range of MTP levels examined, increasing the level of the MTP tended to decrease training errors, increase the number of training configurations generated, and increase the prediction accuracy of the MTP. The variance of MTP training for a fixed training set did not appear to be very significant and also decreased with increasing MTP level. However, due to the instability of runs on the cluster, we were limited in the number of active learning runs we could perform and it would be helpful to further examine the effect of initial parameters and other hyperparameters on the active learning runs. In terms of accuracy, the MTP performed well in most of the validation training sets although we find that the MTP levels below 6 tended to overpredict interatomic forces in liquids which made it unstable for MD calculations. Additionally, using general-purpose MTPs, it is challenging to obtain accurate predictions of properties that require the precise evaluation of specific configurations like the elastic curve. In cases like these, we would recommend specifically tailoring a training scheme to the target regime or experimenting with MTP of a considerably higher level. We would recommend using an MTP level of at least 10 or more in general-purpose simulations like those targeted here and recommend experimenting with much higher levels of MTP as needed. 
+Overall, we successfully trained several MTPs and validated them in practical simulations and predictions. The MTP is a strong-performing model for the relatively low number of trainable parameters and computational expense. Utilizing active learning, we found that a bottom-up approach was effective, and reduced the training cost of creating useful MTPs. For the range of MTP levels examined, increasing the level of the MTP tended to decrease training errors, increase the number of training configurations generated, and increase the prediction accuracy of the MTP. The variance of MTP training for a fixed training set did not appear to be very significant and also decreased with increasing MTP level. However, due to the instability of runs on the cluster, we were limited in the number of active learning runs we could perform and it would be helpful to examine the effect of initial parameters and other hyperparameters on the active learning runs. In terms of accuracy, the MTP performed well in most of the validation training sets although we find that the MTP levels below 6 tended to overpredict interatomic forces in liquids which made it unstable for MD calculations. Additionally, using general-purpose MTPs, it is challenging to obtain accurate predictions of properties that require the precise evaluation of specific configurations like the elastic curve. In cases like these, we would recommend specifically tailoring a training scheme to the target regime or experimenting with MTPs of a considerably higher level. We would recommend using an MTP level of at least 10 or more in general-purpose simulations like those targeted here and recommend experimenting with much higher levels of MTP as needed. 
 
 \section*{Acknowledgements}
-I would like to send a warm thanks to my supervisor, Professor Béland and Hao for helping me with the intriguing project and dealing with all my troubleshooting requests. Quick shoutout to Professor Pilkey for organizing the course! It was fun!
+I would like to send a warm thanks to my supervisor, Professor Béland and Dr. Hao Sun for helping me with this intriguing project and dealing with all my troubleshooting requests. Quick shoutout to Professor Pilkey for organizing the course! It was fun!
 
 
 
