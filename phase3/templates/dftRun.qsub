@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --account=$account
+#SBATCH --partition=$partition
+#SBATCH --qos=$qos
+#SBATCH --nodes=1
+#SBATCH --ntasks=$cpus
+#SBATCH --cpus-per-task=1
+#SBATCH --job-name=$job
+#SBATCH --output=$outfile
+#SBATCH --mem-per-cpu=8G
+#SBATCH --time=$time # time (DD-HH:MM)
+#SBATCH --wait
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+module load    quantumespresso/6.6
+
+mpirun -np $cpus pw.x < $in > $out

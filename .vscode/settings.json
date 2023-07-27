@@ -1,0 +1,5 @@
+{
+  "markdown-pdf.styles": ["markdown.css"],
+  "markdown.extension.toc.levels": "1..4",
+  "cSpell.words": ["customizability"]
+}

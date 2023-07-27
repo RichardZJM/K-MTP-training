@@ -1,6 +1,6 @@
 # A Collection of the Important Commands for MTP Usage
 
-This document outlines several important commands which are niche (unique) to the MTP. I may often find myself copy/pasting these in the future.
+This document outlines several important commands which are niche (unique to the MTP) although they are often used when dealing with MTP.
 
 ### Passive Training of an MTP
 
@@ -17,3 +17,5 @@ CAC Example:
 ```sh
 /global/home/hpc5146/mlip-2/bin/mlp train 08.mtp train.cfg --energy-weight=1 --force-weight=0.01 --stress-weight=0.001 --max-iter=10000 --bfgs-conv-tol=0.000001 --trained-pot-name=pot.mtp
 ```
+
+srun --account=def-hpcg1725 --cpus-per-task=1 --mem-per-cpu=4G --partition=reserved --qos=privileged --pty bash -l

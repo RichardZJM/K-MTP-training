@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --account=$account
+#SBATCH --partition=$partition
+#SBATCH --qos=$qos
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --job-name=selectAdd
+#SBATCH --output=$outfile
+#SBATCH --time=00-01:00 # time (DD-HH:MM)
+#SBATCH --mem-per-cpu=12G
+#SBATCH --wait
+
+module load    StdEnv/2020  gcc/9.3.0  openmpi/4.0.3
+
+mpirun -np 1 $mlp select-add $mtp $train $preselected $diff --als-filename=$als --selected-filename=$selected
