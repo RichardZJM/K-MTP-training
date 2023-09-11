@@ -1,0 +1,566 @@
+\documentclass[9pt,twocolumn,twoside]{opticajnl}
+\journal{opticajournal} % use for journal or Optica Open submissions
+
+% See template introduction for guidance on setting shortarticle option
+\setboolean{shortarticle}{false}
+% true = letter/tutorial
+% false = research/review article
+
+% ONLY applicable for journal submission shortarticle types:
+% When \setboolean{shortarticle}{true}
+% then \setboolean{memo}{true} will print "Memorandum" on title page header
+% Otherwise header will remain as "Letter"
+% \setboolean{memo}{true}
+
+\usepackage{lineno}
+\usepackage[inkscapeformat=png]{svg}
+
+% \linenumbers % Turn off line numbering for Optica Open preprint submissions.
+
+\title{Training and Validation of Moment Tensor Potentials for Potassium Metal}
+
+\author[1,2,3]{ Richard Meng}
+\author[1]{Laurent Béland}
+\author[1]{Hao Sun}
+
+\affil[1]{Department of Mechanical and Materials Engineering, Queen's University, 45 Union St, Kingston, ON K7L 3N6}
+
+\affil[2]{contact@richardzjm.com}
+\affil[3]{17zjm1@queensu.ca}
+
+\begin{abstract}
+Machine learning models have been of recent interest in the development of interatomic potentials for molecular dynamics simulations. One such model is the MTP, a linear regression-based model which uses an active learning approach to assist in training. In exploring the MTPs uses for the Queen's Nuclear Materials group, we utilize a bottom-up training scheme to train potassium metal MTPs which we subsequently validate. We find that the scheme produces effective MTPs with less cost than more direct approaches. We also note that the MTP has generally strong accuracy that increases with the MTP's level of representation, yielding strong performance in both artificial validation datasets and comparisons against \textit{ab inito} molecular dynamics runs. This translates into excellent liquid radial distribution function predictions although more specific training regimes or very high MTP levels are likely needed for properties that involve the precise prediction of a small number of configurations. Overall, for a solid-liquid potassium model, we would recommend an MTP level of no less than 10.
+\end{abstract}
+
+\setboolean{displaycopyright}{false}
+\doi{\url{https://www.richardzjm.com/projects} \\ \url{https://github.com/RichardZJM/K-MTP-training}}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+Molecular Dynamics (MD) has been an invaluable tool in fields such as computational chemistry, materials science, and pharmaceutical drug discovery, for modelling the motion of atoms and predicting the properties of compounds \cite{karplus2002molecular}. MD models use a classical representation of atoms, representing them as particles and applying interatomic forces to numerically solve the equations of motion.
+
+Quantum chemistry methods provide perhaps the highest fidelity description of interatomic forces. With considerations for the electrons of the system, techniques like Density Functional Theory (DFT) and Hartree-Fock methods provide a force calculation by approximating a solution to the many-bodied Schrödinger Equation \cite{DFT}. However, this comes with a cubic time complexity and considerable expense even for a system of moderate size. For instance,  a single timestep in a DFT MD run of 54 atoms took several hours on 48 cores. 
+
+Instead, interatomic potentials, less expensive descriptors which approximate interatomic force predictions, are typically used. In the simplest case, pair potentials such as the Lennard-Jones Potential or the Morse Potential can be used to describe the forces between pairs of atoms as a simple function of pairwise separation. More sophisticated many-body potentials like EAM potentials for metals and bond order potentials for covalent solids have seen widespread practical use \cite{MatSci}. Much of recent research in interatomic potential development has been focused on machine learning (ML) potentials. These offer an improvable and adaptable approach to force modelling which is more made accessible by the relative ease of training data acquisition through quantum modelling methods. Some of the common categories of ML potentials include neural networks, Gaussian approximation potentials, and regression on basis sets \cite{mlip}.
+
+The Moment Tensor Potential (MTP) falls into this last category, making considerations for radial and angular interactions in its basis sets \cite{mtp}. The MTP architecture can be enhanced with an active learning scheme, applying the D-optimality criterion on the information matrix formed by the values of the basis functions for a set of configurations. Thus, an MTP can decide whether newly encountered configurations will be likely misrepresented or are worthwhile to learn from, selecting them on the fly for further training through DFT calculations.
+
+\section{MTP Architecture}
+We provide a brief overview of the linearly-parameterized MTP architecture. More rigorous and broad explanations are available from the source paper \cite{mtp}.
+
+Using the MTP, the total energy of a configuration, $E^{MTP} (\textrm{cfg}) $, is determined by the sum of the contributions, $V(n_i)$, of the local neighbourhood of each atom as evaluated within a cutoff radius, $n_i$. $E^{MTP} (\textrm{cfg}) $ is described in Equation \ref{eq:configEnergy}. 
+
+\begin{equation} \label{eq:configEnergy}
+  E^{MTP} (\textrm{cfg}) = \sum_{i=1}^{n} V(n_i)
+\end{equation}
+
+For each atomic neighbourhood, the contribution is a linear combination of a set of learnable weights, $\xi = \{\xi_\alpha\}$ and the basis set, shown in Equation \ref{eq:basisSet}.
+
+\begin{equation} \label{eq:basisSet}
+  V(n_i) = \sum_{\alpha} \xi_\alpha   B_\alpha (n_i)
+\end{equation}
+
+The elements of this basis set consist of, but not necessarily directly consist of, moment tensor descriptors or simply \textit{moments}. A moment, $M_{\mu,\nu}$,  is characterized by a $\mu$ and a $\nu$ value, and has level, $\textrm{lev}_{max}$, which is given by Equation \ref{eq:levelMTP}.
+
+\begin{equation} \label{eq:levelMTP}
+  \textrm{lev}M_{\mu,\nu} = 2 + 4\mu + \nu
+\end{equation}
+
+Each moment, given by Equation \ref{eq:moment}, is a summation between all atoms within the neighbourhood of atom $i$. Moments have a radial part $f_\mu (|r_{ij}|,z_i,z_j) $, characterized by the moment's $\mu$ value. It is a function of the distance between the two atoms of interest, $|r_{ij}|$, and their species $z_i$ and $z_j$. Moments also have an angular part, given by $r_{ij} ^{\otimes \nu}$.
+
+\begin{equation} \label{eq:moment}
+  M_{\mu,\nu} (n_i)= \sum_{j} f_\mu (|r_{ij}|,z_i,z_j) r_{ij} ^{\otimes \nu}
+\end{equation}
+
+\subsection{Radial Considerations}
+The radial component, given by Equation \ref{eq:radial}, expands into a linear combination of a set of learnable weights $c = \{c^{(\beta)} _ {\mu,z_i,z_j} \}$, and set of radial basis functions, $Q = \{Q^{(\beta)}\}$.
+
+\begin{equation} \label{eq:radial}
+  f_\mu (|r_{ij}|,z_i,z_j) = \sum ^ {N_o} _ {\beta = 1} c^{(\beta)} _ {\mu,z_i,z_j}  Q^{(\beta)}(|r_{ij}|)
+\end{equation}
+
+The radial functions, given in Equation \ref{eq:cheby}, are simply members of a polynomial basis set, usually Chebyshev polynomials of the first order, $\phi$, which are quadratically tapered towards the cutoff radius, $R_{\textrm{cut}}$, to provide a smooth transition as atoms leave the neighbourhood.
+
+\begin{equation} \label{eq:cheby}
+  Q^{(\beta)}(|r_{ij}|)=  \begin{cases}
+    \phi ^{(\beta)}(|r_{ij}|) (R_{\textrm{cut}} - |r_{ij}|)^2& |r_{ij}| < R_{\textrm{cut}} \\
+    0 & |r_{ij}| \geq R_{\textrm{cut}} 
+\end{cases}
+\end{equation}
+
+\subsection{Angular Considerations}
+The angular component, $r_{ij} ^{\otimes \nu}$, represents the outer product of $\nu$ copies of the relative position vectors between atoms $i$ and $j$. This yields a tensor of dimension equal to $\nu$. These tensors are not scalars, although they could yield scalars on their contraction.
+
+\subsection{Contraction of Tensors}
+Since the contribution is reliant on a linear combination of learnable weights and the basis functions, moments cannot always be basis functions since they are not always scalars. Instead, contractions are performed on some number of moments, which can ultimately lead to a scalar value. Much like how moments have levels, contractions of moments have levels too, defined as the sum of the levels of the constituent moments.
+
+When choosing the hyperparameters of an MTP, we define a level and take all contractions of moment tensor descriptors which have a level less than or equal to this chosen level. Two other key hyperparameters in the MTP model are the cutoff radii (lower and upper bound) and the number of elements used in the basis set, $N_o$.
+
+\section{Active Learning}
+The MTP is capable of active learning, which allows the MTP to evaluate new configurations it encounters during an MD simulation \cite{mlip}. For the linearly-parameterized MTP, a given set of training configurations produces a set of values for the basis functions for each atom. These per-atom basis function values, $B_\alpha$, can be summed up to generate a per-configuration value of each basis function, $b_\alpha$, as shown in Equation \ref{eq:b}.
+
+\begin{equation} \label{eq:b}
+  E^{MTP}(\textrm{cfg}) = \sum_i \sum_\alpha^m \xi_\alpha B_\alpha (n_i) = \sum_\alpha^m \xi_\alpha (\sum_i  B_\alpha (n_i)) = \sum_\alpha^m \xi_\alpha b_\alpha
+\end{equation}
+
+Thus, for each training configuration, we can formulate a vector of the per-configuration values of the basis functions, $b(\textrm{cfg})$. Taking these vectors as the rows, we can form a matrix with a height equal to the number of training configurations and a width equal to the number of basis functions in the chosen level of MTP.  For $n$ training configurations with $m$ basis functions we have:
+
+\[
+\begin{bmatrix} 
+    b_{1}(\textrm{cfg}_1)  & b_{2}(\textrm{cfg}_1)  & \cdots & b_{\alpha}(\textrm{cfg}_1) \\
+    b_{2}(\textrm{cfg}_2)  & b_{2}(\textrm{cfg}_2)  & \cdots & b_{\alpha}(\textrm{cfg}_2) \\
+    \vdots & \vdots & \ddots & \vdots \\ 
+    b_{1}(\textrm{cfg}_n)       & b_{2}(\textrm{cfg}_n)  & \dots & b_{\alpha}(\textrm{cfg}_n) 
+\end{bmatrix}
+\]
+
+
+In cases where there are more training configurations than we have basis functions, $m < n$, this matrix would be tall. Applying the D-optimality criterion, the $m$ rows which compose the $m$ by $m$ square submatrix, $A$, that has the largest determinant magnitude, are taken to be the most linearly independent members of the training set. In the case of the linearly-parameterized MTP, the linear independence of a set conceptually corresponds to an MTP's breadth of representation.
+
+When the MTP is used in an MD simulation, it can assess whether a newly encountered configuration, $\textrm{cfg}_x$, would increase the magnitude of $A$'s determinant. To do this, the MTP calculates $c(\textrm{cfg}_x)$, a vector of the degrees to which the determinant would be changed should the new configuration, $\textrm{cfg}_x$, replace members of the current submatrix $A$, using Equation \ref{eq:actLearn}. 
+
+\begin{equation} \label{eq:actLearn}
+  c(\textrm{cfg}_x)  = (c_1(\textrm{cfg}_x) \cdots c_m(\textrm{cfg}_x)) = (b_1(\textrm{cfg}_x) \cdots b_m(\textrm{cfg}_x)) A^{-1}
+\end{equation}
+
+The extrapolation grade is then defined as the maximum possible change in the magnitude of the determinant of $A$. The grade is equivalent to the maximum of the vector $c(\textrm{cfg}_x)$, as shown in Equation \ref{eq:max}.
+
+\begin{equation}    \label{eq:max}
+  \gamma(\textrm{cfg}_x) = \max c_1(\textrm{cfg}_x)
+\end{equation}
+
+Should the extrapolation grade be below 1, the newly encountered configuration is considered to be interpolating relative to the existing database. Grades above 1 correspond to extrapolation which signifies that adding the new configuration would allow the training set to encompass a broader (more linearly independent) representation. Extrapolation grade thus becomes a quantitative evaluation criterion for determining beneficial training sets on the fly. When a new configuration is added to the training set, it replaces the corresponding member in the submatrix $A$.
+
+\section{Objectives}
+As an interatomic potential of interest to the Queen's Nuclear Materials Group, we look to explore the behaviour and validity of the MTP for Potassium metal. To be precise, we aim to:
+\begin{itemize}
+  \itemsep0em
+  \item Train general-purpose MTPs of potassium metal for temperature ranges which span the solid and liquid phases, under reasonable levels of pressure/strain. 
+  \item Explore the effects of MD learning simulations and training schemes on the active learning of an MTP.
+  \item  Test the sensitivity of the MTP to hyperparameters and the initial, randomized learnable parameters. 
+  \item Validate the MTP with physical property prediction against DFT results: elastic properties, radial distribution function (RDF), and configurational errors.
+\end{itemize}
+
+
+\section{Methodology}
+
+\subsection{Simulation Software and Hardware}
+To perform DFT calculations, we utilize the Quantum Espresso PWF code \cite{QE}. Molecular dynamics runs are performed using LAMMPS  \cite{LAMMPS}. The MTP implementation is available from the MLIP package which can be complied with a LAMMPS interface \cite{mlip}. We perform the calculations on the Digital Research Alliance of Canada Narval Cluster and the Queen's University Frontenac Cluster. Most simulations are performed on a single core with some of the more intensive calculations performed on 24 or 48 cores. 
+
+\subsection{DFT Parameters and Base Lattice Parameter}
+To produce generally applicable MTPs, and examine the practical applicability of the MTP, we emphasize the importance of a \textit{representative} training scheme for the target phases and environments. To examine potassium metal in reasonable solid and liquid phases, we target performance within 100-1000K, with minor strains/ pressures.
+
+DFT calculations are performed using a pseudopotential packaged with Quantum Espresso\cite{DFT}. We start by performing convergence testing for the k-point count (8 for a single BCC lattice) and the plane-wave cutoff values (60 Ry). Using, a range of BCC cell calculations, we arrive at a predicted lattice parameter of 5.11 Å. Future training and simulations were based on these baseline values. 
+
+\subsection{Training of MTPs}
+Before utilizing MTPs in MD runs to train through active learning, we initially train the MTP on some configurations to provide a base representation of the behaviour. We settled on a range of single-atom configurations of BCC potassium under triaxial strain, $[0.75, 1.25]$; single-atom configurations under shear strain, $[0, 0.785]$; and two-atom configurations under triaxial strain $[0.9, 1.1]$. 23 configurations are selected overall.
+
+After the initial training, we subject the MTPs to a bottom-up training scheme in which we introduce the MTP to parallel MD simulations of BCC lattice cells under a range of pressures and temperatures for a simulation cell size. When an MTP is \textit{sufficiently trained} on a simulation cell size, we expose it to the subsequent simulation size in the training scheme. The rationale behind such an approach is to capture most of the interactions between potassium atoms at lower simulation cell sizes, and thus reduce the amount of overall computation required, especially considering the time complexity of DFT.  Furthermore, we wish to limit the rate at which the MTP learns, for fear that learning from excessively extrapolative configurations may cause the number of training configurations outside the submatrix $A$ to become excessively sparse. 
+
+  We define \textit{sufficiently trained} using the criteria proposed by the MLIP package \cite{mlip}. We preselect configurations with extrapolation grades greater than 2 for further training and consider grades larger than 10 as risky configurations, terminating the active MD run and initiating the training of the MTP. Just before training, preselected configurations that are too similar are removed, generating the selected configurations for which DFT calculations are performed and added to the training set. A diagram of this scheme is shown in Figure \ref{fig:extrapolation}.
+
+  \begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{assets/grade.png}
+    \caption{Configuration categorization based on extrapolation grade}
+    \label{fig:extrapolation}
+  \end{figure}
+
+  We take an MTP to be \textit{sufficiently trained} relative to a simulation cell size when all the parallel MD runs return no preselected configurations. We take an MTP to have completed learning when it has passed through all of the simulation cell sizes in the scheme.
+
+  In the bottom-up training approach, we choose six simulation cell sizes, shown in Table \ref{tab:stages}. Each simulation cell consists of BCC unit cells of potassium, the dimensions of which are modified from the baseline values by the applied strains. We observed through experimentation that $3\times 3\times 3$ simulation cells tended to produce no preselected configurations at all and used it as the final stage in the scheme.
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Training Scheme Stages (Simulation Cell Dimensions)}
+  \begin{tabular}{cccc}
+  \hline
+  Stage & $X$ count & $Y$ count & $Z$ count\\
+  \hline
+  1 & 1 & 1 & 1\\
+  2 & 1 & 1 & 2\\
+  3 & 1 & 1 & 3\\
+  4 & 1 & 2 & 2\\
+  5 & 2 & 2 & 2\\
+  6 & 3 & 3 & 3\\
+  \hline
+  \end{tabular}
+  \label{tab:stages}
+\end{table}
+
+Overall, the complete training of the MTPs can be summarized by the flowchart in Figure \ref{fig:scheme}. For each of the stages, we perform 24 parallel MD runs under six strains in the range of $[0.95, 1.05]$ and four temperatures, 100 K, 330K, 400K, 800 K. This scheme aims to generate training datasets that model solid and liquid configurations, including temperatures near the empirical potassium melting point. These MTP runs are initiated from a perfect BCC lattice structure, before simulating under a Langevin $NVT$, in the hope of easing the number of risky configurations encountered for liquid modelling and sampling configurations near coexistence. Each MTP uses a first-order Chebyshev polynomial basis set with 8 members, and a cutoff radius of 8 Å. Experimentation with these two hyperparameters yielded no substantial benefit with higher values.  
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/trainingScheme.png}
+  \caption{Flowchart of the active learning process}
+  \label{fig:scheme}
+\end{figure}
+
+
+\section{Results and Discussion}
+To gauge the effectiveness of the MTPs of different levels and assess the validity of the bottom-up training scheme, active learning runs were performed using even MTP levels from 6 to 14. Figure \ref{fig:iterations} displays the percentage of the total iterations observed during each stage of the active learning runs. 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/iterations.png}
+  \caption{Percentage of iterations spent at each stage}
+  \label{fig:iterations}
+\end{figure}
+
+All of the MTPs, except MTP10 which is likely an outlier run, learn the majority of the interactions needed in the first two stages of the training scheme. From the point of view of the active learning representation, the bottom-up approach is valid, as it reaches a representation that generates no preselected configurations by the end of the scheme. This is the same result that occurs when we directly trained an MTP in some of the latter stages. From a practical point of view, MTPs directly trained on later levels resulted in a slightly lower count of total iterations, although the computational expense is considerably higher and the validation performance is no different. 
+
+In the cases where the MTPs spent a larger percentage of their total iterations in preceding stages, stages 3 and 6 tended to offer limited additional benefits. Comparatively, stages 4 and 5 tended to give some additional learning. This observation is reasonable, given that the longest dimension of stages 3 and 6 is approximately twice the cutoff radius used. However, due to the lack of a larger sample pool of active learning runs, is it difficult to determine the training scheme's effectiveness with more certainty. 
+
+Figure \ref{fig:levels} shows the total number of training configurations obtained through an entire active learning run. Generally, MTPs can be expected to select more configurations with increasing levels, although we note that MTP 6 has more training configurations than MTP 8. The exact relationship is uncertain due to the sample size of active learning runs we managed to perform. This relationship may also vary based on the target scenario and the training scheme used. 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/levels.png}
+  \caption{Number of the configurations observed through each active learning run }
+  \label{fig:levels}
+\end{figure}
+
+To explore the effect of the initial parameters on the MTPs training, we prepare an ensemble of 30 MTPs per level. With the training sets generated by the active learning runs, we train fresh MTPs, each with random initial parameters. Recording the average training energy and force errors on a per-atom basis for each of the MTPs, we generate Figure \ref{fig:errors}. 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/errors.png}
+  \caption{Average training errors. 30 training runs, 95\% confidence interval.}
+  \label{fig:errors}
+\end{figure}
+
+As expected, the average training errors for force and energy decrease with increasing levels of MTP. We also find that for a fixed training dataset for each level of MTP, the variance due to the initial parameters is larger for MTPs of lower levels and larger for forces than energies. This observation is reasonable given that force is the derivative of energy. 
+
+\subsection{Solid Potassium Predictions}
+To validate the results of the ensembles of trained MTP for elastic properties, energy calculations of BCC lattices near the baseline lattice parameter are prepared for each MTP. The resultant plot is available in Figure \ref{fig:elastic}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/curve.png}
+  \caption{Elastic curve predictions. General purpose MTPs, DFT reference, and specialized MTP (08s). 95\% confidence interval.}
+  \label{fig:elastic}
+\end{figure}
+
+We find fairly poor accuracy when trying to predict the elastic curve using the general-purpose MTPs of all levels. Interestingly, it appears that the predictions are not necessarily better for MTPs of higher levels, with MTP 8 performing the best out of all the levels. One possibility is overfitting, as suggested by the less symmetrical and irregular elastic curves produced by the MTPs of higher levels. However, we suspect that the issue may lie with the training sets. Since the initial training sets are closely representative of the elastic curve and are consistent between all the MTPs, the MTPs of a lower level would have a higher proportion of their training data related to the elastic curve, giving a better representation.  To further illustrate this, we performed another active learning on MTP08, the best performer, with a training scheme specialized for solid data, yielding a near-perfect agreement with the DFT reference. Using, a $2^{nd}$ order Birch fit, Table \ref{tab:elastic} shows the predicted values of the general MTP of level 8 and one trained on specialized data. 
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Elastic Property Predictions the MTP}
+  \begin{tabular}{cccc}
+  \hline
+  Property & DFT &  MTP08 & MTP08s\\ 
+  \hline
+  Lattice Parameter [Å] & 5.11 & 5.04 & 5.12\\
+  Bulk Modulus [GPa]& 3.9 & 3.3 & 3.8\\
+  Equilibirum Volume [Å$^3$]& 66.72 & 64.02 & 67.33\\
+  \hline
+  \end{tabular}
+  \label{tab:elastic}
+\end{table}
+
+We thus suspect that the MTP's predictions of very specific properties that rely on precise predictions in a narrow range of conditions may be lacking for the MTP level examined. This limitation is especially true for MTPs trained on diverse representations like different phases, and we find that lower-level MTPs can still provide good predictions when specifically trained. However, the MTP levels being examined are still relatively low, and higher levels may lead to a richer representation. In cases where specific configurations are of interest, we would strongly recommend performing active learning on training scenarios adapted to the conditions or experimenting with significantly higher MTP levels.
+
+\subsection{Liquid Potassium Predictions}
+To assess the validity of the MTP for property prediction in the liquid phase, we rely on radial distribution function (RDF) prediction. Due to the lack of quantum mechanical reference liquid potassium data in the literature, we perform our own \textit{ab initio} (DFT-based) MD runs. To generate this reference benchmark, we took an arbitrary 54-atom liquid configuration from one of the previously discarded active learning runs as an initial frame to an \textit{ab initio} run at 600K. Due to the computational expense and limited time scope of the project, only 0.01 ps (104 frames) of the simulation were available for RDF calculation. Combined with the relatively small simulation cell, the reference data is noisy and certain peaks are exaggerated. For each MTP ensemble, the MTP with the lowest training error was subjected to an NVT MD run starting from a BCC simulation cell of 16000 atoms at 600K. Figure \ref{fig:rdf} shows the resultant RDFs.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/rdf.png}
+  \caption{Radial distribution function predictions.}
+  \label{fig:rdf}
+\end{figure}
+
+Overall, the MTPs examined are all within excellent agreement with each other except for MTP06 which was not stable in the larger simulations, losing atoms. Within the limited quality of the \textit{ab initio} data, we observe a good agreement between the predictions and the reference too. The spikes, especially those at a separation of approximately 4.5 Å, have softened as the simulation has progressed and the liquid potassium atoms shift further from their initial positions. We expect an even better match given sufficient computation.
+
+\subsection{Configurational Errors}
+Having examined the MTP's performance in prediction tasks, we consider its performance in validation datasets. We first benchmark the MTP's performance relative to validation configurations which are very similar to its training schemes. To this end, we stored configurations from previous, unrelated active learning runs as a ground truth. We select the MTP with the lowest per-atom energy error out of each MTP ensemble and compare the predicted force magnitude with 400 stored configurations. The comparison for 200 arbitrary atoms of the set is shown in Figure \ref{fig:configs} to minimize clutter. In this benchmark, a perfect linear relationship would indicate a perfect model.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/configurations.png}
+  \caption{Force magnitude validation against a near-training validation set}
+  \label{fig:configs}
+\end{figure}
+
+We also perform a linear regression on the validation predictions and note the results in Table \ref{tab:configs}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Regression constants of near-training predictions, 95\% confidence interval }
+  \begin{tabular}{ccc}
+  \hline
+  MTP Level & Slope Fit &  R$^2$\\ 
+  \hline
+  06 & $1.006 \pm 0.01$ & 0.974 \\
+  08 & $1.026 \pm 0.01$ & 0.981  \\
+  10 & $0.969 \pm 0.007$ & 0.990 \\
+  12 & $1.032 \pm 0.01$ & 0.985 \\
+  14 & $0.977 \pm 0.009$ & 0.985 \\
+  \hline
+  \end{tabular}
+  \label{tab:configs}
+\end{table}
+
+All MTPs exhibited a strongly linear behaviour with few significant outliers. While the predicted slopes do not always represent a perfect prediction within the error, there is no bias towards overprediction or underprediction of the force magnitude and the deviation is very minor. Visually, we find a tighter clustering for lower force magnitude, with more outliers near the higher forces which may suggest that there is greater difficulty in representing more extreme configurations. Inspecting the graph, we find that MTP06 has the widest spread from a perfect model, while MTP08 has a tighter clustering with some outliers. All MTPs of higher level performed without major issues, and this result is reflected in the R$^2$ where the correlation increases with MTP level, somewhat plateauing after MTP 10.
+
+To gauge the configurational performance of MTPs in more practical tasks, we repeat the force comparison with the all configurations obtained from the \textit{ab inito} liquid MD simulation of 54 atoms. Visualizing the atoms from one timestep of these configurations, we obtain Figure \ref{fig:aimdconfigs}. The linear regression on the full set of configurations and atoms is shown in Table \ref{tab:aimdconfigs}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{assets/aimdconfigurations.png}
+  \caption{Force magnitude validation against a DFT MD validation set}
+  \label{fig:aimdconfigs}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{\bf Regression constants of practical predictions, 95\% confidence interval }
+  \begin{tabular}{ccc}
+  \hline
+  MTP Level & Slope Fit &  R$^2$\\ 
+  \hline
+  06 & $0.804 \pm 0.005$ & 0.845 \\
+  08 & $0.967 \pm 0.003$ & 0.942  \\
+  10 & $1.008 \pm 0.0006$ & 0.959 \\
+  12 & $0.997 \pm 0.0005$ & 0.966 \\
+  14 & $1.01 \pm 0.003$ & 0.963 \\
+  \hline
+  \end{tabular}
+  \label{tab:aimdconfigs}
+\end{table}
+
+Inspecting the single configuration plot, all of the MTPs tend to overpredict the force magnitude although this is not the case for all of the configurations from the \textit{ab inito} run. Indeed, looking at the slopes of the higher-level MTPs in Table \ref{tab:aimdconfigs}, we see a close-to-linear relationship, just barely outside of the error.  MTP06, however, overpredicts the forces of the atoms to a greater extent, evidenced in the deviation from the other MTPs in both the linear-fit slope and the prediction plot. This observation aligns with the instability of MTP06 in liquid LAMMPS runs, as a chronic overprediction of force may have led to the atom loss. Furthermore, MTP06 exhibits a wider spread than all the other potentials. The R$^2$ values agree with this, and much like the previous validation set, the R$^2$ values tend to plateau after reaching MTP10.
+
+\section{Conclusions}
+Overall, we successfully trained several MTPs and validated them in practical simulations and predictions. The MTP is a strong-performing model for the relatively low number of trainable parameters and computational expense. Utilizing active learning, we found that a bottom-up approach was effective, and reduced the training cost of creating useful MTPs. For the range of MTP levels examined, increasing the level of the MTP tended to decrease training errors, increase the number of training configurations generated, and increase the prediction accuracy of the MTP. The variance of MTP training for a fixed training set did not appear to be very significant and also decreased with increasing MTP level. However, due to the instability of runs on the cluster, we were limited in the number of active learning runs we could perform and it would be helpful to examine the effect of initial parameters and other hyperparameters on the active learning runs. In terms of accuracy, the MTP performed well in most of the validation training sets although we find that the MTP levels below 6 tended to overpredict interatomic forces in liquids which made it unstable for MD calculations. Additionally, using general-purpose MTPs, it is challenging to obtain accurate predictions of properties that require the precise evaluation of specific configurations like the elastic curve. In cases like these, we would recommend specifically tailoring a training scheme to the target regime or experimenting with MTPs of a considerably higher level. We would recommend using an MTP level of at least 10 or more in general-purpose simulations like those targeted here and recommend experimenting with much higher levels of MTP as needed. 
+
+\section*{Acknowledgements}
+I would like to send a warm thanks to my supervisor, Professor Béland and Dr. Hao Sun for helping me with this intriguing project and dealing with all my troubleshooting requests. Quick shoutout to Professor Pilkey for organizing the course! It was fun!
+
+
+
+
+% \section{Corresponding author}
+
+% We require manuscripts to identify a single corresponding author. The corresponding author typically is the person who submits the manuscript and handles correspondence throughout the peer review and publication process. If other statements about author contribution and contact are needed, they can be added in addition to the corresponding author designation.
+
+% %Example with the corresponding author designated by an asterisk:
+
+% %\author{Author One\authormark{1} and Author Two\authormark{2,*}}
+
+% %\address{\authormark{1}Peer Review, Publications Department,
+% %Optica Publishing Group, 2010 Massachusetts Avenue NW,
+% %Washington, DC 20036, USA\\
+% %\authormark{2}Publications Department, Optica Publishing Group,
+% %2010 Massachusetts Avenue NW, Washington, DC 20036, USA\\
+% %%\authormark{3}xyz@optica.org}
+
+% %\email{\authormark{*}xyz@optica.org}}
+
+% %Example with the corresponding author designated by an asterisk and a note indicating equal contributions by two authors.
+
+% %\author{Author One\authormark{1,3} and Author %Two\authormark{2,3,*}}
+
+% %\address{\authormark{1}Peer Review, Publications Department,
+% %Optica Publishing Group, 2010 Massachusetts Avenue NW, %Washington, DC 20036, USA\\
+% %\authormark{2}Publications Department, Optica Publishing Group, %2010 Massachusetts Avenue NW, Washington, DC 20036, USA\\
+% %\authormark{3}The authors contributed equally to this work.\\
+% %\authormark{*}xyz@optica.org}}
+
+% %\section{Examples of Article Components}
+% %\label{sec:examples}
+
+% The sections below show examples of different article components.
+
+% \section{Figures and Tables}
+
+% Do not place figures and tables at the back of the manuscript. Figures and tables should be placed and sized as they are likely to appear in the final article. 
+
+% Figures and Tables should be labelled and referenced in the standard way using the \verb|\label{}| and \verb|\ref{}| commands.
+
+% \subsection{Sample Figure}
+
+% Figure \ref{fig:false-color} shows an example figure.
+
+% \begin{figure}[ht]
+% \centering
+% \fbox{\includegraphics[width=\linewidth]{opticafig1}}
+% \caption{Dark-field image of a point absorber.}
+% \label{fig:false-color}
+% \end{figure}
+
+% \subsection{Sample Table}
+
+% Table \ref{tab:shape-functions} shows an example table.
+
+% \begin{table}[htbp]
+% \centering
+% \caption{\bf Shape Functions for Quadratic Line Elements}
+% \begin{tabular}{ccc}
+% \hline
+% local node & $\{N\}_m$ & $\{\Phi_i\}_m$ $(i=x,y,z)$ \\
+% \hline
+% $m = 1$ & $L_1(2L_1-1)$ & $\Phi_{i1}$ \\
+% $m = 2$ & $L_2(2L_2-1)$ & $\Phi_{i2}$ \\
+% $m = 3$ & $L_3=4L_1L_2$ & $\Phi_{i3}$ \\
+% \hline
+% \end{tabular}
+%   \label{tab:shape-functions}
+% \end{table}
+
+% \section{Sample Equation}
+
+% Let $X_1, X_2, \ldots, X_n$ be a sequence of independent and identically distributed random variables with $\text{E}[X_i] = \mu$ and $\text{Var}[X_i] = \sigma^2 < \infty$, and let
+% \begin{equation}
+% S_n = \frac{X_1 + X_2 + \cdots + X_n}{n}
+%       = \frac{1}{n}\sum_{i}^{n} X_i
+% \label{eq:refname1}
+% \end{equation}
+% denote their mean. Then as $n$ approaches infinity, the random variables $\sqrt{n}(S_n - \mu)$ converge in distribution to a normal $\mathcal{N}(0, \sigma^2)$.
+
+% \section{Sample Algorithm}
+
+% Algorithms can be included using the commands as shown in algorithm \ref{alg:euclid}.
+
+% \begin{algorithm}
+% \caption{Euclid’s algorithm}\label{alg:euclid}
+% \begin{algorithmic}[1]
+% \Procedure{Euclid}{$a,b$}\Comment{The g.c.d. of a and b}
+% \State $r\gets a\bmod b$
+% \While{$r\not=0$}\Comment{We have the answer if r is 0}
+% \State $a\gets b$
+% \State $b\gets r$
+% \State $r\gets a\bmod b$
+% \EndWhile\label{euclidendwhile}
+% \State \textbf{return} $b$\Comment{The gcd is b}
+% \EndProcedure
+% \end{algorithmic}
+% \end{algorithm}
+
+% \subsection{Supplementary materials in Optica Publishing Group journals}
+% Optica Publishing Group journals allow authors to include supplementary materials as integral parts of a manuscript. Such materials are subject to peer-review procedures along with the rest of the paper and should be uploaded and described using the Prism manuscript system. Please refer to the \href{https://opg.optica.org/submit/style/supplementary_materials.cfm}{Author Guidelines for Supplementary Materials in Optica Publishing Group Journals} for more detailed instructions on labeling supplementary materials and your manuscript. For preprints submitted to Optica Open a link to supplemental material should be included in the submission, but do not upload the material.
+
+% \textbf{Authors may also include Supplemental Documents} (PDF documents with expanded descriptions or methods) with the primary manuscript. At this time, supplemental PDF files are not accepted for JOCN or PRJ. To reference the supplementary document, the statement ``See Supplement 1 for supporting content.'' should appear at the bottom of the manuscript (above the References heading). Supplemental documents are not accepted for Optica Open preprints.
+
+% \begin{figure}[ht!]
+% \centering\includegraphics{opticafig2}
+% \caption{Terahertz focusing metalens.}
+% \end{figure}
+
+
+% \subsection{Sample Dataset Citation}
+
+% 1. M. Partridge, "Spectra evolution during coating," figshare (2014), http://dx.doi.org/10.6084/m9.figshare.1004612.
+
+% \subsection{Sample Code Citation}
+
+% 2. C. Rivers, "Epipy: Python tools for epidemiology," Figshare (2014) [retrieved 13 May 2015], http://dx.doi.org/10.6084/m9.figshare.1005064.
+
+% \section{Backmatter}
+% Backmatter sections should be listed in the order Funding/Acknowledgment/Disclosures/Data Availability Statement/Supplemental Document section. An example of backmatter with each of these sections included is shown below.
+
+% \begin{backmatter}
+% \bmsection{Funding} Content in the funding section will be generated entirely from details submitted to Prism. Authors may add placeholder text in the manuscript to assess length, but any text added to this section in the manuscript will be replaced during production and will display official funder names along with any grant numbers provided. If additional details about a funder are required, they may be added to the Acknowledgments, even if this duplicates information in the funding section. See the example below in Acknowledgements. For preprint submissions, please include funder names and grant numbers in the manuscript.
+
+% \bmsection{Acknowledgments} The section title should not follow the numbering scheme of the body of the paper. Additional information crediting individuals who contributed to the work being reported, clarifying who received funding from a particular source, or other information that does not fit the criteria for the funding block may also be included; for example, ``K. Flockhart thanks the National Science Foundation for help identifying collaborators for this work.''
+
+% \bmsection{Disclosures} Disclosures should be listed in a separate section at the end of the manuscript. List the Disclosures codes identified on the \href{https://opg.optica.org/submit/review/conflicts-interest-policy.cfm}{Conflict of Interest policy page}. If there are no disclosures, then list ``The authors declare no conflicts of interest.''
+
+% \smallskip
+
+% \noindent Here are examples of disclosures:
+
+
+% \bmsection{Disclosures} ABC: 123 Corporation (I,E,P), DEF: 456 Corporation (R,S). GHI: 789 Corporation (C).
+
+% \bmsection{Disclosures} The authors declare no conflicts of interest.
+
+
+% \bmsection{Data Availability Statement} A Data Availability Statement (DAS) will be required for all submissions beginning 1 March 2021. The DAS should be an unnumbered separate section titled ``Data Availability'' that
+% immediately follows the Disclosures section. See the \href{https://opg.optica.org/submit/review/data-availability-policy.cfm}{Data Availability Statement policy page} for more information.
+
+% There are four common (sometimes overlapping) situations that authors should use as guidance. These are provided as minimal models, and authors should feel free to
+% include any additional details that may be relevant.
+
+
+
+% \begin{enumerate}
+% \item When datasets are included as integral supplementary material in the paper, they must be declared (e.g., as "Dataset 1" following our current supplementary materials policy) and cited in the DAS, and should appear in the references.
+
+% \bmsection{Data availability} Data underlying the results presented in this paper are available in Dataset 1, Ref. [3].
+
+% \item When datasets are cited but not submitted as integral supplementary material, they must be cited in the DAS and should appear in the references.
+
+% \bmsection{Data availability} Data underlying the results presented in this paper are available in Ref. [3].
+
+% \item If the data generated or analyzed as part of the research are not publicly available, that should be stated. Authors are encouraged to explain why (e.g.~the data may be restricted for privacy reasons), and how the data might be obtained or accessed in the future.
+
+% \bmsection{Data availability} Data underlying the results presented in this paper are not publicly available at this time but may be obtained from the authors upon reasonable request.
+
+% \item If no data were generated or analyzed in the presented research, that should be stated.
+
+% \bmsection{Data availability} No data were generated or analyzed in the presented research.
+% \end{enumerate}
+
+% \bigskip
+
+% \noindent Data availability statements are not required for preprint submissions.
+
+% \bmsection{Supplemental document}
+% See Supplement 1 for supporting content. 
+
+% \end{backmatter}
+
+% \section{References}
+
+% Note that \emph{Optics Letters} and \emph{Optica} short articles use an abbreviated reference style. Citations to journal articles should omit the article title and final page number; this abbreviated reference style is produced automatically when the \emph{Optics Letters} journal option is selected in the template, if you are using a .bib file for your references.
+
+% However, full references (to aid the editor and reviewers) must be included as well on a fifth informational page that will not count against page length; again this will be produced automatically if you are using a .bib file.
+
+% \bigskip
+% \noindent Add citations manually or use BibTeX. See \cite{Zhang:14,OPTICA,FORSTER2007,testthesis,manga_rao_single_2007}.
+
+% Bibliography
+\bibliography{sample}
+
+% Full bibliography added automatically for Optics Letters submissions; the following line will simply be ignored if submitting to other journals.
+% Note that this extra page will not count against page length
+\bibliographyfullrefs{sample}
+
+%Manual citation list
+%\begin{thebibliography}{1}
+%\bibitem{Zhang:14}
+%Y.~Zhang, S.~Qiao, L.~Sun, Q.~W. Shi, W.~Huang, %L.~Li, and Z.~Yang,
+ % \enquote{Photoinduced active terahertz metamaterials with nanostructured
+  %vanadium dioxide film deposited by sol-gel method,} Opt. Express \textbf{22},
+  %11070--11078 (2014).
+%\end{thebibliography}
+
+% Please include bios and photos of all authors for aop articles
+\ifthenelse{\equal{\journalref}{aop}}{%
+\section*{Author Biographies}
+\begingroup
+\setlength\intextsep{0pt}
+\begin{minipage}[t][6.3cm][t]{1.0\textwidth} % Adjust height [6.3cm] as required for separation of bio photos.
+  \begin{wrapfigure}{L}{0.25\textwidth}
+    \includegraphics[width=0.25\textwidth]{john_smith.eps}
+  \end{wrapfigure}
+  \noindent
+  {\bfseries John Smith} received his BSc (Mathematics) in 2000 from The University of Maryland. His research interests include lasers and optics.
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+  \begin{wrapfigure}{L}{0.25\textwidth}
+    \includegraphics[width=0.25\textwidth]{alice_smith.eps}
+  \end{wrapfigure}
+  \noindent
+  {\bfseries Alice Smith} also received her BSc (Mathematics) in 2000 from The University of Maryland. Her research interests also include lasers and optics.
+\end{minipage}
+\endgroup
+}{}
+
+
+\end{document}
