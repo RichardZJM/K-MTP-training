@@ -1,0 +1,168 @@
+19/04/2023 11:40:02   =============================================================
+19/04/2023 11:40:02   Starting New Potential Training !!!
+19/04/2023 11:40:02   =============================================================
+19/04/2023 11:44:47   Initial generation of DFT training dataset has completed.
+19/04/2023 11:44:47   Starting the active learning loop
+19/04/2023 11:44:47   Beginning active learning of [1, 1, 1] atoms.
+19/04/2023 11:44:47   Generated MD runs.
+19/04/2023 11:44:47   [1, 1, 1] atoms, iteration: 1 of up to 20
+19/04/2023 11:45:55   Generated new ALS file
+19/04/2023 11:46:29   Passive training iteration completed.
+19/04/2023 11:46:29   Average energy per atom error: 0.00144122
+19/04/2023 11:46:29   Average force per atom error: 1.08442e-06
+19/04/2023 11:46:29   Starting MD Runs
+19/04/2023 11:47:17   24 risky configurations found.
+19/04/2023 11:47:17   MD Runs Completed
+19/04/2023 11:47:17   Runs with no preselected configurations: 0 / 24
+19/04/2023 11:47:40   Diff DFT configurations selected.
+19/04/2023 11:47:40   There are 0 new diff DFT configurations.
+19/04/2023 11:47:40   Commencing diff DFT Runs.
+19/04/2023 11:47:40   Beginning active learning of [1, 1, 2] atoms.
+19/04/2023 11:47:40   Generated MD runs.
+19/04/2023 11:47:40   [1, 1, 2] atoms, iteration: 1 of up to 15
+19/04/2023 11:48:52   Passive training iteration completed.
+19/04/2023 11:48:52   Average energy per atom error: 0.00144223
+19/04/2023 11:48:52   Average force per atom error: 1.0854e-06
+19/04/2023 11:48:52   Starting MD Runs
+19/04/2023 11:49:49   24 risky configurations found.
+19/04/2023 11:49:49   MD Runs Completed
+19/04/2023 11:49:50   Runs with no preselected configurations: 0 / 24
+19/04/2023 11:50:03   Diff DFT configurations selected.
+19/04/2023 11:50:03   There are 4 new diff DFT configurations.
+19/04/2023 11:50:03   Commencing diff DFT Runs.
+19/04/2023 11:58:05   Diff DFT calculations complete.
+19/04/2023 11:58:05   [1, 1, 2] atoms, iteration: 2 of up to 15
+19/04/2023 11:59:45   Passive training iteration completed.
+19/04/2023 11:59:45   Average energy per atom error: 0.0194405
+19/04/2023 11:59:45   Average force per atom error: 0.01056
+19/04/2023 11:59:45   Starting MD Runs
+19/04/2023 12:01:56   14 risky configurations found.
+19/04/2023 12:01:56   MD Runs Completed
+19/04/2023 12:01:57   Runs with no preselected configurations: 3 / 24
+19/04/2023 12:02:29   Diff DFT configurations selected.
+19/04/2023 12:02:29   There are 6 new diff DFT configurations.
+19/04/2023 12:02:29   Commencing diff DFT Runs.
+19/04/2023 12:12:36   Diff DFT calculations complete.
+19/04/2023 12:12:36   [1, 1, 2] atoms, iteration: 3 of up to 15
+19/04/2023 12:12:56   Passive training iteration completed.
+19/04/2023 12:12:56   Average energy per atom error: 0.0160484
+19/04/2023 12:12:56   Average force per atom error: 0.0182351
+19/04/2023 12:12:56   Starting MD Runs
+19/04/2023 12:13:47   3 risky configurations found.
+19/04/2023 12:13:47   MD Runs Completed
+19/04/2023 12:13:47   Runs with no preselected configurations: 18 / 24
+19/04/2023 12:13:54   Diff DFT configurations selected.
+19/04/2023 12:13:54   There are 7 new diff DFT configurations.
+19/04/2023 12:13:54   Commencing diff DFT Runs.
+19/04/2023 12:23:50   Diff DFT calculations complete.
+19/04/2023 12:23:50   [1, 1, 2] atoms, iteration: 4 of up to 15
+19/04/2023 12:24:17   Passive training iteration completed.
+19/04/2023 12:24:17   Average energy per atom error: 0.0126275
+19/04/2023 12:24:17   Average force per atom error: 0.0202786
+19/04/2023 12:24:17   Starting MD Runs
+19/04/2023 12:25:03   8 risky configurations found.
+19/04/2023 12:25:03   MD Runs Completed
+19/04/2023 12:25:04   Runs with no preselected configurations: 10 / 24
+19/04/2023 12:25:52   Diff DFT configurations selected.
+19/04/2023 12:25:52   There are 7 new diff DFT configurations.
+19/04/2023 12:25:52   Commencing diff DFT Runs.
+19/04/2023 12:35:56   Diff DFT calculations complete.
+19/04/2023 12:35:56   [1, 1, 2] atoms, iteration: 5 of up to 15
+19/04/2023 12:36:16   Passive training iteration completed.
+19/04/2023 12:36:16   Average energy per atom error: 0.012057
+19/04/2023 12:36:16   Average force per atom error: 0.019801
+19/04/2023 12:36:16   Starting MD Runs
+19/04/2023 12:36:57   No risky configurations found.
+19/04/2023 12:36:57   MD Runs Completed
+19/04/2023 12:36:57   Runs with no preselected configurations: 24 / 24
+19/04/2023 12:37:08   Diff DFT configurations selected.
+19/04/2023 12:37:08   There are 0 new diff DFT configurations.
+19/04/2023 12:37:08   Commencing diff DFT Runs.
+19/04/2023 12:37:08   Beginning active learning of [1, 1, 3] atoms.
+19/04/2023 12:37:08   Generated MD runs.
+19/04/2023 12:37:08   [1, 1, 3] atoms, iteration: 1 of up to 10
+19/04/2023 12:37:29   Passive training iteration completed.
+19/04/2023 12:37:29   Average energy per atom error: 0.012057
+19/04/2023 12:37:29   Average force per atom error: 0.019801
+19/04/2023 12:37:29   Starting MD Runs
+19/04/2023 12:38:41   2 risky configurations found.
+19/04/2023 12:38:41   MD Runs Completed
+19/04/2023 12:38:42   Runs with no preselected configurations: 20 / 24
+19/04/2023 12:38:56   Diff DFT configurations selected.
+19/04/2023 12:38:56   There are 2 new diff DFT configurations.
+19/04/2023 12:38:56   Commencing diff DFT Runs.
+19/04/2023 12:51:28   Diff DFT calculations complete.
+19/04/2023 12:51:28   [1, 1, 3] atoms, iteration: 2 of up to 10
+19/04/2023 12:51:50   Passive training iteration completed.
+19/04/2023 12:51:50   Average energy per atom error: 0.0144229
+19/04/2023 12:51:50   Average force per atom error: 0.0157316
+19/04/2023 12:51:50   Starting MD Runs
+19/04/2023 12:52:51   No risky configurations found.
+19/04/2023 12:52:51   MD Runs Completed
+19/04/2023 12:52:51   Runs with no preselected configurations: 22 / 24
+19/04/2023 12:52:59   Diff DFT configurations selected.
+19/04/2023 12:52:59   There are 1 new diff DFT configurations.
+19/04/2023 12:52:59   Commencing diff DFT Runs.
+19/04/2023 13:07:12   Diff DFT calculations complete.
+19/04/2023 13:07:12   [1, 1, 3] atoms, iteration: 3 of up to 10
+19/04/2023 13:07:34   Passive training iteration completed.
+19/04/2023 13:07:34   Average energy per atom error: 0.0141779
+19/04/2023 13:07:34   Average force per atom error: 0.0157758
+19/04/2023 13:07:34   Starting MD Runs
+19/04/2023 13:08:42   No risky configurations found.
+19/04/2023 13:08:42   MD Runs Completed
+19/04/2023 13:08:42   Runs with no preselected configurations: 24 / 24
+19/04/2023 13:08:50   Diff DFT configurations selected.
+19/04/2023 13:08:50   There are 0 new diff DFT configurations.
+19/04/2023 13:08:50   Commencing diff DFT Runs.
+19/04/2023 13:08:50   Beginning active learning of [1, 2, 2] atoms.
+19/04/2023 13:08:50   Generated MD runs.
+19/04/2023 13:08:50   [1, 2, 2] atoms, iteration: 1 of up to 10
+19/04/2023 13:09:05   Passive training iteration completed.
+19/04/2023 13:09:05   Average energy per atom error: 0.0141791
+19/04/2023 13:09:05   Average force per atom error: 0.0157753
+19/04/2023 13:09:05   Starting MD Runs
+19/04/2023 13:09:57   No risky configurations found.
+19/04/2023 13:09:57   MD Runs Completed
+19/04/2023 13:09:57   Runs with no preselected configurations: 23 / 24
+19/04/2023 13:10:22   Diff DFT configurations selected.
+19/04/2023 13:10:22   There are 3 new diff DFT configurations.
+19/04/2023 13:10:22   Commencing diff DFT Runs.
+19/04/2023 13:31:10   Diff DFT calculations complete.
+19/04/2023 13:31:10   [1, 2, 2] atoms, iteration: 2 of up to 10
+19/04/2023 13:31:32   Passive training iteration completed.
+19/04/2023 13:31:32   Average energy per atom error: 0.0141696
+19/04/2023 13:31:32   Average force per atom error: 0.0173838
+19/04/2023 13:31:32   Starting MD Runs
+19/04/2023 13:32:55   No risky configurations found.
+19/04/2023 13:32:55   MD Runs Completed
+19/04/2023 13:32:55   Runs with no preselected configurations: 24 / 24
+19/04/2023 13:33:08   Diff DFT configurations selected.
+19/04/2023 13:33:08   There are 0 new diff DFT configurations.
+19/04/2023 13:33:08   Commencing diff DFT Runs.
+19/04/2023 13:33:08   Beginning active learning of [2, 2, 2] atoms.
+19/04/2023 13:33:08   Generated MD runs.
+19/04/2023 14:47:02   [2, 2, 2] atoms, iteration: 1 of up to 5
+19/04/2023 14:47:16   Passive training iteration completed.
+19/04/2023 14:47:16   Average energy per atom error: 0.0135062
+19/04/2023 14:47:16   Average force per atom error: 0.0162118
+19/04/2023 14:47:16   Starting MD Runs
+19/04/2023 14:48:47   No risky configurations found.
+19/04/2023 14:48:47   MD Runs Completed
+19/04/2023 14:48:47   Runs with no preselected configurations: 24 / 24
+19/04/2023 14:49:12   Diff DFT configurations selected.
+19/04/2023 14:49:12   There are 0 new diff DFT configurations.
+19/04/2023 14:49:12   Commencing diff DFT Runs.
+19/04/2023 14:49:12   Beginning active learning of [3, 3, 3] atoms.
+19/04/2023 14:49:12   Generated MD runs.
+19/04/2023 14:49:12   [3, 3, 3] atoms, iteration: 1 of up to 3
+19/04/2023 14:49:59   Passive training iteration completed.
+19/04/2023 14:49:59   Average energy per atom error: 0.0135062
+19/04/2023 14:49:59   Average force per atom error: 0.0162118
+19/04/2023 14:49:59   Starting MD Runs
+19/04/2023 14:54:26   No risky configurations found.
+19/04/2023 14:54:26   MD Runs Completed
+19/04/2023 14:54:26   Runs with no preselected configurations: 24 / 24
+19/04/2023 14:54:33   Diff DFT configurations selected.
+19/04/2023 14:54:33   There are 0 new diff DFT configurations.
+19/04/2023 14:54:33   Commencing diff DFT Runs.

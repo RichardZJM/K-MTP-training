@@ -13,7 +13,7 @@
     [2, 2, 2],
     [3, 3, 3]
   ],
-  "maxItersPerConfig": [20, 10, 10, 10, 5, 2],
+  "maxItersPerConfig": [20, 15, 10, 10, 5, 3],
   "MDTemperatures": [100, 300, 400, 800],
   "MDStrainRange": [0.95, 1.06],
   "MDStrainStep": 0.02,
@@ -32,7 +32,7 @@
   },
   "dftJobParam": {
     "cpus": "1",
-    "time": "0-02:00"
+    "time": "0-06:00"
   },
   "mdJobParam": {
     "cpus": "1",
