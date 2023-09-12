@@ -1,0 +1,36 @@
+&control
+    disk_io = 'none',
+    prefix = 'K_DiffDFT',
+    calculation ='scf',
+    outdir = '$out',
+    pseudo_dir = '$pseudo_dir',
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav=0,
+    nat=$nnn,
+    ntyp=1,
+    vdw_corr='grimme-d2'
+    ecutwfc=60,
+    occupations='smearing',
+    smearing = 'gaussian',
+    degauss = 0.01,
+ /
+ &electrons
+    mixing_mode='plain',
+    diagonalization='david',
+/
+ &ions
+    ion_dynamics = 'bfgs'
+ /
+CELL_PARAMETERS angstrom
+   $v1
+   $v2
+   $v3
+ATOMIC_SPECIES bohr
+K  39.0983 $pseudo
+ATOMIC_POSITIONS angstrom
+   $aaa
+K_POINTS automatic
+$k1 $k2 $k3 0 0 0

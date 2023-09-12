@@ -1,5 +1,9 @@
 {
   "markdown-pdf.styles": ["markdown.css"],
   "markdown.extension.toc.levels": "1..4",
-  "cSpell.words": ["customizability"]
+  "cSpell.words": ["customizability"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.formatting.provider": "none"
 }
