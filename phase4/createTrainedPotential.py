@@ -70,6 +70,7 @@ try:
 except:
     pass
 
+
 rootFolder = os.path.dirname(os.path.realpath(__file__))              # Get useful folder locations
 DFToutputFolder = rootFolder + "/outputDFT"
 DFToldOutputFolder = rootFolder + "/previousDFT"
@@ -99,12 +100,15 @@ if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
 if not os.path.exists(mdFolder): os.mkdir(mdFolder)
 if not os.path.exists(diffDFTFolder): os.mkdir(diffDFTFolder)
 if not os.path.exists(initialGenerationFolder): os.mkdir(initialGenerationFolder)
+if not os.path.exists(DFToldOutputFolder): os.mkdir(DFToldOutputFolder)
 if not os.path.exists(DFToutputFolder): os.mkdir(DFToutputFolder)
 else: 
     pass
     # RUN NEXT PART OF THE SCRIPT
     # exit(1)
 #endregion
+
+
 
 #region Inital Generation
 DFT1AtomStrainFolder = initialGenerationFolder + "/1AtomDFTStrain"             #Same for all the different types of DFT runs
@@ -357,8 +361,6 @@ for config in configs:
     printAndLog("Generated MD runs.")
     #endregion
     
-  
-    
     for i in range(maxIters[tuple(config)]):
         printAndLog(str(config) + " atoms, iteration: " + str(i+1) + " of up to " + str(maxIters[tuple(config)]))
         
@@ -375,15 +377,15 @@ for config in configs:
 
         # Generate and run mindist job file (job file must be used to avoid clogging login nodes)
         with open (minddistJob, 'r+' ) as f:
-                    content = f.read()
-                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-                    contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
-                    f.seek(0)
-                    f.write(contentNew)
-                    f.truncate()
+            content = f.read()
+            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+            contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
+            f.seek(0)
+            f.write(contentNew)
+            f.truncate()
                 
         exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
         if(exitCode):
@@ -392,7 +394,17 @@ for config in configs:
 
         os.remove(minddistJob)
         # Copy the newly formed training config to the mtpProperties
-        os.system("mv train.cfg " + trainingConfigs)
+        # os.system("mv train.cfg " + trainingConfigs)
+        
+        with open(trainingConfigs, 'a') as wfd:
+            with open("train.cfg", 'rb') as fd:
+                shutil.copyfileobj(fd, wfd)
+        os.remove("train.cfg")
+        
+        # Move the finished output files to the previous DFT outpts
+        file_names = os.listdir(DFToutputFolder)
+        for file_name in file_names:
+            shutil.move(os.path.join(DFToutputFolder, file_name), DFToldOutputFolder)
         os.chdir(rootFolder)
             
         #region Generate an state als
@@ -635,7 +647,11 @@ for config in configs:
         
         # exit(1)
         #endregion
-        
+    
+    #Sparsification
+    if(params["sparsify"] == True):
+        printAndLog("Sparsifying!")
+        os.system("cp " + selectedConfigs + " " + trainingConfigs)    
 #endregion
 
 # except Exception as e:

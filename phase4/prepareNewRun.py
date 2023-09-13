@@ -19,6 +19,7 @@ except:
 
 rootFolder = os.path.dirname(os.path.realpath(__file__))              # Get useful folder locations
 DFToutputFolder = rootFolder + "/outputDFT"
+DFToldOutputFolder = rootFolder + "/previousDFT"
 mtpFolder = rootFolder + "/mtpProperties"
 slurmRunFolder = rootFolder + "/slurmRunOutputs"
 mdFolder = rootFolder + "/mdLearningRuns"
@@ -40,6 +41,7 @@ bfgsLog = rootFolder + "/bfgs.log"
 if  os.path.exists(mdFolder): shutil.rmtree(mdFolder)
 if  os.path.exists(diffDFTFolder): shutil.rmtree(diffDFTFolder)
 if  os.path.exists(DFToutputFolder): shutil.rmtree(DFToutputFolder)
+if  os.path.exists(DFToldOutputFolder): shutil.rmtree(DFToldOutputFolder)
 
 if  os.path.exists(initialGenerationFolder) and not preserveInitial: shutil.rmtree(initialGenerationFolder)
 
