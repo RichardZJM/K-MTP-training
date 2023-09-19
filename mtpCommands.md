@@ -19,3 +19,5 @@ CAC Example:
 ```
 
 srun --account=def-hpcg1725 --cpus-per-task=1 --mem-per-cpu=4G --partition=reserved --time=0-024:00 --qos=privileged --pty bash -l
+
+squeue -u hpc5146 | awk '{if (NR!=1 && $1 > 6347003) {print $1}}' | xargs -n 1 scancel

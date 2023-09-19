@@ -8,7 +8,7 @@
 #SBATCH --job-name=TrainMTP
 #SBATCH --output=./create.out
 #SBATCH --mem-per-cpu=8G
-#SBATCH --time=0-010:00 # time (DD-HH:MM)
+#SBATCH --time=0-023:00 # time (DD-HH:MM)
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=17zjm1@queensu.ca
 #SBATCH
@@ -18,5 +18,5 @@ module load python
 echo Python Loaded
 source  ../ENV/bin/activate
 echo Enviroment Loaded
-python createTrainedPotential.py
+python createTrainedPotential.py config.json dry
 echo Script Completed
