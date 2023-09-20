@@ -44,6 +44,7 @@ configurationalValidation
 massRuns
 mdMTPRun*
 anims
+previousDFT
 
 *.acn
 *.acr

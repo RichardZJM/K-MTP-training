@@ -1,5 +1,5 @@
 {
-  "sparsify": true,
+  "sparsify": false,
   "1AtomDFTStrainRange": [0.75, 1.26],
   "1AtomDFTStrainStep": 0.05,
   "1AtomDFTShearRange": [1, 2.01],
