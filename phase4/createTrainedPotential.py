@@ -21,32 +21,6 @@ from datetime import datetime
 # As QE and LAMMPS runs must be submitted through the coumpute nodes, we need to record when the last of a QE run is completed. 
 # This done by adding a completion file to a directory. The end of each run will count the number of completed file to verify whether all runs have completed.
 
-# class MTPTrainer:
-#   def __init__(self, configFile: str, continuationRun : bool):
-#     # Load Parameters
-#     self.params = {}
-#     try:
-#         f = open(configFile)
-#         params = json.load(f)
-#     except:
-#         raise Exception(configFile + " not found or not in JSON format.")
-#     self.params = params
-#     # Load whether the run is a continuation
-#     self.continuationRun = continuationRun
-#     self.setupRoutes()
-#     self.rootFolder = os.path.dirname(os.path.realpath(__file__))              # Get useful folder locations
-#     self.DFToutputFolder = rootFolder + "/outputDFT"
-#     self.DFToldOutputFolder = rootFolder + "/previousDFT"
-#     self.templatesFolder = rootFolder + "/templates"
-#     self.scriptsFolder = rootFolder + "/pythonScripts"   
-#     self.mtpFolder = rootFolder + "/mtpProperties"
-#     self.slurmRunFolder = rootFolder + "/slurmRunOutputs"
-#     self.mdFolder = rootFolder + "/mdLearningRuns"
-#     self.diffDFTFolder = rootFolder + "/diffDFT"
-#     self.initialGenerationFolder = rootFolder + "/initialGenerationDFT" 
-#     os.chdir(rootFolder)
-    
-
 #region Folder Setup
 # A configuration file can be specified from the user to get model hyperparameters
 configFile = "config.json"           # First system argument, generates and performs run if specified
@@ -70,10 +44,8 @@ try:
 except:
     pass
 
-
 rootFolder = os.path.dirname(os.path.realpath(__file__))              # Get useful folder locations
 DFToutputFolder = rootFolder + "/outputDFT"
-DFToldOutputFolder = rootFolder + "/previousDFT"
 templatesFolder = rootFolder + "/templates"
 scriptsFolder = rootFolder + "/pythonScripts"   
 mtpFolder = rootFolder + "/mtpProperties"
@@ -100,15 +72,12 @@ if not os.path.exists(slurmRunFolder): os.mkdir(slurmRunFolder)
 if not os.path.exists(mdFolder): os.mkdir(mdFolder)
 if not os.path.exists(diffDFTFolder): os.mkdir(diffDFTFolder)
 if not os.path.exists(initialGenerationFolder): os.mkdir(initialGenerationFolder)
-if not os.path.exists(DFToldOutputFolder): os.mkdir(DFToldOutputFolder)
 if not os.path.exists(DFToutputFolder): os.mkdir(DFToutputFolder)
 else: 
     pass
     # RUN NEXT PART OF THE SCRIPT
     # exit(1)
 #endregion
-
-
 
 #region Inital Generation
 DFT1AtomStrainFolder = initialGenerationFolder + "/1AtomDFTStrain"             #Same for all the different types of DFT runs
@@ -361,6 +330,8 @@ for config in configs:
     printAndLog("Generated MD runs.")
     #endregion
     
+  
+    
     for i in range(maxIters[tuple(config)]):
         printAndLog(str(config) + " atoms, iteration: " + str(i+1) + " of up to " + str(maxIters[tuple(config)]))
         
@@ -377,15 +348,15 @@ for config in configs:
 
         # Generate and run mindist job file (job file must be used to avoid clogging login nodes)
         with open (minddistJob, 'r+' ) as f:
-            content = f.read()
-            contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-            contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-            contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-            contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-            contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
-            f.seek(0)
-            f.write(contentNew)
-            f.truncate()
+                    content = f.read()
+                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
+                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
+                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
+                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
+                    contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
+                    f.seek(0)
+                    f.write(contentNew)
+                    f.truncate()
                 
         exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
         if(exitCode):
@@ -394,17 +365,7 @@ for config in configs:
 
         os.remove(minddistJob)
         # Copy the newly formed training config to the mtpProperties
-        # os.system("mv train.cfg " + trainingConfigs)
-        
-        with open(trainingConfigs, 'a') as wfd:
-            with open("train.cfg", 'rb') as fd:
-                shutil.copyfileobj(fd, wfd)
-        os.remove("train.cfg")
-        
-        # Move the finished output files to the previous DFT outpts
-        file_names = os.listdir(DFToutputFolder)
-        for file_name in file_names:
-            shutil.move(os.path.join(DFToutputFolder, file_name), DFToldOutputFolder)
+        os.system("mv train.cfg " + trainingConfigs)
         os.chdir(rootFolder)
             
         #region Generate an state als
@@ -643,15 +604,9 @@ for config in configs:
         else: 
             pass
         printAndLog("Diff DFT calculations complete.")
-        
-        
         # exit(1)
         #endregion
-    
-    #Sparsification
-    if(params["sparsify"] == True):
-        printAndLog("Sparsifying!")
-        os.system("cp " + selectedConfigs + " " + trainingConfigs)    
+        
 #endregion
 
 # except Exception as e:

@@ -1,5 +1,4 @@
 {
-  "sparsify": false,
   "1AtomDFTStrainRange": [0.75, 1.26],
   "1AtomDFTStrainStep": 0.05,
   "1AtomDFTShearRange": [1, 2.01],
@@ -20,10 +19,10 @@
   "MDStrainStep": 0.02,
   "selectThreshold": 2.1,
   "breakThreshold": 10.0,
-  "mlpBinary": "/global/home/hpc5146/mlip-2/bin/mlp",
+  "mlpBinary": "/global/home/hpc5146/mlip-3/bin/mlp",
   "pseudopotentialDirectory": "/global/home/hpc5146",
   "pseudopotential": "K.pbe-mt_fhi.UPF",
-  "lmpMPIFile": "/global/home/hpc5146/interface-lammps-mlip-2/lmp_mpi",
+  "lmpMPIFile": "/global/home/hpc5146/interface-lammps-mlip-3/lmp_mpi",
   "baseLatticeParameter": 9.6568,
   "baseKPoints": 8,
   "slurmParam": {

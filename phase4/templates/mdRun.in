@@ -10,7 +10,11 @@ create_box       1  whole
 create_atoms     1 region whole
 mass             1 39.0983
 
-pair_style mlip $ini
+pair_style mlip      load_from=$ini
+                                extrapolation_control=true
+                                threshold_save=2.1
+                                threshold_break=10 
+                                save_extrapolative_to=preselected.cfg               
 pair_coeff * *
 
 neighbor	0.5 bin
