@@ -42,6 +42,7 @@ lattice_minimization
 ai_md
 configurationalValidation
 massRuns
+newMassRuns
 mdMTPRun*
 anims
 previousDFT

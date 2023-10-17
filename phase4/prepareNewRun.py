@@ -25,8 +25,9 @@ slurmRunFolder = rootFolder + "/slurmRunOutputs"
 mdFolder = rootFolder + "/mdLearningRuns"
 diffDFTFolder = rootFolder + "/diffDFT"
 initialGenerationFolder = rootFolder + "/initialGenerationDFT" 
+potFolder = rootFolder + "/untrainedPots"
 
-mtpFile = mtpFolder + "/pot.mtp"
+mtpFile = mtpFolder + "/pot.almtp"
 mtpJobFile = mtpFile + "/trainMTP.qsub"
 trainingConfigs = mtpFolder + "/train.cfg"
 preselectedConfigs = mtpFolder + "/preselected.cfg"
@@ -56,7 +57,7 @@ if  os.path.exists(outConfigs): os.remove(outConfigs)
 if  os.path.exists(iniFile): os.remove(iniFile)
 if  os.path.exists(alsFile): os.remove(alsFile)
 
-freshMTP = mtpFolder + "/" + loadedMTP + ".mtp"
+freshMTP = potFolder + "/" + loadedMTP + ".almtp"
 
 shutil.copy(freshMTP, mtpFile)
 

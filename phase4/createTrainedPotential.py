@@ -235,33 +235,18 @@ printAndLog("Initial generation of DFT training dataset has completed.")
 
 #region Active Learning Setup
 # Get some useful file locations for the active learning
-mtpFile = mtpFolder + "/pot.mtp"
+mtpFile = mtpFolder + "/pot.almtp"
 trainingConfigs = mtpFolder + "/train.cfg"
 preselectedConfigs = mtpFolder + "/preselected.cfg"
 selectedConfigs = mtpFolder + "/selected.cfg"
 diffConfigs = mtpFolder + "/diff.cfg"
 outConfigs = mtpFolder + "/out.cfg"
-iniFile = mtpFolder + "/mlip.ini"
-alsFile = mtpFolder + "/state.als"
 
-#Prepare MD Runs
+#Prepare MD Runs folders
 mdRunTemplate = templatesFolder + "/mdRun.in"
 jobTemplate = templatesFolder + "/mdRun.qsub"
 
-# Prepare mlip.ini
-iniTemplate = templatesFolder + "/mlip.ini"
-shutil.copyfile(iniTemplate, iniFile)
-with open (iniFile, 'r+' ) as f:
-            content = f.read()
-            contentNew = re.sub("\$mtp", mtpFile, content) 
-            contentNew = re.sub("\$select", str(params["selectThreshold"]), contentNew)
-            contentNew = re.sub("\$break", str(params["breakThreshold"]), contentNew)
-            contentNew = re.sub("\$als", alsFile, contentNew)
-            f.seek(0)
-            f.write(contentNew)
-            f.truncate()
-
-#Load the MDRuns to use
+#Load the MDRuns parameters to use
 temperatures = params["MDTemperatures"]
 strains = np.arange(params["MDStrainRange"][0],params["MDStrainRange"][1],params["MDStrainStep"] )
 configs = params["MDLatticeConfigs"]
@@ -275,7 +260,6 @@ printAndLog("Starting the active learning loop")
 for config in configs:
     printAndLog("Beginning active learning of " + str(config) + " atoms.") 
     configName = str([int(x) for x in config]).replace(" ", "").replace(",", "")[1:-1]
-    print(configName)
     
     #region Generate MDRuns Folders
     if (os.path.exists(mdFolder)): shutil.rmtree(mdFolder)
@@ -305,7 +289,7 @@ for config in configs:
                 contentNew = re.sub("\$111", str(config[0]), contentNew)   
                 contentNew = re.sub("\$222", str(config[1]), contentNew)   
                 contentNew = re.sub("\$333", str(config[2]), contentNew)   
-                contentNew = re.sub("\$ini", iniFile, contentNew)       
+                contentNew = re.sub("\$pot", mtpFile, contentNew)   
                 f.seek(0)
                 f.write(contentNew)
                 f.truncate()
@@ -330,70 +314,19 @@ for config in configs:
     printAndLog("Generated MD runs.")
     #endregion
     
-  
     
     for i in range(maxIters[tuple(config)]):
         printAndLog(str(config) + " atoms, iteration: " + str(i+1) + " of up to " + str(maxIters[tuple(config)]))
         
         #region Extraction of DFT Results and Training
         extractionScript = scriptsFolder + "/extractConfigFromDFT.py"
-        minddistJobTemplate = templatesFolder + "/runMinDist.qsub"
-        minddistJob = DFToutputFolder + "/runMinDist.qsub"
 
         # Extract the outputs from the individual files and assemble a training config file
-        # Then, run mindidst on it
         os.chdir(DFToutputFolder)
         exitCode = subprocess.Popen(["python", extractionScript]).wait()
-        shutil.copyfile(minddistJobTemplate, minddistJob)
-
-        # Generate and run mindist job file (job file must be used to avoid clogging login nodes)
-        with open (minddistJob, 'r+' ) as f:
-                    content = f.read()
-                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-                    contentNew = re.sub("\$outfile", slurmRunFolder + "/mindist.out", contentNew)
-                    f.seek(0)
-                    f.write(contentNew)
-                    f.truncate()
-                
-        exitCode = subprocess.Popen(["sbatch", minddistJob]).wait()
-        if(exitCode):
-            print("The mindist call has failed. Potential may be unstable. Exiting...")
-            exit(1)
-
-        os.remove(minddistJob)
         # Copy the newly formed training config to the mtpProperties
         os.system("mv train.cfg " + trainingConfigs)
         os.chdir(rootFolder)
-            
-        #region Generate an state als
-        if not os.path.exists(alsFile):
-            calcGradeJobTemplate = templatesFolder + "/calcGrade.qsub"
-            calcGradeJob = mtpFolder + "/calcGrade.qsub"
-            shutil.copyfile(calcGradeJobTemplate, calcGradeJob)
-            with open (calcGradeJob, 'r+' ) as f:
-                    content = f.read()
-                    contentNew = re.sub("\$account", params["slurmParam"]["account"], content) 
-                    contentNew = re.sub("\$partition", params["slurmParam"]["partition"], contentNew) 
-                    contentNew = re.sub("\$qos", params["slurmParam"]["qos"], contentNew) 
-                    contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
-                    contentNew = re.sub("\$outfile", slurmRunFolder + "/calcGrade.out", contentNew)
-                    contentNew = re.sub("\$mtp", mtpFile, contentNew)
-                    contentNew = re.sub("\$als", alsFile, contentNew)
-                    contentNew = re.sub("\$train", trainingConfigs, contentNew)
-                    contentNew = re.sub("\$outconfigs", outConfigs, contentNew)
-                    f.seek(0)
-                    f.write(contentNew)
-                    f.truncate()
-            exitCode = subprocess.Popen(["sbatch", calcGradeJob]).wait()
-            if(exitCode):
-                printAndLog("The calc grade call has failed. Exiting...")
-                exit(1)
-            printAndLog("Generated new ALS file")
-            os.remove(calcGradeJob)
-        #endregion
 
         # Generate and run train job file (job file must be used to avoid clogging login nodes)
         trainJobTemplate = templatesFolder + "/trainMTP.qsub"
@@ -461,7 +394,7 @@ for config in configs:
             for directory, subdir, files in os.walk(mdFolder):        
                 if directory == mdFolder: continue;       # There is no preselected config in the parent directory of the runs so skip
                 
-                childPreselectedConfigName = directory + "/preselected.cfg"   
+                childPreselectedConfigName = directory + "/preselected.cfg.0"   
                 try: 
                          #Copy the preselected files to the master preselected 
                     with open(childPreselectedConfigName,'rb') as child:
@@ -484,7 +417,6 @@ for config in configs:
                 contentNew = re.sub("\$mlp", params["mlpBinary"], contentNew)
                 contentNew = re.sub("\$outfile", slurmRunFolder + "/selectAdd.out", contentNew)
                 contentNew = re.sub("\$mtp", mtpFile, contentNew)
-                contentNew = re.sub("\$als", alsFile, contentNew)
                 contentNew = re.sub("\$train", trainingConfigs, contentNew)
                 contentNew = re.sub("\$preselected", preselectedConfigs, contentNew)
                 contentNew = re.sub("\$selected", selectedConfigs, contentNew)
